@@ -221,21 +221,32 @@
                         <span v-else>-</span>
                       </template>
                     </el-table-column>
-                    <el-table-column prop="logFilePath" label="日志文件" width="200">
+                    <el-table-column prop="logFilePath" label="日志文件" width="250">
                       <template #default="scope">
                         <div v-if="scope.row.logFilePath">
-                          <el-tooltip :content="scope.row.logFilePath" placement="top" :show-after="500">
-                            <el-link 
-                              v-if="scope.row.logFilePath.startsWith('http')" 
-                              type="primary" 
-                              :href="scope.row.logFilePath" 
-                              target="_blank"
-                              :underline="false"
+                          <div class="log-actions">
+                            <el-tooltip :content="scope.row.logFilePath" placement="top" :show-after="500">
+                              <el-link 
+                                v-if="scope.row.logFilePath.startsWith('http')" 
+                                type="primary" 
+                                :href="scope.row.logFilePath" 
+                                target="_blank"
+                                :underline="false"
+                              >
+                                查看日志
+                              </el-link>
+                              <span v-else class="log-file-path">{{ scope.row.logFilePath }}</span>
+                            </el-tooltip>
+                            <el-button 
+                              v-if="scope.row.executorIp"
+                              type="text" 
+                              size="small" 
+                              @click="openRemoteConnectionDialog(scope.row)"
+                              style="margin-left: 8px; color: #409eff;"
                             >
-                              查看日志
-                            </el-link>
-                            <span v-else class="log-file-path">{{ scope.row.logFilePath }}</span>
-                          </el-tooltip>
+                              远程连接
+                            </el-button>
+                          </div>
                         </div>
                         <span v-else>-</span>
                       </template>
@@ -626,6 +637,56 @@
       </template>
     </el-dialog>
 
+    <!-- 远程连接对话框 -->
+    <el-dialog
+      v-model="remoteConnectionDialogVisible"
+      title="远程连接Windows机器"
+      width="500px"
+      @close="resetRemoteConnectionForm"
+    >
+      <el-form
+        ref="remoteConnectionFormRef"
+        :model="remoteConnectionForm"
+        :rules="remoteConnectionRules"
+        label-width="80px"
+      >
+        <el-form-item label="目标IP" prop="ip">
+          <el-input 
+            v-model="remoteConnectionForm.ip" 
+            placeholder="请输入目标机器IP地址"
+            :disabled="true"
+          />
+        </el-form-item>
+        <el-form-item label="用户名" prop="username">
+          <el-input 
+            v-model="remoteConnectionForm.username" 
+            placeholder="请输入Windows用户名"
+          />
+        </el-form-item>
+        <el-form-item label="密码" prop="password">
+          <el-input 
+            v-model="remoteConnectionForm.password" 
+            type="password" 
+            placeholder="请输入密码"
+            show-password
+          />
+        </el-form-item>
+      </el-form>
+      
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="remoteConnectionDialogVisible = false">取消</el-button>
+          <el-button 
+            type="primary" 
+            @click="connectRemoteMachine"
+            :loading="remoteConnectionLoading"
+          >
+            连接
+          </el-button>
+        </span>
+      </template>
+    </el-dialog>
+
 
       <div v-if="selectedTask" class="task-detail">
         <!-- 基本信息 -->
@@ -855,6 +916,27 @@ export default {
     const showCustomParamsEditor = ref(false)
     const editableCustomParams = ref([])
     const originalCustomParams = ref([])
+    
+    // 远程连接相关
+    const remoteConnectionDialogVisible = ref(false)
+    const remoteConnectionLoading = ref(false)
+    const remoteConnectionFormRef = ref()
+    const remoteConnectionForm = reactive({
+      ip: '',
+      username: '',
+      password: '',
+    })
+    const remoteConnectionRules = {
+      ip: [
+        { required: true, message: '请输入目标机器IP地址', trigger: 'blur' },
+      ],
+      username: [
+        { required: true, message: '请输入用户名', trigger: 'blur' },
+      ],
+      password: [
+        { required: true, message: '请输入密码', trigger: 'blur' },
+      ],
+    }
 
     const pagination = reactive({
       current: 1,
@@ -1758,6 +1840,102 @@ export default {
       ElMessage.info(`查看用例 ${instance.testCaseNumber} 第 ${instance.round} 轮执行详情，执行任务ID: ${instance.executionTaskId}`)
     }
 
+    // 远程连接相关方法
+    const openRemoteConnectionDialog = (row) => {
+      remoteConnectionForm.ip = row.executorIp || ''
+      remoteConnectionForm.username = ''
+      remoteConnectionForm.password = ''
+      remoteConnectionDialogVisible.value = true
+    }
+
+    const resetRemoteConnectionForm = () => {
+      remoteConnectionForm.ip = ''
+      remoteConnectionForm.username = ''
+      remoteConnectionForm.password = ''
+      if (remoteConnectionFormRef.value) {
+        remoteConnectionFormRef.value.resetFields()
+      }
+    }
+
+    const connectRemoteMachine = async () => {
+      try {
+        await remoteConnectionFormRef.value.validate()
+        remoteConnectionLoading.value = true
+        
+        // 构建连接参数
+        const connectionParams = {
+          ip: remoteConnectionForm.ip,
+          username: remoteConnectionForm.username,
+          password: remoteConnectionForm.password,
+        }
+        
+        // 调用后端API进行远程连接
+        const res = await request({
+          url: '/remote-connection/connect',
+          method: 'post',
+          data: connectionParams,
+        })
+        
+        if (res.success) {
+          ElMessage.success('远程连接成功')
+          remoteConnectionDialogVisible.value = false
+          
+          // 如果连接成功，尝试打开远程桌面连接
+          if (res.data && res.data.connectionUrl) {
+            try {
+              // 如果是RDP文件，创建下载链接
+              if (res.data.connectionUrl.startsWith('data:application/rdp;base64,')) {
+                const base64Data = res.data.connectionUrl.split(',')[1]
+                const rdpContent = atob(base64Data)
+                
+                // 创建RDP文件并下载
+                const blob = new Blob([rdpContent], { type: 'application/rdp' })
+                const url = window.URL.createObjectURL(blob)
+                const link = document.createElement('a')
+                link.href = url
+                link.download = `remote_${remoteConnectionForm.ip}.rdp`
+                document.body.appendChild(link)
+                link.click()
+                document.body.removeChild(link)
+                window.URL.revokeObjectURL(url)
+                
+                ElMessage.info('RDP文件已下载，请双击打开进行远程连接')
+              } else {
+                // 直接打开URL
+                window.open(res.data.connectionUrl, '_blank')
+              }
+            } catch (error) {
+              console.error('打开远程连接失败:', error)
+              ElMessage.warning('远程连接建立成功，但无法自动打开连接窗口')
+            }
+          } else {
+            // 提供手动连接指导
+            ElMessageBox.alert(
+              `远程连接已建立成功！\n\n请使用以下方式连接：\n1. 打开"远程桌面连接"工具\n2. 输入计算机名：${remoteConnectionForm.ip}\n3. 输入用户名：${remoteConnectionForm.username}\n4. 输入密码进行连接`,
+              '远程连接成功',
+              {
+                confirmButtonText: '我知道了',
+                type: 'success',
+              }
+            )
+          }
+        } else {
+          ElMessage.error(res.message || '远程连接失败')
+        }
+      } catch (error) {
+        console.error('远程连接失败:', error)
+        if (error.response && error.response.data && error.response.data.message) {
+          ElMessage.error(error.response.data.message)
+        } else if (error.message) {
+          ElMessage.error(error.message)
+        } else {
+          ElMessage.error('远程连接失败，请检查网络连接和凭据')
+        }
+      } finally {
+        remoteConnectionLoading.value = false
+      }
+    }
+
     // 自动刷新定时器
     let autoRefreshTimer = null
 
@@ -1886,6 +2064,16 @@ export default {
       getInstanceResultType,
       getInstanceResultText,
       viewInstanceResult,
+      
+      // 远程连接相关
+      remoteConnectionDialogVisible,
+      remoteConnectionLoading,
+      remoteConnectionFormRef,
+      remoteConnectionForm,
+      remoteConnectionRules,
+      openRemoteConnectionDialog,
+      resetRemoteConnectionForm,
+      connectRemoteMachine,
     }
   },
 }
@@ -2414,6 +2602,34 @@ export default {
 .param-actions {
   display: flex;
   gap: 8px;
+}
+
+/* 日志操作样式 */
+.log-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.log-actions .el-button {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+/* 远程连接对话框样式 */
+.remote-connection-dialog .el-form-item {
+  margin-bottom: 20px;
+}
+
+.remote-connection-dialog .el-input {
+  width: 100%;
+}
+
+.remote-connection-dialog .el-input.is-disabled .el-input__inner {
+  background-color: #f5f7fa;
+  border-color: #e4e7ed;
+  color: #606266;
 }
 
 </style>
