@@ -242,39 +242,118 @@
     <el-dialog
       v-model="networkDialogVisible"
       title="管理逻辑组网"
-      width="600px"
+      width="800px"
     >
-      <div class="network-management">
-        <div class="network-section">
-          <h4>当前组网列表</h4>
-          <el-table :data="currentNetworks" style="width: 100%">
-            <el-table-column prop="name" label="组网名称" />
-            <el-table-column prop="description" label="描述" />
-            <el-table-column label="操作" width="100">
-              <template #default="scope">
-                <el-button size="small" type="danger" @click="removeNetwork(scope.row)">移除</el-button>
-              </template>
-            </el-table-column>
-          </el-table>
-        </div>
+      <el-tabs v-model="activeNetworkTab" type="card">
+        <!-- 当前组网管理 -->
+        <el-tab-pane label="当前组网" name="current">
+          <div class="network-section">
+            <h4>当前组网列表</h4>
+            <el-table :data="currentNetworks" style="width: 100%">
+              <el-table-column prop="name" label="组网名称" />
+              <el-table-column prop="description" label="描述" />
+              <el-table-column label="操作" width="100">
+                <template #default="scope">
+                  <el-button size="small" type="danger" @click="removeNetwork(scope.row)">移除</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
+        </el-tab-pane>
         
-        <div class="network-section">
-          <h4>添加组网</h4>
-          <el-select
-            v-model="selectedNetworkId"
-            placeholder="请选择要添加的组网"
-            style="width: 100%"
-            @change="addNetwork"
-          >
-            <el-option
-              v-for="item in availableNetworks"
-              :key="item.id"
-              :label="`${item.name}${item.description ? ' - ' + item.description : ''}`"
-              :value="item.id"
-            />
-          </el-select>
-        </div>
-      </div>
+        <!-- 网络类型管理 -->
+        <el-tab-pane label="网络类型管理" name="manage">
+          <div class="network-management">
+            <div class="table-operations" style="margin-bottom: 16px;">
+              <el-button type="primary" @click="showCreateNetworkDialog">
+                <el-icon><Plus /></el-icon>
+                新增网络类型
+              </el-button>
+              <el-button @click="loadAllNetworkTypes">
+                <el-icon><Refresh /></el-icon>
+                刷新
+              </el-button>
+            </div>
+            
+            <el-table :data="allNetworkTypes" v-loading="networkTypeLoading" style="width: 100%">
+              <el-table-column prop="name" label="网络类型名称" />
+              <el-table-column prop="description" label="描述" />
+              <el-table-column prop="status" label="状态">
+                <template #default="scope">
+                  <el-tag :type="scope.row.status === 1 ? 'success' : 'danger'">
+                    {{ scope.row.status === 1 ? '启用' : '禁用' }}
+                  </el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="200">
+                <template #default="scope">
+                  <el-button size="small" @click="editNetworkType(scope.row)">编辑</el-button>
+                  <el-button size="small" type="danger" @click="deleteNetworkType(scope.row)">删除</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
+        </el-tab-pane>
+        
+        <!-- 添加组网到环境 -->
+        <el-tab-pane label="添加组网" name="add">
+          <div class="network-section">
+            <h4>添加组网到当前环境</h4>
+            <el-select
+              v-model="selectedNetworkId"
+              placeholder="请选择要添加的组网"
+              style="width: 100%"
+              @change="addNetwork"
+            >
+              <el-option
+                v-for="item in availableNetworks"
+                :key="item.id"
+                :label="`${item.name}${item.description ? ' - ' + item.description : ''}`"
+                :value="item.id"
+              />
+            </el-select>
+          </div>
+        </el-tab-pane>
+      </el-tabs>
+    </el-dialog>
+
+    <!-- 网络类型管理对话框 -->
+    <el-dialog
+      v-model="networkTypeDialogVisible"
+      :title="networkTypeDialogTitle"
+      width="500px"
+      @close="resetNetworkTypeForm"
+    >
+      <el-form
+        ref="networkTypeFormRef"
+        :model="networkTypeForm"
+        :rules="networkTypeRules"
+        label-width="120px"
+      >
+        <el-form-item label="网络类型名称" prop="name">
+          <el-input v-model="networkTypeForm.name" placeholder="请输入网络类型名称" />
+        </el-form-item>
+        <el-form-item label="描述" prop="description">
+          <el-input
+            v-model="networkTypeForm.description"
+            type="textarea"
+            :rows="3"
+            placeholder="请输入描述"
+          />
+        </el-form-item>
+        <el-form-item label="状态" prop="status">
+          <el-radio-group v-model="networkTypeForm.status">
+            <el-radio :label="1">启用</el-radio>
+            <el-radio :label="0">禁用</el-radio>
+          </el-radio-group>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="networkTypeDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleNetworkTypeSubmit">确定</el-button>
+        </span>
+      </template>
     </el-dialog>
 
     <!-- 快速添加逻辑组网对话框 -->
@@ -359,6 +438,14 @@ export default {
     const currentNetworks = ref([])
     const availableNetworks = ref([])
     const selectedNetworkId = ref(null)
+    const activeNetworkTab = ref('current')
+
+    // 网络类型管理相关
+    const networkTypeDialogVisible = ref(false)
+    const networkTypeDialogTitle = ref('')
+    const networkTypeFormRef = ref()
+    const allNetworkTypes = ref([])
+    const networkTypeLoading = ref(false)
 
     // 快速添加逻辑组网相关
     const quickAddNetworkDialogVisible = ref(false)
@@ -380,6 +467,13 @@ export default {
       status: 1,
     })
 
+    const networkTypeForm = reactive({
+      id: null,
+      name: '',
+      description: '',
+      status: 1,
+    })
+
     const rules = {
       name: [
         { required: true, message: '请输入逻辑环境名称', trigger: 'blur' },
@@ -389,6 +483,12 @@ export default {
       ],
       selectedUeIds: [
         { required: true, message: '请选择UE', trigger: 'change' },
+      ],
+    }
+
+    const networkTypeRules = {
+      name: [
+        { required: true, message: '请输入网络类型名称', trigger: 'blur' },
       ],
     }
 
@@ -440,7 +540,7 @@ export default {
     const loadNetworkOptions = async () => {
       try {
         const res = await request({
-          url: '/logic-network/list',
+          url: '/network-type/list',
           method: 'get',
         })
         networkOptions.value = res.data
@@ -670,6 +770,7 @@ export default {
     const handleManageNetwork = async (row) => {
       currentLogicEnvironmentId.value = row.id
       networkDialogVisible.value = true
+      activeNetworkTab.value = 'current'
       await loadCurrentNetworks(row.id)
       await loadAvailableNetworks()
     }
@@ -689,7 +790,7 @@ export default {
     const loadAvailableNetworks = async () => {
       try {
         const res = await request({
-          url: '/logic-network/list',
+          url: '/network-type/list',
           method: 'get',
         })
         availableNetworks.value = res.data
@@ -730,6 +831,102 @@ export default {
       }
     }
 
+    // 网络类型管理相关方法
+    const loadAllNetworkTypes = async () => {
+      networkTypeLoading.value = true
+      try {
+        const res = await request({
+          url: '/network-type/page',
+          method: 'get',
+          params: {
+            current: 1,
+            size: 100, // 获取所有网络类型
+          },
+        })
+        allNetworkTypes.value = res.data.records
+      } catch (error) {
+        console.error('加载网络类型失败:', error)
+        ElMessage.error('加载网络类型失败')
+      } finally {
+        networkTypeLoading.value = false
+      }
+    }
+
+    const showCreateNetworkDialog = () => {
+      networkTypeDialogTitle.value = '新增网络类型'
+      networkTypeDialogVisible.value = true
+      resetNetworkTypeForm()
+    }
+
+    const editNetworkType = (row) => {
+      networkTypeDialogTitle.value = '编辑网络类型'
+      Object.assign(networkTypeForm, row)
+      networkTypeDialogVisible.value = true
+    }
+
+    const deleteNetworkType = async (row) => {
+      try {
+        await ElMessageBox.confirm('确定要删除这个网络类型吗？', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning',
+        })
+        
+        await request({
+          url: `/network-type/${row.id}`,
+          method: 'delete',
+        })
+        ElMessage.success('删除成功')
+        await loadAllNetworkTypes()
+        await loadAvailableNetworks() // 刷新可用网络列表
+      } catch (error) {
+        if (error !== 'cancel') {
+          ElMessage.error('删除失败')
+        }
+      }
+    }
+
+    const handleNetworkTypeSubmit = async () => {
+      try {
+        await networkTypeFormRef.value.validate()
+        
+        if (networkTypeForm.id) {
+          await request({
+            url: `/network-type/${networkTypeForm.id}`,
+            method: 'put',
+            data: networkTypeForm,
+          })
+          ElMessage.success('更新成功')
+        } else {
+          await request({
+            url: '/network-type',
+            method: 'post',
+            data: networkTypeForm,
+          })
+          ElMessage.success('创建成功')
+        }
+        
+        networkTypeDialogVisible.value = false
+        await loadAllNetworkTypes()
+        await loadAvailableNetworks() // 刷新可用网络列表
+      } catch (error) {
+        console.error('提交失败:', error)
+        ElMessage.error('提交失败')
+      }
+    }
+
+    const resetNetworkTypeForm = () => {
+      Object.assign(networkTypeForm, {
+        id: null,
+        name: '',
+        description: '',
+        status: 1,
+      })
+      if (networkTypeFormRef.value) {
+        networkTypeFormRef.value.resetFields()
+      }
+    }
+
     // 快速添加逻辑组网相关方法
     const showAddNetworkDialog = () => {
       quickAddNetworks.value = [{ name: '', description: '' }]
@@ -756,15 +953,16 @@ export default {
       }
 
       try {
-        // 批量创建逻辑组网
+        // 批量创建网络类型（作为逻辑组网使用）
         const createdNetworks = []
         for (const network of quickAddNetworks.value) {
           const res = await request({
-            url: '/logic-network',
+            url: '/network-type',
             method: 'post',
             data: {
               name: network.name.trim(),
               description: network.description ? network.description.trim() : '', // 描述可以为空
+              status: 1, // 默认启用状态
             },
           })
           createdNetworks.push(res.data)
@@ -839,6 +1037,7 @@ export default {
       currentNetworks,
       availableNetworks,
       selectedNetworkId,
+      activeNetworkTab,
       handleManageNetwork,
       loadCurrentNetworks,
       loadAvailableNetworks,
@@ -853,6 +1052,20 @@ export default {
       addQuickAddNetwork,
       removeQuickAddNetwork,
       submitQuickAddNetworks,
+      // 网络类型管理相关
+      networkTypeDialogVisible,
+      networkTypeDialogTitle,
+      networkTypeFormRef,
+      networkTypeForm,
+      networkTypeRules,
+      allNetworkTypes,
+      networkTypeLoading,
+      loadAllNetworkTypes,
+      showCreateNetworkDialog,
+      editNetworkType,
+      deleteNetworkType,
+      handleNetworkTypeSubmit,
+      resetNetworkTypeForm,
     }
   },
 }
