@@ -145,6 +145,10 @@
               <el-icon><Plus /></el-icon>
               快速添加组网
             </el-button>
+            <el-button size="small" type="success" @click="showNetworkTypeFilter" style="margin-left: 8px;">
+              <el-icon><Filter /></el-icon>
+              按网络类型筛选
+            </el-button>
           </div>
           <el-select
             v-model="form.selectedNetworkIds"
@@ -157,9 +161,17 @@
             <el-option
               v-for="item in networkOptions"
               :key="item.id"
-              :label="`${item.name}${item.description ? ' - ' + item.description : ''}`"
+              :label="getNetworkDisplayLabel(item)"
               :value="item.id"
-            />
+            >
+              <div class="network-option">
+                <div class="network-name">{{ item.name }}</div>
+                <div class="network-details">
+                  <span v-if="item.networkTypeName" class="network-type">{{ item.networkTypeName }}</span>
+                  <span v-if="item.description" class="network-description">{{ item.description }}</span>
+                </div>
+              </div>
+            </el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="已选组网" v-if="form.selectedNetworkIds && form.selectedNetworkIds.length > 0">
@@ -277,6 +289,56 @@
       </div>
     </el-dialog>
 
+    <!-- 网络类型筛选对话框 -->
+    <el-dialog
+      v-model="networkTypeFilterDialogVisible"
+      title="按网络类型筛选组网"
+      width="600px"
+    >
+      <div class="network-type-filter">
+        <div class="filter-section">
+          <h4>选择网络类型</h4>
+          <el-select
+            v-model="selectedNetworkTypeId"
+            placeholder="请选择网络类型"
+            style="width: 100%"
+            @change="filterNetworksByType"
+          >
+            <el-option
+              v-for="type in networkTypeOptions"
+              :key="type.id"
+              :label="`${type.name}${type.description ? ' - ' + type.description : ''}`"
+              :value="type.id"
+            />
+          </el-select>
+        </div>
+        
+        <div class="filter-section" v-if="filteredNetworks.length > 0">
+          <h4>筛选结果</h4>
+          <div class="filtered-networks">
+            <el-checkbox
+              v-for="network in filteredNetworks"
+              :key="network.id"
+              v-model="network.selected"
+              @change="handleFilteredNetworkChange(network)"
+            >
+              {{ network.name }}
+              <span v-if="network.description" style="color: #909399; font-size: 12px;">
+                - {{ network.description }}
+              </span>
+            </el-checkbox>
+          </div>
+        </div>
+      </div>
+      
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="networkTypeFilterDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="applyNetworkTypeFilter">确定</el-button>
+        </span>
+      </template>
+    </el-dialog>
+
     <!-- 快速添加逻辑组网对话框 -->
     <el-dialog
       v-model="quickAddNetworkDialogVisible"
@@ -363,6 +425,12 @@ export default {
     // 快速添加逻辑组网相关
     const quickAddNetworkDialogVisible = ref(false)
     const quickAddNetworks = ref([{ name: '', description: '' }])
+    
+    // 网络类型筛选相关
+    const networkTypeFilterDialogVisible = ref(false)
+    const networkTypeOptions = ref([])
+    const selectedNetworkTypeId = ref(null)
+    const filteredNetworks = ref([])
 
     const pagination = reactive({
       current: 1,
@@ -440,7 +508,7 @@ export default {
     const loadNetworkOptions = async () => {
       try {
         const res = await request({
-          url: '/logic-network/list',
+          url: '/logic-network/list-with-network-type',
           method: 'get',
         })
         networkOptions.value = res.data
@@ -457,6 +525,17 @@ export default {
     const getNetworkDisplayName = (networkId) => {
       const network = networkOptions.value.find(item => item.id === networkId)
       return network ? `${network.name}${network.description ? ' - ' + network.description : ''}` : networkId
+    }
+
+    const getNetworkDisplayLabel = (network) => {
+      let label = network.name
+      if (network.networkTypeName) {
+        label += ` [${network.networkTypeName}]`
+      }
+      if (network.description) {
+        label += ` - ${network.description}`
+      }
+      return label
     }
 
     const handleUeSelectionChange = (value) => {
@@ -788,6 +867,66 @@ export default {
       }
     }
 
+    // 网络类型筛选相关方法
+    const showNetworkTypeFilter = async () => {
+      networkTypeFilterDialogVisible.value = true
+      selectedNetworkTypeId.value = null
+      filteredNetworks.value = []
+      await loadNetworkTypeOptions()
+    }
+
+    const loadNetworkTypeOptions = async () => {
+      try {
+        const res = await request({
+          url: '/network-type/list',
+          method: 'get',
+        })
+        networkTypeOptions.value = res.data
+      } catch (error) {
+        console.error('加载网络类型数据失败:', error)
+      }
+    }
+
+    const filterNetworksByType = async () => {
+      if (!selectedNetworkTypeId.value) {
+        filteredNetworks.value = []
+        return
+      }
+      
+      try {
+        const res = await request({
+          url: `/logic-network/list-by-network-type/${selectedNetworkTypeId.value}`,
+          method: 'get',
+        })
+        // 为每个网络添加选中状态
+        filteredNetworks.value = res.data.map(network => ({
+          ...network,
+          selected: form.selectedNetworkIds.includes(network.id)
+        }))
+      } catch (error) {
+        console.error('筛选组网失败:', error)
+        ElMessage.error('筛选组网失败')
+      }
+    }
+
+    const handleFilteredNetworkChange = (network) => {
+      if (network.selected) {
+        if (!form.selectedNetworkIds.includes(network.id)) {
+          form.selectedNetworkIds.push(network.id)
+        }
+      } else {
+        const index = form.selectedNetworkIds.indexOf(network.id)
+        if (index > -1) {
+          form.selectedNetworkIds.splice(index, 1)
+        }
+      }
+    }
+
+    const applyNetworkTypeFilter = () => {
+      networkTypeFilterDialogVisible.value = false
+      ElMessage.success('筛选结果已应用')
+    }
+
     const handleSizeChange = (val) => {
       pagination.size = val
       loadData()
@@ -853,6 +992,18 @@ export default {
       addQuickAddNetwork,
       removeQuickAddNetwork,
       submitQuickAddNetworks,
+      
+      // 网络类型筛选相关
+      networkTypeFilterDialogVisible,
+      networkTypeOptions,
+      selectedNetworkTypeId,
+      filteredNetworks,
+      showNetworkTypeFilter,
+      loadNetworkTypeOptions,
+      filterNetworksByType,
+      handleFilteredNetworkChange,
+      applyNetworkTypeFilter,
+      getNetworkDisplayLabel,
     }
   },
 }
@@ -940,5 +1091,62 @@ export default {
 .quick-add-network .add-network-button {
   text-align: center;
   margin-top: 15px;
+}
+
+/* 网络类型筛选样式 */
+.network-type-filter {
+  padding: 20px 0;
+}
+
+.filter-section {
+  margin-bottom: 20px;
+}
+
+.filter-section h4 {
+  margin-bottom: 10px;
+  color: #303133;
+}
+
+.filtered-networks {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #e4e7ed;
+  border-radius: 4px;
+  padding: 10px;
+}
+
+.filtered-networks .el-checkbox {
+  display: block;
+  margin-bottom: 8px;
+}
+
+/* 网络选项样式 */
+.network-option {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.network-name {
+  font-weight: bold;
+  color: #303133;
+}
+
+.network-details {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: #909399;
+}
+
+.network-type {
+  color: #409EFF;
+  background-color: #f0f9ff;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.network-description {
+  color: #67C23A;
 }
 </style>
