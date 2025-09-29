@@ -783,17 +783,28 @@
               <el-table-column prop="executionTaskId" label="执行任务ID" width="200" />
               <el-table-column prop="createTime" label="创建时间" width="160" />
               <el-table-column prop="updateTime" label="更新时间" width="160" />
-              <el-table-column label="操作" width="120">
+              <el-table-column label="操作" width="200">
                 <template #default="scope">
-                  <el-button 
-                    v-if="scope.row.executionTaskId" 
-                    type="text" 
-                    size="small"
-                    @click="viewInstanceResult(scope.row)"
-                  >
-                    查看详情
-                  </el-button>
-                  <span v-else>-</span>
+                  <div class="action-buttons">
+                    <el-button 
+                      v-if="scope.row.executionTaskId" 
+                      type="text" 
+                      size="small"
+                      @click="viewInstanceResult(scope.row)"
+                    >
+                      查看详情
+                    </el-button>
+                    <el-button 
+                      v-if="scope.row.executorIp" 
+                      type="text" 
+                      size="small"
+                      @click="openRemoteLoginDialog(scope.row)"
+                      style="margin-left: 8px;"
+                    >
+                      登录执行机
+                    </el-button>
+                    <span v-if="!scope.row.executionTaskId && !scope.row.executorIp">-</span>
+                  </div>
                 </template>
               </el-table-column>
             </el-table>
@@ -801,6 +812,80 @@
         </el-card>
       </div>
     </div>
+
+    <!-- 远程登录弹窗 -->
+    <el-dialog
+      v-model="remoteLoginDialogVisible"
+      title="远程登录执行机"
+      width="600px"
+      :close-on-click-modal="false"
+    >
+      <div class="remote-login-content">
+        <el-form :model="remoteLoginForm" :rules="remoteLoginRules" ref="remoteLoginFormRef" label-width="100px">
+          <el-form-item label="执行机信息">
+            <div class="executor-info">
+              <p><strong>IP地址：</strong>{{ remoteLoginForm.executorIp }}</p>
+              <p><strong>逻辑环境：</strong>{{ remoteLoginForm.logicEnvironmentName }}</p>
+            </div>
+          </el-form-item>
+          
+          <el-form-item label="操作系统" prop="osType">
+            <el-radio-group v-model="remoteLoginForm.osType">
+              <el-radio label="linux">Linux</el-radio>
+              <el-radio label="windows">Windows</el-radio>
+            </el-radio-group>
+          </el-form-item>
+
+          <el-form-item label="连接方式" prop="connectionType">
+            <el-radio-group v-model="remoteLoginForm.connectionType">
+              <el-radio label="ssh" v-if="remoteLoginForm.osType === 'linux'">SSH</el-radio>
+              <el-radio label="rdp" v-if="remoteLoginForm.osType === 'windows'">RDP</el-radio>
+              <el-radio label="vnc" v-if="remoteLoginForm.osType === 'linux'">VNC</el-radio>
+            </el-radio-group>
+          </el-form-item>
+
+          <el-form-item label="用户名" prop="username">
+            <el-input v-model="remoteLoginForm.username" placeholder="请输入用户名" />
+          </el-form-item>
+
+          <el-form-item label="密码" prop="password">
+            <el-input 
+              v-model="remoteLoginForm.password" 
+              type="password" 
+              placeholder="请输入密码"
+              show-password
+            />
+          </el-form-item>
+
+          <el-form-item label="端口" prop="port">
+            <el-input-number 
+              v-model="remoteLoginForm.port" 
+              :min="1" 
+              :max="65535"
+              placeholder="端口号"
+            />
+          </el-form-item>
+
+          <el-form-item label="操作说明" prop="operationNote">
+            <el-input 
+              v-model="remoteLoginForm.operationNote" 
+              type="textarea" 
+              :rows="3"
+              placeholder="请描述您将要执行的操作..."
+            />
+          </el-form-item>
+        </el-form>
+      </div>
+
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="closeRemoteLoginDialog">取消</el-button>
+          <el-button type="primary" @click="connectRemoteMachine" :loading="connecting">
+            连接
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
 </template>
 
 <script>
@@ -855,6 +940,41 @@ export default {
     const showCustomParamsEditor = ref(false)
     const editableCustomParams = ref([])
     const originalCustomParams = ref([])
+
+    // 远程登录相关
+    const remoteLoginDialogVisible = ref(false)
+    const connecting = ref(false)
+    const remoteLoginFormRef = ref()
+    const remoteLoginForm = reactive({
+      executorIp: '',
+      logicEnvironmentName: '',
+      osType: 'linux',
+      connectionType: 'ssh',
+      username: '',
+      password: '',
+      port: 22,
+      operationNote: ''
+    })
+    const remoteLoginRules = {
+      osType: [
+        { required: true, message: '请选择操作系统', trigger: 'change' }
+      ],
+      connectionType: [
+        { required: true, message: '请选择连接方式', trigger: 'change' }
+      ],
+      username: [
+        { required: true, message: '请输入用户名', trigger: 'blur' }
+      ],
+      password: [
+        { required: true, message: '请输入密码', trigger: 'blur' }
+      ],
+      port: [
+        { required: true, message: '请输入端口号', trigger: 'blur' }
+      ],
+      operationNote: [
+        { required: true, message: '请描述操作内容', trigger: 'blur' }
+      ]
+    }
 
     const pagination = reactive({
       current: 1,
@@ -1758,6 +1878,147 @@ export default {
       ElMessage.info(`查看用例 ${instance.testCaseNumber} 第 ${instance.round} 轮执行详情，执行任务ID: ${instance.executionTaskId}`)
     }
 
+    // 远程登录相关方法
+    const openRemoteLoginDialog = (instance) => {
+      // 填充执行机信息
+      remoteLoginForm.executorIp = instance.executorIp
+      remoteLoginForm.logicEnvironmentName = instance.logicEnvironmentName
+      
+      // 重置表单
+      remoteLoginForm.osType = 'linux'
+      remoteLoginForm.connectionType = 'ssh'
+      remoteLoginForm.username = ''
+      remoteLoginForm.password = ''
+      remoteLoginForm.port = 22
+      remoteLoginForm.operationNote = ''
+      
+      remoteLoginDialogVisible.value = true
+    }
+
+    const closeRemoteLoginDialog = () => {
+      remoteLoginDialogVisible.value = false
+      // 重置表单
+      if (remoteLoginFormRef.value) {
+        remoteLoginFormRef.value.resetFields()
+      }
+    }
+
+    const connectRemoteMachine = async () => {
+      if (!remoteLoginFormRef.value) return
+      
+      try {
+        await remoteLoginFormRef.value.validate()
+        connecting.value = true
+        
+        // 调用后端API记录操作日志
+        const response = await request({
+          url: '/remote-login/log',
+          method: 'post',
+          data: {
+            executorIp: remoteLoginForm.executorIp,
+            logicEnvironmentName: remoteLoginForm.logicEnvironmentName,
+            osType: remoteLoginForm.osType,
+            connectionType: remoteLoginForm.connectionType,
+            username: remoteLoginForm.username,
+            port: remoteLoginForm.port,
+            operationNote: remoteLoginForm.operationNote
+          }
+        })
+        
+        if (response.code === 200) {
+          const connectionInfo = response.data
+          
+          // 根据连接类型执行不同的连接逻辑
+          if (remoteLoginForm.connectionType === 'ssh') {
+            await connectSSH(connectionInfo)
+          } else if (remoteLoginForm.connectionType === 'rdp') {
+            await connectRDP(connectionInfo)
+          } else if (remoteLoginForm.connectionType === 'vnc') {
+            await connectVNC(connectionInfo)
+          }
+          
+          ElMessage.success('连接成功！')
+          closeRemoteLoginDialog()
+        } else {
+          throw new Error(response.message || '记录登录日志失败')
+        }
+        
+      } catch (error) {
+        console.error('远程连接失败:', error)
+        ElMessage.error('连接失败：' + error.message)
+      } finally {
+        connecting.value = false
+      }
+    }
+
+    const connectSSH = async (connectionInfo) => {
+      // SSH连接逻辑
+      const sshCommand = connectionInfo.command
+      console.log('SSH连接命令:', sshCommand)
+      
+      // 复制命令到剪贴板
+      if (navigator.clipboard) {
+        try {
+          await navigator.clipboard.writeText(sshCommand)
+          ElMessage.success('SSH连接命令已复制到剪贴板')
+        } catch (err) {
+          console.error('复制到剪贴板失败:', err)
+        }
+      }
+      
+      // 显示连接信息
+      ElMessageBox.alert(
+        `SSH连接命令: ${sshCommand}\n\n请使用终端执行此命令进行连接。`,
+        'SSH连接信息',
+        {
+          confirmButtonText: '确定',
+          type: 'info'
+        }
+      )
+    }
+
+    const connectRDP = async (connectionInfo) => {
+      // RDP连接逻辑
+      const rdpUrl = connectionInfo.url
+      console.log('RDP连接URL:', rdpUrl)
+      
+      // 尝试打开RDP连接
+      try {
+        window.open(rdpUrl, '_blank')
+        ElMessage.success('正在启动RDP连接...')
+      } catch (error) {
+        ElMessageBox.alert(
+          `RDP连接URL: ${rdpUrl}\n\n请使用RDP客户端连接到此地址。`,
+          'RDP连接信息',
+          {
+            confirmButtonText: '确定',
+            type: 'info'
+          }
+        )
+      }
+    }
+
+    const connectVNC = async (connectionInfo) => {
+      // VNC连接逻辑
+      const vncUrl = connectionInfo.url
+      console.log('VNC连接URL:', vncUrl)
+      
+      // 尝试打开VNC连接
+      try {
+        window.open(vncUrl, '_blank')
+        ElMessage.success('正在启动VNC连接...')
+      } catch (error) {
+        ElMessageBox.alert(
+          `VNC连接URL: ${vncUrl}\n\n请使用VNC客户端连接到此地址。`,
+          'VNC连接信息',
+          {
+            confirmButtonText: '确定',
+            type: 'info'
+          }
+        )
+      }
+    }
+
     // 自动刷新定时器
     let autoRefreshTimer = null
 
@@ -1886,6 +2147,16 @@ export default {
       getInstanceResultType,
       getInstanceResultText,
       viewInstanceResult,
+      
+      // 远程登录相关
+      remoteLoginDialogVisible,
+      connecting,
+      remoteLoginFormRef,
+      remoteLoginForm,
+      remoteLoginRules,
+      openRemoteLoginDialog,
+      closeRemoteLoginDialog,
+      connectRemoteMachine,
     }
   },
 }
@@ -2414,6 +2685,62 @@ export default {
 .param-actions {
   display: flex;
   gap: 8px;
+}
+
+/* 远程登录相关样式 */
+.remote-login-content {
+  padding: 20px 0;
+}
+
+.executor-info {
+  background-color: #f5f7fa;
+  border: 1px solid #e4e7ed;
+  border-radius: 4px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.executor-info p {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #606266;
+}
+
+.executor-info p:last-child {
+  margin-bottom: 0;
+}
+
+.executor-info strong {
+  color: #303133;
+  font-weight: 600;
+}
+
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.action-buttons .el-button {
+  margin: 0;
+}
+
+/* 远程登录弹窗样式 */
+.remote-login-content .el-form-item {
+  margin-bottom: 20px;
+}
+
+.remote-login-content .el-radio-group {
+  display: flex;
+  gap: 16px;
+}
+
+.remote-login-content .el-input-number {
+  width: 100%;
+}
+
+.remote-login-content .el-textarea {
+  width: 100%;
 }
 
 </style>
