@@ -839,9 +839,23 @@
           <el-form-item label="连接方式" prop="connectionType">
             <el-radio-group v-model="remoteLoginForm.connectionType">
               <el-radio label="ssh" v-if="remoteLoginForm.osType === 'linux'">SSH</el-radio>
-              <el-radio label="rdp" v-if="remoteLoginForm.osType === 'windows'">RDP</el-radio>
+              <el-radio label="rdp" v-if="remoteLoginForm.osType === 'windows'">RDP (远程桌面)</el-radio>
               <el-radio label="vnc" v-if="remoteLoginForm.osType === 'linux'">VNC</el-radio>
             </el-radio-group>
+            <div v-if="remoteLoginForm.connectionType === 'rdp'" class="connection-tip">
+              <el-alert 
+                title="RDP连接提示" 
+                type="info" 
+                :closable="false"
+                show-icon
+              >
+                <template #default>
+                  <p>• 确保目标Windows机器已启用远程桌面</p>
+                  <p>• 确保防火墙允许RDP连接（端口3389）</p>
+                  <p>• 如果连接失败，系统将自动提供RDP文件下载</p>
+                </template>
+              </el-alert>
+            </div>
           </el-form-item>
 
           <el-form-item label="用户名" prop="username">
@@ -1980,21 +1994,62 @@ export default {
     const connectRDP = async (connectionInfo) => {
       // RDP连接逻辑
       const rdpUrl = connectionInfo.url
+      const rdpFileContent = connectionInfo.rdpFileContent
       console.log('RDP连接URL:', rdpUrl)
+      console.log('RDP文件内容:', rdpFileContent)
       
-      // 尝试打开RDP连接
       try {
-        window.open(rdpUrl, '_blank')
-        ElMessage.success('正在启动RDP连接...')
+        // 首先尝试直接打开RDP URL
+        const rdpWindow = window.open(rdpUrl, '_blank')
+        
+        if (rdpWindow) {
+          ElMessage.success('正在启动RDP连接...')
+          
+          // 同时提供下载RDP文件的功能
+          setTimeout(() => {
+            downloadRdpFile(connectionInfo)
+          }, 1000)
+        } else {
+          throw new Error('无法打开RDP连接窗口')
+        }
       } catch (error) {
-        ElMessageBox.alert(
-          `RDP连接URL: ${rdpUrl}\n\n请使用RDP客户端连接到此地址。`,
-          'RDP连接信息',
+        console.error('RDP连接失败:', error)
+        
+        // 如果直接连接失败，提供RDP文件下载
+        ElMessageBox.confirm(
+          `直接RDP连接失败，是否下载RDP连接文件？\n\n连接信息：\n服务器: ${connectionInfo.executorIp}:${connectionInfo.port}\n用户名: ${connectionInfo.username}`,
+          'RDP连接',
           {
-            confirmButtonText: '确定',
-            type: 'info'
+            confirmButtonText: '下载RDP文件',
+            cancelButtonText: '取消',
+            type: 'warning'
           }
-        )
+        ).then(() => {
+          downloadRdpFile(connectionInfo)
+        }).catch(() => {
+          ElMessage.info('已取消RDP连接')
+        })
+      }
+    }
+
+    const downloadRdpFile = (connectionInfo) => {
+      try {
+        const rdpFileContent = connectionInfo.rdpFileContent
+        const blob = new Blob([rdpFileContent], { type: 'application/rdp' })
+        const url = window.URL.createObjectURL(blob)
+        
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `rdp_${connectionInfo.executorIp}_${connectionInfo.port}.rdp`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+        
+        ElMessage.success('RDP文件已下载，请双击文件进行连接')
+      } catch (error) {
+        console.error('下载RDP文件失败:', error)
+        ElMessage.error('下载RDP文件失败: ' + error.message)
       }
     }
 
@@ -2728,6 +2783,19 @@ export default {
 /* 远程登录弹窗样式 */
 .remote-login-content .el-form-item {
   margin-bottom: 20px;
+}
+
+.connection-tip {
+  margin-top: 10px;
+}
+
+.connection-tip .el-alert {
+  margin-top: 8px;
+}
+
+.connection-tip p {
+  margin: 4px 0;
+  font-size: 13px;
 }
 
 .remote-login-content .el-radio-group {
