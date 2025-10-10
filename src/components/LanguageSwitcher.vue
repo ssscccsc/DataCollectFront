@@ -1,7 +1,7 @@
 <template>
   <el-dropdown @command="handleLanguageChange" trigger="click">
     <span class="language-switcher">
-      <el-icon><Translation /></el-icon>
+      <span class="language-icon">🌐</span>
       <span>{{ currentLanguageText }}</span>
       <el-icon><ArrowDown /></el-icon>
     </span>
@@ -27,14 +27,13 @@
 </template>
 
 <script>
-import { Translation, ArrowDown } from '@element-plus/icons-vue'
+import { ArrowDown } from '@element-plus/icons-vue'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 export default {
   name: 'LanguageSwitcher',
   components: {
-    Translation,
     ArrowDown,
   },
   setup() {
@@ -81,6 +80,11 @@ export default {
 
 .language-switcher .el-icon {
   margin: 0 4px;
+}
+
+.language-icon {
+  font-size: 16px;
+  margin-right: 4px;
 }
 
 :deep(.el-dropdown-menu__item.is-active) {
