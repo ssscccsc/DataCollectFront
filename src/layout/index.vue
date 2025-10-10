@@ -2,7 +2,7 @@
   <el-container class="layout-container">
     <el-aside width="200px" class="sidebar">
       <div class="logo">
-        <h2>数据采集管理系统</h2>
+        <h2>{{ $t('system.title') }}</h2>
       </div>
       <el-menu
         :default-active="$route.path"
@@ -14,52 +14,52 @@
       >
         <el-menu-item index="/dashboard">
           <el-icon><Odometer /></el-icon>
-          <span>仪表盘</span>
+          <span>{{ $t('menu.dashboard') }}</span>
         </el-menu-item>
         
         <el-sub-menu index="data-collect">
           <template #title>
             <el-icon><DataAnalysis /></el-icon>
-            <span>数据采集</span>
+            <span>{{ $t('menu.dataCollect') }}</span>
           </template>
           <el-menu-item index="/collect-task/index">
             <el-icon><List /></el-icon>
-            <span>采集任务管理</span>
+            <span>{{ $t('menu.collectTask') }}</span>
           </el-menu-item>
           <el-menu-item index="/collect-strategy/index">
             <el-icon><Operation /></el-icon>
-            <span>采集策略管理</span>
+            <span>{{ $t('menu.collectStrategy') }}</span>
           </el-menu-item>
         </el-sub-menu>
         
         <el-sub-menu index="settings">
           <template #title>
             <el-icon><Setting /></el-icon>
-            <span>设置</span>
+            <span>{{ $t('menu.settings') }}</span>
           </template>
           <el-menu-item index="/test-case-set/index">
             <el-icon><Document /></el-icon>
-            <span>用例集管理</span>
+            <span>{{ $t('menu.testCaseSet') }}</span>
           </el-menu-item>
           <el-menu-item index="/logic-environment/index">
             <el-icon><Setting /></el-icon>
-            <span>逻辑环境管理</span>
+            <span>{{ $t('menu.logicEnvironment') }}</span>
           </el-menu-item>
           <el-menu-item index="/executor/index">
             <el-icon><Monitor /></el-icon>
-            <span>执行机管理</span>
+            <span>{{ $t('menu.executor') }}</span>
           </el-menu-item>
           <el-menu-item index="/ue/index">
             <el-icon><Iphone /></el-icon>
-            <span>UE管理</span>
+            <span>{{ $t('menu.ue') }}</span>
           </el-menu-item>
           <el-menu-item index="/region/index">
             <el-icon><Location /></el-icon>
-            <span>地域管理</span>
+            <span>{{ $t('menu.region') }}</span>
           </el-menu-item>
           <el-menu-item index="/network-type/index">
             <el-icon><Connection /></el-icon>
-            <span>网络类型管理</span>
+            <span>{{ $t('menu.networkType') }}</span>
           </el-menu-item>
         </el-sub-menu>
       </el-menu>
@@ -71,14 +71,15 @@
           <h3>{{ currentPageTitle }}</h3>
         </div>
         <div class="header-right">
+          <LanguageSwitcher />
           <el-dropdown>
             <span class="user-info">
-              管理员 <el-icon><ArrowDown /></el-icon>
+              {{ $t('system.admin') }} <el-icon><ArrowDown /></el-icon>
             </span>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item>个人信息</el-dropdown-item>
-                <el-dropdown-item>退出登录</el-dropdown-item>
+                <el-dropdown-item>{{ $t('system.personalInfo') }}</el-dropdown-item>
+                <el-dropdown-item>{{ $t('system.logout') }}</el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
@@ -96,25 +97,31 @@
 import { Iphone } from '@element-plus/icons-vue'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 
 export default {
   name: 'Layout',
+  components: {
+    LanguageSwitcher,
+  },
   setup() {
     const route = useRoute()
+    const { t } = useI18n()
     
     const currentPageTitle = computed(() => {
       const routeMap = {
-        '/dashboard': '仪表盘',
-        '/collect-task/index': '采集任务管理',
-        '/collect-strategy/index': '采集策略管理',
-        '/test-case-set/index': '用例集管理',
-        '/logic-environment/index': '逻辑环境管理',
-        '/executor/index': '执行机管理',
-        '/ue/index': 'UE管理',
-        '/region/index': '地域管理',
-        '/network-type/index': '网络类型管理',
+        '/dashboard': t('pageTitle.dashboard'),
+        '/collect-task/index': t('pageTitle.collectTask'),
+        '/collect-strategy/index': t('pageTitle.collectStrategy'),
+        '/test-case-set/index': t('pageTitle.testCaseSet'),
+        '/logic-environment/index': t('pageTitle.logicEnvironment'),
+        '/executor/index': t('pageTitle.executor'),
+        '/ue/index': t('pageTitle.ue'),
+        '/region/index': t('pageTitle.region'),
+        '/network-type/index': t('pageTitle.networkType'),
       }
-      return routeMap[route.path] || '数据采集管理系统'
+      return routeMap[route.path] || t('system.title')
     })
 
     return {
@@ -159,6 +166,12 @@ export default {
   align-items: center;
   justify-content: space-between;
   padding: 0 20px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
 .header-left h3 {

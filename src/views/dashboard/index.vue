@@ -1,8 +1,8 @@
 <template>
   <div class="dashboard">
     <div class="page-header">
-      <h2 class="page-title">仪表盘</h2>
-      <p class="page-description">数据采集任务配置管理系统概览</p>
+      <h2 class="page-title">{{ $t('pageTitle.dashboard') }}</h2>
+      <p class="page-description">{{ $t('dashboard.description') }}</p>
     </div>
 
     <el-row :gutter="20">
@@ -14,7 +14,7 @@
             </div>
             <div class="stat-info">
               <div class="stat-number">{{ stats.regionCount }}</div>
-              <div class="stat-label">地域数量</div>
+              <div class="stat-label">{{ $t('dashboard.regionCount') }}</div>
             </div>
           </div>
         </el-card>
@@ -28,7 +28,7 @@
             </div>
             <div class="stat-info">
               <div class="stat-number">{{ stats.executorCount }}</div>
-              <div class="stat-label">执行机数量</div>
+              <div class="stat-label">{{ $t('dashboard.executorCount') }}</div>
             </div>
           </div>
         </el-card>
@@ -42,7 +42,7 @@
             </div>
             <div class="stat-info">
               <div class="stat-number">{{ stats.ueCount }}</div>
-              <div class="stat-label">UE数量</div>
+              <div class="stat-label">{{ $t('dashboard.ueCount') }}</div>
             </div>
           </div>
         </el-card>
@@ -56,7 +56,7 @@
             </div>
             <div class="stat-info">
               <div class="stat-number">{{ stats.taskCount }}</div>
-              <div class="stat-label">任务数量</div>
+              <div class="stat-label">{{ $t('dashboard.taskCount') }}</div>
             </div>
           </div>
         </el-card>
@@ -67,18 +67,18 @@
       <el-col :span="12">
         <el-card>
           <template #header>
-            <span>最近任务</span>
+            <span>{{ $t('dashboard.recentTasks') }}</span>
           </template>
           <el-table :data="recentTasks" style="width: 100%">
-            <el-table-column prop="name" label="任务名称" />
-            <el-table-column prop="status" label="状态">
+            <el-table-column prop="name" :label="$t('dashboard.taskName')" />
+            <el-table-column prop="status" :label="$t('dashboard.status')">
               <template #default="scope">
                 <el-tag :type="getStatusType(scope.row.status)">
                   {{ getStatusText(scope.row.status) }}
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="createTime" label="创建时间" />
+            <el-table-column prop="createTime" :label="$t('dashboard.createTime')" />
           </el-table>
         </el-card>
       </el-col>
@@ -86,27 +86,27 @@
       <el-col :span="12">
         <el-card>
           <template #header>
-            <span>系统信息</span>
+            <span>{{ $t('dashboard.systemInfo') }}</span>
           </template>
           <div class="system-info">
             <div class="info-item">
-              <span class="label">系统版本：</span>
+              <span class="label">{{ $t('dashboard.systemVersion') }}：</span>
               <span class="value">v1.0.0</span>
             </div>
             <div class="info-item">
-              <span class="label">运行时间：</span>
+              <span class="label">{{ $t('dashboard.uptime') }}：</span>
               <span class="value">{{ uptime }}</span>
             </div>
             <div class="info-item">
-              <span class="label">数据库状态：</span>
+              <span class="label">{{ $t('dashboard.dbStatus') }}：</span>
               <span class="value">
-                <el-tag type="success">正常</el-tag>
+                <el-tag type="success">{{ $t('dashboard.normal') }}</el-tag>
               </span>
             </div>
             <div class="info-item">
-              <span class="label">API状态：</span>
+              <span class="label">{{ $t('dashboard.apiStatus') }}：</span>
               <span class="value">
-                <el-tag type="success">正常</el-tag>
+                <el-tag type="success">{{ $t('dashboard.normal') }}</el-tag>
               </span>
             </div>
           </div>
@@ -118,10 +118,13 @@
 
 <script>
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 export default {
   name: 'Dashboard',
   setup() {
+    const { t } = useI18n()
+    
     const stats = ref({
       regionCount: 0,
       executorCount: 0,
@@ -143,11 +146,11 @@ export default {
 
     const getStatusText = (status) => {
       const statusMap = {
-        0: '停止',
-        1: '运行中',
-        2: '暂停',
+        0: t('dashboard.statusStopped'),
+        1: t('dashboard.statusRunning'),
+        2: t('dashboard.statusPaused'),
       }
-      return statusMap[status] || '阻塞'
+      return statusMap[status] || t('dashboard.statusBlocked')
     }
 
     const loadStats = () => {
