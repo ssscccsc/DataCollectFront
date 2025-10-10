@@ -1,35 +1,35 @@
 <template>
   <div class="collect-strategy-page">
     <div class="page-header">
-      <h2 class="page-title">采集策略管理</h2>
-      <p class="page-description">管理采集策略，包括策略名称、采集次数、逻辑环境等</p>
+      <h2 class="page-title">{{ $t('pageTitle.collectStrategy') }}</h2>
+      <p class="page-description">{{ $t('collectStrategy.description') }}</p>
     </div>
 
     <el-card>
       <div class="table-operations">
         <el-button type="primary" @click="handleAdd">
           <el-icon><Plus /></el-icon>
-          新增策略
+          {{ $t('collectStrategy.addStrategy') }}
         </el-button>
         <el-button @click="loadData">
           <el-icon><Refresh /></el-icon>
-          刷新
+          {{ $t('collectStrategy.refresh') }}
         </el-button>
       </div>
 
       <el-table :data="tableData" v-loading="loading" style="width: 100%">
-        <el-table-column prop="id" label="策略ID" width="80" />
-        <el-table-column prop="name" label="策略名称" min-width="150" />
-        <el-table-column label="采集意图" width="120">
+        <el-table-column prop="id" :label="$t('collectStrategy.strategyId')" width="80" />
+        <el-table-column prop="name" :label="$t('collectStrategy.strategyName')" min-width="150" />
+        <el-table-column :label="$t('collectStrategy.collectIntent')" width="120">
           <template #default="scope">
             <el-tag v-if="scope.row.intentName" size="small" type="warning">
               {{ scope.row.intentName }}
             </el-tag>
-            <span v-else style="color: #909399;">未配置</span>
+            <span v-else style="color: #909399;">{{ $t('collectStrategy.notConfigured') }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="collectCount" label="采集次数" width="100" />
-        <el-table-column label="用例集" min-width="300">
+        <el-table-column prop="collectCount" :label="$t('collectStrategy.collectCount')" width="100" />
+        <el-table-column :label="$t('collectStrategy.testCaseSet')" min-width="300">
           <template #default="scope">
             <div v-if="scope.row.testCaseSetName">
               <div class="test-case-set-info">
@@ -37,18 +37,18 @@
                   <strong>{{ scope.row.testCaseSetName }} ({{ scope.row.testCaseSetVersion }})</strong>
                 </div>
                 <div class="set-description" v-if="scope.row.testCaseSetDescription">
-                  <span class="label">描述：</span>
+                  <span class="label">{{ $t('collectStrategy.testCaseSetDescription') }}：</span>
                   <span>{{ scope.row.testCaseSetDescription }}</span>
                 </div>
                 <div class="test-case-info" v-if="scope.row.testCaseList && scope.row.testCaseList.length > 0">
-                  <span class="label">测试用例：</span>
+                  <span class="label">{{ $t('collectStrategy.testCases') }}：</span>
                   <span v-for="(testCase, index) in scope.row.testCaseList" :key="testCase.id">
                     {{ testCase.name }}({{ testCase.number }})
                     <span v-if="index < scope.row.testCaseList.length - 1">, </span>
                   </span>
                 </div>
                 <div class="file-info" v-if="scope.row.testCaseSetGohttpserverUrl">
-                  <span class="label">文件：</span>
+                  <span class="label">{{ $t('collectStrategy.file') }}：</span>
                   <el-link 
                     type="primary" 
                     :href="scope.row.testCaseSetGohttpserverUrl" 
@@ -56,28 +56,28 @@
                     :underline="false"
                   >
                     <el-icon><Link /></el-icon>
-                    查看文件
+                    {{ $t('collectStrategy.viewFile') }}
                   </el-link>
                 </div>
               </div>
             </div>
-            <span v-else style="color: #909399;">未配置</span>
+            <span v-else style="color: #909399;">{{ $t('collectStrategy.notConfigured') }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="筛选条件" min-width="200">
+        <el-table-column :label="$t('collectStrategy.filterConditions')" min-width="200">
           <template #default="scope">
             <div v-if="scope.row.businessCategory || scope.row.app">
               <div v-if="scope.row.businessCategory" class="filter-tag">
-                <el-tag size="small" type="info">业务大类: {{ scope.row.businessCategory }}</el-tag>
+                <el-tag size="small" type="info">{{ $t('collectStrategy.businessCategory') }}: {{ scope.row.businessCategory }}</el-tag>
               </div>
               <div v-if="scope.row.app" class="filter-tag">
-                <el-tag size="small" type="success">App: {{ scope.row.app }}</el-tag>
+                <el-tag size="small" type="success">{{ $t('collectStrategy.app') }}: {{ scope.row.app }}</el-tag>
               </div>
             </div>
-            <span v-else style="color: #909399;">无筛选</span>
+            <span v-else style="color: #909399;">{{ $t('collectStrategy.noFilter') }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="自定义参数" min-width="200">
+        <el-table-column :label="$t('collectStrategy.customParams')" min-width="200">
           <template #default="scope">
             <div v-if="scope.row.customParamList && scope.row.customParamList.length > 0">
               <div v-for="param in scope.row.customParamList" :key="param.key" class="param-tag">
@@ -86,22 +86,22 @@
                 </el-tag>
               </div>
             </div>
-            <span v-else style="color: #909399;">无参数</span>
+            <span v-else style="color: #909399;">{{ $t('collectStrategy.noParams') }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="description" label="描述" />
-        <el-table-column prop="status" label="状态">
+        <el-table-column prop="description" :label="$t('collectStrategy.description')" />
+        <el-table-column prop="status" :label="$t('collectStrategy.status')">
           <template #default="scope">
             <el-tag :type="scope.row.status === 1 ? 'success' : 'danger'">
-              {{ scope.row.status === 1 ? '启用' : '禁用' }}
+              {{ scope.row.status === 1 ? $t('collectStrategy.enabled') : $t('collectStrategy.disabled') }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="createTime" label="创建时间" />
-        <el-table-column label="操作" width="200">
+        <el-table-column prop="createTime" :label="$t('collectStrategy.createTime')" />
+        <el-table-column :label="$t('collectStrategy.operations')" width="200">
           <template #default="scope">
-            <el-button size="small" @click="handleEdit(scope.row)">编辑</el-button>
-            <el-button size="small" type="danger" @click="handleDelete(scope.row)">删除</el-button>
+            <el-button size="small" @click="handleEdit(scope.row)">{{ $t('collectStrategy.edit') }}</el-button>
+            <el-button size="small" type="danger" @click="handleDelete(scope.row)">{{ $t('collectStrategy.delete') }}</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -132,13 +132,13 @@
         :rules="rules"
         label-width="120px"
       >
-        <el-form-item label="策略名称" prop="name">
-          <el-input v-model="form.name" placeholder="请输入策略名称" />
+        <el-form-item :label="$t('collectStrategy.strategyNameLabel')" prop="name">
+          <el-input v-model="form.name" :placeholder="$t('collectStrategy.strategyNamePlaceholder')" />
         </el-form-item>
-        <el-form-item label="采集意图" prop="intent">
+        <el-form-item :label="$t('collectStrategy.collectIntentLabel')" prop="intent">
           <el-select 
             v-model="form.intent" 
-            placeholder="请选择采集意图" 
+            :placeholder="$t('collectStrategy.collectIntentPlaceholder')" 
             style="width: 100%"
           >
             <el-option
@@ -151,22 +151,22 @@
         </el-form-item>
         
         <!-- 自定义参数列表 -->
-        <el-form-item label="自定义参数">
+        <el-form-item :label="$t('collectStrategy.customParamsLabel')">
           <div class="custom-params-container">
             <div class="custom-params-header">
-              <span class="params-title">参数列表</span>
+              <span class="params-title">{{ $t('collectStrategy.paramList') }}</span>
               <el-button 
                 type="primary" 
                 size="small" 
                 @click="addCustomParam"
                 :icon="Plus"
               >
-                添加参数
+                {{ $t('collectStrategy.addParam') }}
               </el-button>
             </div>
             
             <div v-if="form.customParams.length === 0" class="empty-params">
-              <el-empty description="暂无自定义参数" :image-size="60" />
+              <el-empty :description="$t('collectStrategy.noCustomParams')" :image-size="60" />
             </div>
             
             <div v-else class="custom-params-list">
@@ -182,7 +182,7 @@
                 >
                   <el-input 
                     v-model="param.key" 
-                    placeholder="参数键" 
+                    :placeholder="$t('collectStrategy.paramKey')" 
                     style="width: 200px;"
                   />
                 </el-form-item>
@@ -193,7 +193,7 @@
                 >
                   <el-input 
                     v-model="param.value" 
-                    placeholder="参数值" 
+                    :placeholder="$t('collectStrategy.paramValue')" 
                     style="width: 200px;"
                   />
                 </el-form-item>
@@ -203,23 +203,23 @@
                   @click="removeCustomParam(index)"
                   :icon="Delete"
                 >
-                  删除
+                  {{ $t('collectStrategy.delete') }}
                 </el-button>
               </div>
             </div>
           </div>
         </el-form-item>
-        <el-form-item label="采集次数" prop="collectCount">
+        <el-form-item :label="$t('collectStrategy.collectCountLabel')" prop="collectCount">
           <el-input-number
             v-model="form.collectCount"
             :min="1"
             :max="1000"
-            placeholder="请输入采集次数"
+            :placeholder="$t('collectStrategy.collectCountPlaceholder')"
             style="width: 100%"
           />
         </el-form-item>
-        <el-form-item label="用例集" prop="testCaseSetId">
-          <el-select v-model="form.testCaseSetId" placeholder="请选择用例集" style="width: 100%" @change="handleTestCaseSetChange">
+        <el-form-item :label="$t('collectStrategy.testCaseSetLabel')" prop="testCaseSetId">
+          <el-select v-model="form.testCaseSetId" :placeholder="$t('collectStrategy.testCaseSetPlaceholder')" style="width: 100%" @change="handleTestCaseSetChange">
             <el-option
               v-for="item in testCaseSetOptions"
               :key="item.id"
@@ -230,10 +230,10 @@
         </el-form-item>
         
         <!-- 筛选条件配置 -->
-        <el-form-item label="业务大类筛选" v-if="selectedTestCaseSet">
+        <el-form-item :label="$t('collectStrategy.businessCategoryFilter')" v-if="selectedTestCaseSet">
           <el-select 
             v-model="form.businessCategory" 
-            placeholder="选择业务大类（可选）" 
+            :placeholder="$t('collectStrategy.businessCategoryPlaceholder')" 
             clearable 
             style="width: 100%"
           >
@@ -246,10 +246,10 @@
           </el-select>
         </el-form-item>
         
-        <el-form-item label="App筛选" v-if="selectedTestCaseSet">
+        <el-form-item :label="$t('collectStrategy.appFilter')" v-if="selectedTestCaseSet">
           <el-select 
             v-model="form.app" 
-            placeholder="选择App（可选）" 
+            :placeholder="$t('collectStrategy.appPlaceholder')" 
             clearable 
             style="width: 100%"
           >
@@ -263,36 +263,36 @@
         </el-form-item>
         
         <!-- 用例列表显示 -->
-        <el-form-item label="包含用例" v-if="selectedTestCaseSet">
+        <el-form-item :label="$t('collectStrategy.includedTestCases')" v-if="selectedTestCaseSet">
           <div class="test-case-list-container">
             <div class="test-case-summary">
-              <span class="summary-text">共 {{ filteredTestCaseList.length }} 个测试用例</span>
+              <span class="summary-text">{{ $t('collectStrategy.totalTestCases', { count: filteredTestCaseList.length }) }}</span>
               <el-button 
                 type="text" 
                 size="small" 
                 @click="showTestCaseList = !showTestCaseList"
               >
-                {{ showTestCaseList ? '收起' : '展开' }}
+                {{ showTestCaseList ? $t('collectStrategy.collapse') : $t('collectStrategy.expand') }}
               </el-button>
             </div>
             
             <div v-if="showTestCaseList" class="test-case-table">
               <el-table :data="filteredTestCaseList" size="small" max-height="300">
-                <el-table-column prop="name" label="用例名称" min-width="150" />
-                <el-table-column prop="number" label="用例编号" width="100" />
-                <el-table-column prop="businessCategory" label="业务大类" width="120">
+                <el-table-column prop="name" :label="$t('collectStrategy.testCaseName')" min-width="150" />
+                <el-table-column prop="number" :label="$t('collectStrategy.testCaseNumber')" width="100" />
+                <el-table-column prop="businessCategory" :label="$t('collectStrategy.businessCategory')" width="120">
                   <template #default="scope">
                     <span v-if="scope.row.businessCategory">{{ scope.row.businessCategory }}</span>
-                    <span v-else style="color: #909399;">未配置</span>
+                    <span v-else style="color: #909399;">{{ $t('collectStrategy.notConfigured') }}</span>
                   </template>
                 </el-table-column>
-                <el-table-column prop="app" label="App" width="100">
+                <el-table-column prop="app" :label="$t('collectStrategy.app')" width="100">
                   <template #default="scope">
                     <span v-if="scope.row.app">{{ scope.row.app }}</span>
-                    <span v-else style="color: #909399;">未配置</span>
+                    <span v-else style="color: #909399;">{{ $t('collectStrategy.notConfigured') }}</span>
                   </template>
                 </el-table-column>
-                <el-table-column prop="logicNetwork" label="逻辑组网" min-width="150">
+                <el-table-column prop="logicNetwork" :label="$t('collectStrategy.logicNetwork')" min-width="150">
                   <template #default="scope">
                     <div v-if="scope.row.logicNetwork">
                       <el-tag 
@@ -304,32 +304,32 @@
                         {{ network }}
                       </el-tag>
                     </div>
-                    <span v-else style="color: #909399;">未配置</span>
+                    <span v-else style="color: #909399;">{{ $t('collectStrategy.notConfigured') }}</span>
                   </template>
                 </el-table-column>
               </el-table>
             </div>
           </div>
         </el-form-item>
-        <el-form-item label="描述" prop="description">
+        <el-form-item :label="$t('collectStrategy.descriptionLabel')" prop="description">
           <el-input
             v-model="form.description"
             type="textarea"
             :rows="3"
-            placeholder="请输入描述"
+            :placeholder="$t('collectStrategy.descriptionPlaceholder')"
           />
         </el-form-item>
-        <el-form-item label="状态" prop="status">
+        <el-form-item :label="$t('collectStrategy.statusLabel')" prop="status">
           <el-radio-group v-model="form.status">
-            <el-radio :label="1">启用</el-radio>
-            <el-radio :label="0">禁用</el-radio>
+            <el-radio :label="1">{{ $t('collectStrategy.enabled') }}</el-radio>
+            <el-radio :label="0">{{ $t('collectStrategy.disabled') }}</el-radio>
           </el-radio-group>
         </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="handleSubmit">确定</el-button>
+          <el-button @click="dialogVisible = false">{{ $t('common.cancel') }}</el-button>
+          <el-button type="primary" @click="handleSubmit">{{ $t('common.confirm') }}</el-button>
         </span>
       </template>
     </el-dialog>
@@ -340,11 +340,13 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Link, Plus, Delete } from '@element-plus/icons-vue'
+import { useI18n } from 'vue-i18n'
 import request from '@/utils/request'
 
 export default {
   name: 'CollectStrategy',
   setup() {
+    const { t } = useI18n()
     const loading = ref(false)
     const tableData = ref([])
     const dialogVisible = ref(false)
@@ -359,10 +361,10 @@ export default {
     const intentOptions = ref([])
     const customParamRules = reactive({
       key: [
-        { required: true, message: '请输入参数键', trigger: 'blur' }
+        { required: true, message: t('collectStrategy.paramKeyRequired'), trigger: 'blur' }
       ],
       value: [
-        { required: true, message: '请输入参数值', trigger: 'blur' }
+        { required: true, message: t('collectStrategy.paramValueRequired'), trigger: 'blur' }
       ]
     })
 
@@ -387,16 +389,16 @@ export default {
 
     const rules = {
       name: [
-        { required: true, message: '请输入策略名称', trigger: 'blur' },
+        { required: true, message: t('collectStrategy.strategyNameRequired'), trigger: 'blur' },
       ],
       collectCount: [
-        { required: true, message: '请输入采集次数', trigger: 'blur' },
+        { required: true, message: t('collectStrategy.collectCountRequired'), trigger: 'blur' },
       ],
       testCaseSetId: [
-        { required: true, message: '请选择用例集', trigger: 'change' },
+        { required: true, message: t('collectStrategy.testCaseSetRequired'), trigger: 'change' },
       ],
       intent: [
-        { required: true, message: '请选择采集意图', trigger: 'change' },
+        { required: true, message: t('collectStrategy.collectIntentRequired'), trigger: 'change' },
       ],
     }
 
@@ -532,13 +534,13 @@ export default {
 
 
     const handleAdd = () => {
-      dialogTitle.value = '新增策略'
+      dialogTitle.value = t('collectStrategy.addStrategy')
       dialogVisible.value = true
       resetForm()
     }
 
     const handleEdit = (row) => {
-      dialogTitle.value = '编辑策略'
+      dialogTitle.value = t('collectStrategy.editStrategy')
       // 只复制必要的字段，避免传递额外字段
       Object.assign(form, {
         id: row.id,
@@ -562,9 +564,9 @@ export default {
 
     const handleDelete = async (row) => {
       try {
-        await ElMessageBox.confirm('确定要删除这个策略吗？', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
+        await ElMessageBox.confirm(t('collectStrategy.deleteConfirm'), t('common.info'), {
+          confirmButtonText: t('common.confirm'),
+          cancelButtonText: t('common.cancel'),
           type: 'warning',
         })
         
@@ -572,11 +574,11 @@ export default {
           url: `/collect-strategy/${row.id}`,
           method: 'delete',
         })
-        ElMessage.success('删除成功')
+        ElMessage.success(t('collectStrategy.deleteSuccess'))
         loadData()
       } catch (error) {
         if (error !== 'cancel') {
-          ElMessage.error('删除失败')
+          ElMessage.error(t('collectStrategy.deleteFailed'))
         }
       }
     }
@@ -604,20 +606,20 @@ export default {
             method: 'put',
             data: submitData,
           })
-          ElMessage.success('更新成功')
+          ElMessage.success(t('collectStrategy.updateSuccess'))
         } else {
           await request({
             url: '/collect-strategy',
             method: 'post',
             data: submitData,
           })
-          ElMessage.success('创建成功')
+          ElMessage.success(t('collectStrategy.createSuccess'))
         }
         
         dialogVisible.value = false
         loadData()
       } catch (error) {
-        console.error('提交失败:', error)
+        console.error(t('collectStrategy.submitFailed'), error)
       }
     }
 

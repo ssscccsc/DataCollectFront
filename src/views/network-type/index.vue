@@ -1,37 +1,37 @@
 <template>
   <div class="network-type-page">
     <div class="page-header">
-      <h2 class="page-title">网络类型管理</h2>
-      <p class="page-description">管理网络类型：normal、弱网、拥塞、弱网+拥塞</p>
+      <h2 class="page-title">{{ $t('pageTitle.networkType') }}</h2>
+      <p class="page-description">{{ $t('networkType.description') }}</p>
     </div>
 
     <el-card>
       <div class="table-operations">
         <el-button type="primary" @click="handleAdd">
           <el-icon><Plus /></el-icon>
-          新增网络类型
+          {{ $t('networkType.addNetworkType') }}
         </el-button>
         <el-button @click="loadData">
           <el-icon><Refresh /></el-icon>
-          刷新
+          {{ $t('networkType.refresh') }}
         </el-button>
       </div>
 
       <el-table :data="tableData" v-loading="loading" style="width: 100%">
-        <el-table-column prop="name" label="网络类型名称" />
-        <el-table-column prop="description" label="描述" />
-        <el-table-column prop="status" label="状态">
+        <el-table-column prop="name" :label="$t('networkType.networkTypeName')" />
+        <el-table-column prop="description" :label="$t('networkType.description')" />
+        <el-table-column prop="status" :label="$t('networkType.status')">
           <template #default="scope">
             <el-tag :type="scope.row.status === 1 ? 'success' : 'danger'">
-              {{ scope.row.status === 1 ? '启用' : '禁用' }}
+              {{ scope.row.status === 1 ? $t('networkType.enabled') : $t('networkType.disabled') }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="createTime" label="创建时间" />
-        <el-table-column label="操作" width="200">
+        <el-table-column prop="createTime" :label="$t('networkType.createTime')" />
+        <el-table-column :label="$t('networkType.operations')" width="200">
           <template #default="scope">
-            <el-button size="small" @click="handleEdit(scope.row)">编辑</el-button>
-            <el-button size="small" type="danger" @click="handleDelete(scope.row)">删除</el-button>
+            <el-button size="small" @click="handleEdit(scope.row)">{{ $t('networkType.edit') }}</el-button>
+            <el-button size="small" type="danger" @click="handleDelete(scope.row)">{{ $t('networkType.delete') }}</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -62,28 +62,28 @@
         :rules="rules"
         label-width="120px"
       >
-        <el-form-item label="网络类型名称" prop="name">
-          <el-input v-model="form.name" placeholder="请输入网络类型名称" />
+        <el-form-item :label="$t('networkType.networkTypeNameLabel')" prop="name">
+          <el-input v-model="form.name" :placeholder="$t('networkType.networkTypeNamePlaceholder')" />
         </el-form-item>
-        <el-form-item label="描述" prop="description">
+        <el-form-item :label="$t('networkType.descriptionLabel')" prop="description">
           <el-input
             v-model="form.description"
             type="textarea"
             :rows="3"
-            placeholder="请输入描述"
+            :placeholder="$t('networkType.descriptionPlaceholder')"
           />
         </el-form-item>
-        <el-form-item label="状态" prop="status">
+        <el-form-item :label="$t('networkType.statusLabel')" prop="status">
           <el-radio-group v-model="form.status">
-            <el-radio :label="1">启用</el-radio>
-            <el-radio :label="0">禁用</el-radio>
+            <el-radio :label="1">{{ $t('networkType.enabled') }}</el-radio>
+            <el-radio :label="0">{{ $t('networkType.disabled') }}</el-radio>
           </el-radio-group>
         </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="handleSubmit">确定</el-button>
+          <el-button @click="dialogVisible = false">{{ $t('common.cancel') }}</el-button>
+          <el-button type="primary" @click="handleSubmit">{{ $t('common.confirm') }}</el-button>
         </span>
       </template>
     </el-dialog>
@@ -93,11 +93,13 @@
 <script>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useI18n } from 'vue-i18n'
 import request from '@/utils/request'
 
 export default {
   name: 'NetworkType',
   setup() {
+    const { t } = useI18n()
     const loading = ref(false)
     const tableData = ref([])
     const dialogVisible = ref(false)
@@ -119,7 +121,7 @@ export default {
 
     const rules = {
       name: [
-        { required: true, message: '请输入网络类型名称', trigger: 'blur' },
+        { required: true, message: t('networkType.networkTypeNameRequired'), trigger: 'blur' },
       ],
     }
 
@@ -138,29 +140,29 @@ export default {
         tableData.value = res.data.records
         pagination.total = res.data.total
       } catch (error) {
-        console.error('加载数据失败:', error)
+        console.error(t('networkType.loadDataFailed'), error)
       } finally {
         loading.value = false
       }
     }
 
     const handleAdd = () => {
-      dialogTitle.value = '新增网络类型'
+      dialogTitle.value = t('networkType.addNetworkType')
       dialogVisible.value = true
       resetForm()
     }
 
     const handleEdit = (row) => {
-      dialogTitle.value = '编辑网络类型'
+      dialogTitle.value = t('networkType.editNetworkType')
       Object.assign(form, row)
       dialogVisible.value = true
     }
 
     const handleDelete = async (row) => {
       try {
-        await ElMessageBox.confirm('确定要删除这个网络类型吗？', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
+        await ElMessageBox.confirm(t('networkType.deleteConfirm'), t('common.info'), {
+          confirmButtonText: t('common.confirm'),
+          cancelButtonText: t('common.cancel'),
           type: 'warning',
         })
         
@@ -168,11 +170,11 @@ export default {
           url: `/network-type/${row.id}`,
           method: 'delete',
         })
-        ElMessage.success('删除成功')
+        ElMessage.success(t('networkType.deleteSuccess'))
         loadData()
       } catch (error) {
         if (error !== 'cancel') {
-          ElMessage.error('删除失败')
+          ElMessage.error(t('networkType.deleteFailed'))
         }
       }
     }
@@ -187,20 +189,20 @@ export default {
             method: 'put',
             data: form,
           })
-          ElMessage.success('更新成功')
+          ElMessage.success(t('networkType.updateSuccess'))
         } else {
           await request({
             url: '/network-type',
             method: 'post',
             data: form,
           })
-          ElMessage.success('创建成功')
+          ElMessage.success(t('networkType.createSuccess'))
         }
         
         dialogVisible.value = false
         loadData()
       } catch (error) {
-        console.error('提交失败:', error)
+        console.error(t('networkType.submitFailed'), error)
       }
     }
 

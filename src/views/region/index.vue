@@ -1,41 +1,41 @@
 <template>
   <div class="region-page">
     <div class="page-header">
-      <h2 class="page-title">地域管理</h2>
-      <p class="page-description">管理片区、国家、省份、城市等地域信息</p>
+      <h2 class="page-title">{{ $t('pageTitle.region') }}</h2>
+      <p class="page-description">{{ $t('region.description') }}</p>
     </div>
 
     <el-card>
       <div class="table-operations">
         <el-button type="primary" @click="handleBatchAdd">
           <el-icon><Plus /></el-icon>
-          批量录入地域
+          {{ $t('region.batchAddRegion') }}
         </el-button>
         <el-button @click="loadData">
           <el-icon><Refresh /></el-icon>
-          刷新
+          {{ $t('region.refresh') }}
         </el-button>
       </div>
 
       <el-table :data="tableData" v-loading="loading" style="width: 100%">
-        <el-table-column prop="regionName" label="地域" width="120" />
-        <el-table-column prop="countryName" label="国家" width="150" />
-        <el-table-column prop="provinceName" label="省份" width="120" />
-        <el-table-column prop="cityName" label="城市" width="120" />
-        <el-table-column prop="status" label="状态" width="100">
+        <el-table-column prop="regionName" :label="$t('region.region')" width="120" />
+        <el-table-column prop="countryName" :label="$t('region.country')" width="150" />
+        <el-table-column prop="provinceName" :label="$t('region.province')" width="120" />
+        <el-table-column prop="cityName" :label="$t('region.city')" width="120" />
+        <el-table-column prop="status" :label="$t('region.status')" width="100">
           <template #default="scope">
             <el-tag :type="scope.row.status === 1 ? 'success' : 'danger'">
-              {{ scope.row.status === 1 ? '启用' : '禁用' }}
+              {{ scope.row.status === 1 ? $t('region.enabled') : $t('region.disabled') }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="200" fixed="right">
+        <el-table-column :label="$t('region.operations')" width="200" fixed="right">
           <template #default="scope">
             <el-button type="primary" size="small" @click="handleEdit(scope.row)">
-              编辑
+              {{ $t('region.edit') }}
             </el-button>
             <el-button type="danger" size="small" @click="handleDelete(scope.row)">
-              删除
+              {{ $t('region.delete') }}
             </el-button>
           </template>
         </el-table-column>
@@ -68,19 +68,19 @@
         :rules="rules"
         label-width="100px"
       >
-        <el-form-item label="地域名称" prop="name">
-          <el-input v-model="form.name" placeholder="请输入地域名称" />
+        <el-form-item :label="$t('region.regionNameLabel')" prop="name">
+          <el-input v-model="form.name" :placeholder="$t('region.regionNamePlaceholder')" />
         </el-form-item>
-        <el-form-item label="层级" prop="level">
-          <el-select v-model="form.level" placeholder="请选择层级" style="width: 100%">
-            <el-option label="片区" :value="1" />
-            <el-option label="国家" :value="2" />
-            <el-option label="省份" :value="3" />
-            <el-option label="城市" :value="4" />
+        <el-form-item :label="$t('region.levelLabel')" prop="level">
+          <el-select v-model="form.level" :placeholder="$t('region.levelPlaceholder')" style="width: 100%">
+            <el-option :label="$t('region.regionLevel')" :value="1" />
+            <el-option :label="$t('region.countryLevel')" :value="2" />
+            <el-option :label="$t('region.provinceLevel')" :value="3" />
+            <el-option :label="$t('region.cityLevel')" :value="4" />
           </el-select>
         </el-form-item>
-        <el-form-item label="上级地域" prop="parentId" v-if="form.level > 1">
-          <el-select v-model="form.parentId" placeholder="请选择上级地域" style="width: 100%">
+        <el-form-item :label="$t('region.parentRegionLabel')" prop="parentId" v-if="form.level > 1">
+          <el-select v-model="form.parentId" :placeholder="$t('region.parentRegionPlaceholder')" style="width: 100%">
             <el-option
               v-for="item in parentOptions"
               :key="item.id"
@@ -89,25 +89,25 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="描述" prop="description">
+        <el-form-item :label="$t('region.descriptionLabel')" prop="description">
           <el-input
             v-model="form.description"
             type="textarea"
             :rows="3"
-            placeholder="请输入描述"
+            :placeholder="$t('region.descriptionPlaceholder')"
           />
         </el-form-item>
-        <el-form-item label="状态" prop="status">
+        <el-form-item :label="$t('region.statusLabel')" prop="status">
           <el-radio-group v-model="form.status">
-            <el-radio :label="1">启用</el-radio>
-            <el-radio :label="0">禁用</el-radio>
+            <el-radio :label="1">{{ $t('region.enabled') }}</el-radio>
+            <el-radio :label="0">{{ $t('region.disabled') }}</el-radio>
           </el-radio-group>
         </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="handleSubmit">确定</el-button>
+          <el-button @click="dialogVisible = false">{{ $t('common.cancel') }}</el-button>
+          <el-button type="primary" @click="handleSubmit">{{ $t('common.confirm') }}</el-button>
         </span>
       </template>
     </el-dialog>
@@ -115,7 +115,7 @@
     <!-- 批量录入地域对话框 -->
     <el-dialog
       v-model="batchDialogVisible"
-      title="批量录入地域信息"
+      :title="$t('region.batchAddRegionInfo')"
       width="600px"
       @close="resetBatchForm"
     >
@@ -125,13 +125,13 @@
         :rules="batchRules"
         label-width="120px"
       >
-        <el-form-item label="地域名称" prop="regionName">
+        <el-form-item :label="$t('region.regionNameLabel')" prop="regionName">
           <el-select
             v-model="batchForm.regionName"
             filterable
             allow-create
             default-first-option
-            placeholder="请选择或输入地域名称（如：中国、亚太区）"
+            :placeholder="$t('region.regionNamePlaceholder')"
             style="width: 100%"
             @change="handleRegionChange"
           >
@@ -143,13 +143,13 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="国家名称" prop="countryName">
+        <el-form-item :label="$t('region.countryNameLabel')" prop="countryName">
           <el-select
             v-model="batchForm.countryName"
             filterable
             allow-create
             default-first-option
-            placeholder="请选择或输入国家名称"
+            :placeholder="$t('region.countryNamePlaceholder')"
             style="width: 100%"
             @change="handleCountryChange"
             :disabled="!batchForm.regionName"
@@ -162,13 +162,13 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="省份名称" prop="provinceName">
+        <el-form-item :label="$t('region.provinceNameLabel')" prop="provinceName">
           <el-select
             v-model="batchForm.provinceName"
             filterable
             allow-create
             default-first-option
-            placeholder="请选择或输入省份名称（可选）"
+            :placeholder="$t('region.provinceNamePlaceholder')"
             style="width: 100%"
             @change="handleProvinceChange"
             :disabled="!batchForm.countryName"
@@ -181,13 +181,13 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="城市名称" prop="cityName">
+        <el-form-item :label="$t('region.cityNameLabel')" prop="cityName">
           <el-select
             v-model="batchForm.cityName"
             filterable
             allow-create
             default-first-option
-            placeholder="请选择或输入城市名称（可选）"
+            :placeholder="$t('region.cityNamePlaceholder')"
             style="width: 100%"
             @change="handleCityChange"
             :disabled="!batchForm.provinceName"
@@ -200,17 +200,17 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="状态" prop="status">
+        <el-form-item :label="$t('region.statusLabel')" prop="status">
           <el-radio-group v-model="batchForm.status">
-            <el-radio :label="1">启用</el-radio>
-            <el-radio :label="0">禁用</el-radio>
+            <el-radio :label="1">{{ $t('region.enabled') }}</el-radio>
+            <el-radio :label="0">{{ $t('region.disabled') }}</el-radio>
           </el-radio-group>
         </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="batchDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="handleBatchSubmit">确定</el-button>
+          <el-button @click="batchDialogVisible = false">{{ $t('common.cancel') }}</el-button>
+          <el-button type="primary" @click="handleBatchSubmit">{{ $t('common.confirm') }}</el-button>
         </span>
       </template>
     </el-dialog>
@@ -220,11 +220,13 @@
 <script>
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useI18n } from 'vue-i18n'
 import request from '@/utils/request'
 
 export default {
   name: 'Region',
   setup() {
+    const { t } = useI18n()
     const loading = ref(false)
     const tableData = ref([])
     const dialogVisible = ref(false)
@@ -265,19 +267,19 @@ export default {
 
     const rules = {
       name: [
-        { required: true, message: '请输入地域名称', trigger: 'blur' },
+        { required: true, message: t('region.regionNameRequired'), trigger: 'blur' },
       ],
       level: [
-        { required: true, message: '请选择层级', trigger: 'change' },
+        { required: true, message: t('region.levelRequired'), trigger: 'change' },
       ],
     }
 
     const batchRules = {
       regionName: [
-        { required: true, message: '请选择或输入地域名称', trigger: 'change' },
+        { required: true, message: t('region.regionNameBatchRequired'), trigger: 'change' },
       ],
       countryName: [
-        { required: true, message: '请选择或输入国家名称', trigger: 'change' },
+        { required: true, message: t('region.countryNameRequired'), trigger: 'change' },
       ],
     }
 
@@ -293,12 +295,12 @@ export default {
 
     const getLevelText = (level) => {
       const textMap = {
-        1: '片区',
-        2: '国家',
-        3: '省份',
-        4: '城市',
+        1: t('region.regionLevel'),
+        2: t('region.countryLevel'),
+        3: t('region.provinceLevel'),
+        4: t('region.cityLevel'),
       }
-      return textMap[level] || '未知'
+      return textMap[level] || t('common.unknown')
     }
 
     const loadData = async () => {
@@ -316,7 +318,7 @@ export default {
         tableData.value = res.data.records || res.data
         pagination.total = res.data.total || res.data.length
       } catch (error) {
-        console.error('加载数据失败:', error)
+        console.error(t('region.loadDataFailed'), error)
       } finally {
         loading.value = false
       }
@@ -331,7 +333,7 @@ export default {
         })
         parentOptions.value = res.data
       } catch (error) {
-        console.error('加载上级地域失败:', error)
+        console.error(t('region.loadParentRegionFailed'), error)
       }
     }
 
@@ -351,14 +353,14 @@ export default {
         provinceOptions.value = allRegions.filter(item => item.level === 3)
         cityOptions.value = allRegions.filter(item => item.level === 4)
       } catch (error) {
-        console.error('加载选项数据失败:', error)
+        console.error(t('region.loadOptionsDataFailed'), error)
       }
     }
 
 
 
     const handleAdd = () => {
-      dialogTitle.value = '新增地域'
+      dialogTitle.value = t('region.addRegion')
       dialogVisible.value = true
       resetForm()
     }
@@ -435,7 +437,7 @@ export default {
     })
 
     const handleEdit = (row) => {
-      dialogTitle.value = '编辑地域'
+      dialogTitle.value = t('region.editRegion')
       Object.assign(form, row)
       dialogVisible.value = true
       loadParentOptions(form.level)
@@ -443,9 +445,9 @@ export default {
 
     const handleDelete = async (row) => {
       try {
-        await ElMessageBox.confirm('确定要删除这个地域吗？', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
+        await ElMessageBox.confirm(t('region.deleteConfirm'), t('common.info'), {
+          confirmButtonText: t('common.confirm'),
+          cancelButtonText: t('common.cancel'),
           type: 'warning',
         })
         
@@ -453,11 +455,11 @@ export default {
           url: `/region/${row.id}`,
           method: 'delete',
         })
-        ElMessage.success('删除成功')
+        ElMessage.success(t('region.deleteSuccess'))
         loadData()
       } catch (error) {
         if (error !== 'cancel') {
-          ElMessage.error('删除失败')
+          ElMessage.error(t('region.deleteFailed'))
         }
       }
     }
@@ -472,20 +474,20 @@ export default {
             method: 'put',
             data: form,
           })
-          ElMessage.success('更新成功')
+          ElMessage.success(t('region.updateSuccess'))
         } else {
           await request({
             url: '/region',
             method: 'post',
             data: form,
           })
-          ElMessage.success('创建成功')
+          ElMessage.success(t('region.createSuccess'))
         }
         
         dialogVisible.value = false
         loadData()
       } catch (error) {
-        console.error('提交失败:', error)
+        console.error(t('region.submitFailed'), error)
       }
     }
 
@@ -498,12 +500,12 @@ export default {
           method: 'post',
           data: batchForm,
         })
-        ElMessage.success('批量创建成功')
+        ElMessage.success(t('region.batchCreateSuccess'))
         batchDialogVisible.value = false
         loadData()
       } catch (error) {
-        console.error('批量提交失败:', error)
-        ElMessage.error('批量创建失败')
+        console.error(t('region.batchSubmitFailed'), error)
+        ElMessage.error(t('region.batchCreateFailed'))
       }
     }
 

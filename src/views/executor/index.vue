@@ -1,32 +1,32 @@
 <template>
   <div class="executor-page">
     <div class="page-header">
-      <h2 class="page-title">执行机管理</h2>
-      <p class="page-description">管理执行机信息，包括IP地址、所属地域等</p>
+      <h2 class="page-title">{{ $t('pageTitle.executor') }}</h2>
+      <p class="page-description">{{ $t('executor.description') }}</p>
     </div>
 
     <el-card>
       <div class="table-operations">
         <el-button type="primary" @click="handleAdd">
           <el-icon><Plus /></el-icon>
-          新增执行机
+          {{ $t('executor.addExecutor') }}
         </el-button>
         <el-button @click="loadData">
           <el-icon><Refresh /></el-icon>
-          刷新
+          {{ $t('executor.refresh') }}
         </el-button>
       </div>
 
       <el-table :data="tableData" v-loading="loading" style="width: 100%">
-        <el-table-column prop="name" label="执行机名称" />
-        <el-table-column prop="ipAddress" label="IP地址" />
-        <el-table-column prop="regionName" label="所属地域" />
-        <el-table-column prop="description" label="描述" />
-        <el-table-column prop="createTime" label="创建时间" />
-        <el-table-column label="操作" width="200">
+        <el-table-column prop="name" :label="$t('executor.executorName')" />
+        <el-table-column prop="ipAddress" :label="$t('executor.ipAddress')" />
+        <el-table-column prop="regionName" :label="$t('executor.region')" />
+        <el-table-column prop="description" :label="$t('executor.description')" />
+        <el-table-column prop="createTime" :label="$t('executor.createTime')" />
+        <el-table-column :label="$t('executor.operations')" width="200">
           <template #default="scope">
-            <el-button size="small" @click="handleEdit(scope.row)">编辑</el-button>
-            <el-button size="small" type="danger" @click="handleDelete(scope.row)">删除</el-button>
+            <el-button size="small" @click="handleEdit(scope.row)">{{ $t('executor.edit') }}</el-button>
+            <el-button size="small" type="danger" @click="handleDelete(scope.row)">{{ $t('executor.delete') }}</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -57,16 +57,16 @@
         :rules="rules"
         label-width="100px"
       >
-        <el-form-item label="执行机名称" prop="name">
-          <el-input v-model="form.name" placeholder="请输入执行机名称" />
+        <el-form-item :label="$t('executor.executorNameLabel')" prop="name">
+          <el-input v-model="form.name" :placeholder="$t('executor.executorNamePlaceholder')" />
         </el-form-item>
-        <el-form-item label="IP地址" prop="ipAddress">
-          <el-input v-model="form.ipAddress" placeholder="请输入IP地址" />
+        <el-form-item :label="$t('executor.ipAddressLabel')" prop="ipAddress">
+          <el-input v-model="form.ipAddress" :placeholder="$t('executor.ipAddressPlaceholder')" />
         </el-form-item>
-        <el-form-item label="所属地域" prop="regionId">
+        <el-form-item :label="$t('executor.regionLabel')" prop="regionId">
           <el-select 
             v-model="form.regionId" 
-            placeholder="请选择所属城市" 
+            :placeholder="$t('executor.regionPlaceholder')" 
             style="width: 100%"
             filterable
             clearable
@@ -79,24 +79,24 @@
             >
               <div style="display: flex; justify-content: space-between; align-items: center;">
                 <span>{{ item.fullPath }}</span>
-                <el-tag size="small" type="info">城市</el-tag>
+                <el-tag size="small" type="info">{{ $t('executor.city') }}</el-tag>
               </div>
             </el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="描述" prop="description">
+        <el-form-item :label="$t('executor.descriptionLabel')" prop="description">
           <el-input
             v-model="form.description"
             type="textarea"
             :rows="3"
-            placeholder="请输入描述"
+            :placeholder="$t('executor.descriptionPlaceholder')"
           />
         </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="handleSubmit">确定</el-button>
+          <el-button @click="dialogVisible = false">{{ $t('common.cancel') }}</el-button>
+          <el-button type="primary" @click="handleSubmit">{{ $t('common.confirm') }}</el-button>
         </span>
       </template>
     </el-dialog>
@@ -106,11 +106,13 @@
 <script>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useI18n } from 'vue-i18n'
 import request from '@/utils/request'
 
 export default {
   name: 'Executor',
   setup() {
+    const { t } = useI18n()
     const loading = ref(false)
     const tableData = ref([])
     const dialogVisible = ref(false)
@@ -134,13 +136,13 @@ export default {
 
     const rules = {
       name: [
-        { required: true, message: '请输入执行机名称', trigger: 'blur' },
+        { required: true, message: t('executor.executorNameRequired'), trigger: 'blur' },
       ],
       ipAddress: [
-        { required: true, message: '请输入IP地址', trigger: 'blur' },
+        { required: true, message: t('executor.ipAddressRequired'), trigger: 'blur' },
       ],
       regionId: [
-        { required: true, message: '请选择所属地域', trigger: 'change' },
+        { required: true, message: t('executor.regionRequired'), trigger: 'change' },
       ],
     }
 
@@ -161,7 +163,7 @@ export default {
         tableData.value = res.data.records
         pagination.total = res.data.total
       } catch (error) {
-        console.error('加载数据失败:', error)
+        console.error(t('executor.loadDataFailed'), error)
       } finally {
         loading.value = false
       }
@@ -175,18 +177,18 @@ export default {
         })
         regionOptions.value = res.data
       } catch (error) {
-        console.error('加载地域数据失败:', error)
+        console.error(t('executor.loadRegionDataFailed'), error)
       }
     }
 
     const handleAdd = () => {
-      dialogTitle.value = '新增执行机'
+      dialogTitle.value = t('executor.addExecutor')
       dialogVisible.value = true
       resetForm()
     }
 
     const handleEdit = (row) => {
-      dialogTitle.value = '编辑执行机'
+      dialogTitle.value = t('executor.editExecutor')
       // 正确映射字段，确保字段名称一致
       form.id = row.id
       form.name = row.name
@@ -198,9 +200,9 @@ export default {
 
     const handleDelete = async (row) => {
       try {
-        await ElMessageBox.confirm('确定要删除这个执行机吗？', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
+        await ElMessageBox.confirm(t('executor.deleteConfirm'), t('common.info'), {
+          confirmButtonText: t('common.confirm'),
+          cancelButtonText: t('common.cancel'),
           type: 'warning',
         })
         
@@ -208,11 +210,11 @@ export default {
           url: `/executor/${row.id}`,
           method: 'delete',
         })
-        ElMessage.success('删除成功')
+        ElMessage.success(t('executor.deleteSuccess'))
         loadData()
       } catch (error) {
         if (error !== 'cancel') {
-          ElMessage.error('删除失败')
+          ElMessage.error(t('executor.deleteFailed'))
         }
       }
     }
@@ -227,20 +229,20 @@ export default {
             method: 'put',
             data: form,
           })
-          ElMessage.success('更新成功')
+          ElMessage.success(t('executor.updateSuccess'))
         } else {
           await request({
             url: '/executor',
             method: 'post',
             data: form,
           })
-          ElMessage.success('创建成功')
+          ElMessage.success(t('executor.createSuccess'))
         }
         
         dialogVisible.value = false
         loadData()
       } catch (error) {
-        console.error('提交失败:', error)
+        console.error(t('executor.submitFailed'), error)
       }
     }
 

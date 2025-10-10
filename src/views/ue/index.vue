@@ -1,52 +1,52 @@
 <template>
   <div class="ue-page">
     <div class="page-header">
-      <h2 class="page-title">UE管理</h2>
-      <p class="page-description">管理UE信息，包括UE ID、用途、网络类型等</p>
+      <h2 class="page-title">{{ $t('pageTitle.ue') }}</h2>
+      <p class="page-description">{{ $t('ue.description') }}</p>
     </div>
 
     <el-card>
       <div class="table-operations">
         <el-button type="primary" @click="handleAdd">
           <el-icon><Plus /></el-icon>
-          新增UE
+          {{ $t('ue.addUe') }}
         </el-button>
         <el-button @click="loadData">
           <el-icon><Refresh /></el-icon>
-          刷新
+          {{ $t('ue.refresh') }}
         </el-button>
       </div>
 
       <el-table :data="tableData" v-loading="loading" style="width: 100%">
-        <el-table-column prop="name" label="UE名称" />
-        <el-table-column prop="ueId" label="UE ID" />
-        <el-table-column prop="purpose" label="用途" />
-        <el-table-column prop="networkTypeName" label="网络类型" />
-        <el-table-column prop="vendorName" label="厂商">
+        <el-table-column prop="name" :label="$t('ue.ueName')" />
+        <el-table-column prop="ueId" :label="$t('ue.ueId')" />
+        <el-table-column prop="purpose" :label="$t('ue.purpose')" />
+        <el-table-column prop="networkTypeName" :label="$t('ue.networkType')" />
+        <el-table-column prop="vendorName" :label="$t('ue.vendor')">
           <template #default="scope">
             <span v-if="scope.row.vendorName">{{ scope.row.vendorName }}</span>
-            <span v-else style="color: #909399;">未配置</span>
+            <span v-else style="color: #909399;">{{ $t('ue.notConfigured') }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="port" label="端口">
+        <el-table-column prop="port" :label="$t('ue.port')">
           <template #default="scope">
             <span v-if="scope.row.port && scope.row.port !== '0'">{{ scope.row.port }}</span>
             <span v-else style="color: #909399;">0</span>
           </template>
         </el-table-column>
-        <el-table-column prop="description" label="描述" />
-        <el-table-column prop="status" label="状态">
+        <el-table-column prop="description" :label="$t('ue.description')" />
+        <el-table-column prop="status" :label="$t('ue.status')">
           <template #default="scope">
             <el-tag :type="scope.row.status === 1 ? 'success' : 'danger'">
-              {{ scope.row.status === 1 ? '启用' : '禁用' }}
+              {{ scope.row.status === 1 ? $t('ue.enabled') : $t('ue.disabled') }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="createTime" label="创建时间" />
-        <el-table-column label="操作" width="200">
+        <el-table-column prop="createTime" :label="$t('ue.createTime')" />
+        <el-table-column :label="$t('ue.operations')" width="200">
           <template #default="scope">
-            <el-button size="small" @click="handleEdit(scope.row)">编辑</el-button>
-            <el-button size="small" type="danger" @click="handleDelete(scope.row)">删除</el-button>
+            <el-button size="small" @click="handleEdit(scope.row)">{{ $t('ue.edit') }}</el-button>
+            <el-button size="small" type="danger" @click="handleDelete(scope.row)">{{ $t('ue.delete') }}</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -77,17 +77,17 @@
         :rules="rules"
         label-width="100px"
       >
-        <el-form-item label="UE名称" prop="name">
-          <el-input v-model="form.name" placeholder="请输入UE名称" />
+        <el-form-item :label="$t('ue.ueNameLabel')" prop="name">
+          <el-input v-model="form.name" :placeholder="$t('ue.ueNamePlaceholder')" />
         </el-form-item>
-        <el-form-item label="UE ID" prop="ueId">
-          <el-input v-model="form.ueId" placeholder="请输入UE ID" />
+        <el-form-item :label="$t('ue.ueIdLabel')" prop="ueId">
+          <el-input v-model="form.ueId" :placeholder="$t('ue.ueIdPlaceholder')" />
         </el-form-item>
-        <el-form-item label="用途" prop="purpose">
-          <el-input v-model="form.purpose" placeholder="请输入用途" />
+        <el-form-item :label="$t('ue.purposeLabel')" prop="purpose">
+          <el-input v-model="form.purpose" :placeholder="$t('ue.purposePlaceholder')" />
         </el-form-item>
-        <el-form-item label="网络类型" prop="networkTypeId">
-          <el-select v-model="form.networkTypeId" placeholder="请选择网络类型" style="width: 100%">
+        <el-form-item :label="$t('ue.networkTypeLabel')" prop="networkTypeId">
+          <el-select v-model="form.networkTypeId" :placeholder="$t('ue.networkTypePlaceholder')" style="width: 100%">
             <el-option
               v-for="item in networkTypeOptions"
               :key="item.id"
@@ -96,8 +96,8 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="厂商" prop="vendor">
-          <el-select v-model="form.vendor" placeholder="请选择厂商" style="width: 100%">
+        <el-form-item :label="$t('ue.vendorLabel')" prop="vendor">
+          <el-select v-model="form.vendor" :placeholder="$t('ue.vendorPlaceholder')" style="width: 100%">
             <el-option
               v-for="item in vendorOptions"
               :key="item.code"
@@ -106,32 +106,32 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="端口" prop="port">
+        <el-form-item :label="$t('ue.portLabel')" prop="port">
           <el-input 
             v-model="form.port" 
-            placeholder="请输入端口号"
+            :placeholder="$t('ue.portPlaceholder')"
             style="width: 100%"
           />
         </el-form-item>
-        <el-form-item label="描述" prop="description">
+        <el-form-item :label="$t('ue.descriptionLabel')" prop="description">
           <el-input
             v-model="form.description"
             type="textarea"
             :rows="3"
-            placeholder="请输入描述"
+            :placeholder="$t('ue.descriptionPlaceholder')"
           />
         </el-form-item>
-        <el-form-item label="状态" prop="status">
+        <el-form-item :label="$t('ue.statusLabel')" prop="status">
           <el-radio-group v-model="form.status">
-            <el-radio :label="1">启用</el-radio>
-            <el-radio :label="0">禁用</el-radio>
+            <el-radio :label="1">{{ $t('ue.enabled') }}</el-radio>
+            <el-radio :label="0">{{ $t('ue.disabled') }}</el-radio>
           </el-radio-group>
         </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="handleSubmit">确定</el-button>
+          <el-button @click="dialogVisible = false">{{ $t('common.cancel') }}</el-button>
+          <el-button type="primary" @click="handleSubmit">{{ $t('common.confirm') }}</el-button>
         </span>
       </template>
     </el-dialog>
@@ -141,11 +141,13 @@
 <script>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useI18n } from 'vue-i18n'
 import request from '@/utils/request'
 
 export default {
   name: 'Ue',
   setup() {
+    const { t } = useI18n()
     const loading = ref(false)
     const tableData = ref([])
     const dialogVisible = ref(false)
@@ -174,16 +176,16 @@ export default {
 
     const rules = {
       name: [
-        { required: true, message: '请输入UE名称', trigger: 'blur' },
+        { required: true, message: t('ue.ueNameRequired'), trigger: 'blur' },
       ],
       ueId: [
-        { required: true, message: '请输入UE ID', trigger: 'blur' },
+        { required: true, message: t('ue.ueIdRequired'), trigger: 'blur' },
       ],
       purpose: [
-        { required: true, message: '请输入用途', trigger: 'blur' },
+        { required: true, message: t('ue.purposeRequired'), trigger: 'blur' },
       ],
       networkTypeId: [
-        { required: true, message: '请选择网络类型', trigger: 'change' },
+        { required: true, message: t('ue.networkTypeRequired'), trigger: 'change' },
       ],
     }
 
@@ -202,7 +204,7 @@ export default {
         tableData.value = res.data.records
         pagination.total = res.data.total
       } catch (error) {
-        console.error('加载数据失败:', error)
+        console.error(t('ue.loadDataFailed'), error)
       } finally {
         loading.value = false
       }
@@ -216,7 +218,7 @@ export default {
         })
         networkTypeOptions.value = res.data
       } catch (error) {
-        console.error('加载网络类型数据失败:', error)
+        console.error(t('ue.loadNetworkTypeDataFailed'), error)
       }
     }
 
@@ -228,18 +230,18 @@ export default {
         })
         vendorOptions.value = res.data
       } catch (error) {
-        console.error('加载厂商数据失败:', error)
+        console.error(t('ue.loadVendorDataFailed'), error)
       }
     }
 
     const handleAdd = () => {
-      dialogTitle.value = '新增UE'
+      dialogTitle.value = t('ue.addUe')
       dialogVisible.value = true
       resetForm()
     }
 
     const handleEdit = (row) => {
-      dialogTitle.value = '编辑UE'
+      dialogTitle.value = t('ue.editUe')
       // 只提取实体类中存在的字段，避免DTO字段导致的反序列化错误
       Object.assign(form, {
         id: row.id,
@@ -257,9 +259,9 @@ export default {
 
     const handleDelete = async (row) => {
       try {
-        await ElMessageBox.confirm('确定要删除这个UE吗？', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
+        await ElMessageBox.confirm(t('ue.deleteConfirm'), t('common.info'), {
+          confirmButtonText: t('common.confirm'),
+          cancelButtonText: t('common.cancel'),
           type: 'warning',
         })
         
@@ -267,11 +269,11 @@ export default {
           url: `/ue/${row.id}`,
           method: 'delete',
         })
-        ElMessage.success('删除成功')
+        ElMessage.success(t('ue.deleteSuccess'))
         loadData()
       } catch (error) {
         if (error !== 'cancel') {
-          ElMessage.error('删除失败')
+          ElMessage.error(t('ue.deleteFailed'))
         }
       }
     }
@@ -286,20 +288,20 @@ export default {
             method: 'put',
             data: form,
           })
-          ElMessage.success('更新成功')
+          ElMessage.success(t('ue.updateSuccess'))
         } else {
           await request({
             url: '/ue',
             method: 'post',
             data: form,
           })
-          ElMessage.success('创建成功')
+          ElMessage.success(t('ue.createSuccess'))
         }
         
         dialogVisible.value = false
         loadData()
       } catch (error) {
-        console.error('提交失败:', error)
+        console.error(t('ue.submitFailed'), error)
       }
     }
 

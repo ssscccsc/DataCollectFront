@@ -1,8 +1,8 @@
 <template>
   <div class="collect-task-page">
     <div class="page-header">
-      <h2 class="page-title">采集任务管理</h2>
-      <p class="page-description">管理采集任务，支持任务的停止、删除等操作</p>
+      <h2 class="page-title">{{ $t('pageTitle.collectTask') }}</h2>
+      <p class="page-description">{{ $t('collectTask.description') }}</p>
     </div>
 
     <!-- 主内容区域 -->
@@ -10,21 +10,21 @@
       <el-card>
         <!-- Tab切换 -->
         <el-tabs v-model="activeTab" @tab-click="handleTabClick" @tab-remove="handleTabRemove">
-          <el-tab-pane label="任务列表" name="list">
+          <el-tab-pane :label="$t('collectTask.taskList')" name="list">
             <div class="table-operations">
               <el-button type="primary" @click="handleAdd">
                 <el-icon><Plus /></el-icon>
-                新增任务
+                {{ $t('collectTask.addTask') }}
               </el-button>
               <el-button @click="refreshAllData" :loading="loading">
                 <el-icon><Refresh /></el-icon>
-                刷新
+                {{ $t('collectTask.refresh') }}
               </el-button>
             </div>
 
             <el-table :data="tableData" v-loading="loading" style="width: 100%">
-        <el-table-column prop="id" label="任务ID" width="80" />
-        <el-table-column prop="name" label="任务名称">
+        <el-table-column prop="id" :label="$t('collectTask.taskId')" width="80" />
+        <el-table-column prop="name" :label="$t('collectTask.taskName')">
           <template #default="scope">
             <el-button 
               type="text" 
@@ -35,14 +35,14 @@
             </el-button>
           </template>
         </el-table-column>
-        <el-table-column prop="status" label="状态">
+        <el-table-column prop="status" :label="$t('collectTask.status')">
           <template #default="scope">
             <el-tag :type="getStatusType(scope.row.status)">
               {{ getStatusText(scope.row.status) }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="执行进度" width="200">
+        <el-table-column :label="$t('collectTask.executionProgress')" width="200">
           <template #default="scope">
             <div class="progress-display">
               <div class="progress-info">
@@ -59,8 +59,8 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="createTime" label="创建时间" />
-        <el-table-column label="操作" width="150">
+        <el-table-column prop="createTime" :label="$t('collectTask.createTime')" />
+        <el-table-column :label="$t('collectTask.operations')" width="150">
           <template #default="scope">
             <el-button 
               size="small" 
@@ -68,9 +68,9 @@
               @click="handleStop(scope.row)"
               :disabled="scope.row.status === 'STOPPED' || scope.row.status === 'COMPLETED'"
             >
-              停止
+              {{ $t('collectTask.stop') }}
             </el-button>
-            <el-button size="small" type="danger" @click="handleDelete(scope.row)">删除</el-button>
+            <el-button size="small" type="danger" @click="handleDelete(scope.row)">{{ $t('collectTask.delete') }}</el-button>
           </template>
         </el-table-column>
             </el-table>
@@ -92,7 +92,7 @@
           <el-tab-pane 
             v-for="task in openedTasks"
             :key="task.id"
-            :label="`任务详情 - ${task.name}`" 
+            :label="`${$t('collectTask.taskDetail')} - ${task.name}`" 
             :name="`detail-${task.id}`"
             closable
           >
@@ -101,19 +101,19 @@
               <el-card class="detail-card">
                 <template #header>
                   <div class="card-header">
-                    <span>基本信息</span>
+                    <span>{{ $t('collectTask.basicInfo') }}</span>
                   </div>
                 </template>
                 <el-descriptions :column="2" border>
-                  <el-descriptions-item label="任务ID">{{ getCurrentTask().id }}</el-descriptions-item>
-                  <el-descriptions-item label="任务名称">{{ getCurrentTask().name }}</el-descriptions-item>
-                  <el-descriptions-item label="任务状态">
+                  <el-descriptions-item :label="$t('collectTask.taskId')">{{ getCurrentTask().id }}</el-descriptions-item>
+                  <el-descriptions-item :label="$t('collectTask.taskName')">{{ getCurrentTask().name }}</el-descriptions-item>
+                  <el-descriptions-item :label="$t('collectTask.status')">
                     <el-tag :type="getStatusType(getCurrentTask().status)">
                       {{ getStatusText(getCurrentTask().status) }}
                     </el-tag>
                   </el-descriptions-item>
-                  <el-descriptions-item label="创建时间">{{ getCurrentTask().createTime }}</el-descriptions-item>
-                  <el-descriptions-item label="任务描述">{{ getCurrentTask().description || '无' }}</el-descriptions-item>
+                  <el-descriptions-item :label="$t('collectTask.createTime')">{{ getCurrentTask().createTime }}</el-descriptions-item>
+                  <el-descriptions-item :label="$t('collectTask.taskDescription')">{{ getCurrentTask().description || $t('collectTask.noDescription') }}</el-descriptions-item>
                 </el-descriptions>
               </el-card>
 
@@ -905,11 +905,13 @@
 <script>
 import { ref, reactive, onMounted, onUnmounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useI18n } from 'vue-i18n'
 import request from '@/utils/request'
 
 export default {
   name: 'CollectTask',
   setup() {
+    const { t } = useI18n()
     const loading = ref(false)
     const tableData = ref([])
     const dialogVisible = ref(false)
@@ -971,22 +973,22 @@ export default {
     })
     const remoteLoginRules = {
       osType: [
-        { required: true, message: '请选择操作系统', trigger: 'change' }
+        { required: true, message: t('collectTask.osTypeRequired'), trigger: 'change' }
       ],
       connectionType: [
-        { required: true, message: '请选择连接方式', trigger: 'change' }
+        { required: true, message: t('collectTask.connectionTypeRequired'), trigger: 'change' }
       ],
       username: [
-        { required: true, message: '请输入用户名', trigger: 'blur' }
+        { required: true, message: t('collectTask.usernameRequired'), trigger: 'blur' }
       ],
       password: [
-        { required: true, message: '请输入密码', trigger: 'blur' }
+        { required: true, message: t('collectTask.passwordRequired'), trigger: 'blur' }
       ],
       port: [
-        { required: true, message: '请输入端口号', trigger: 'blur' }
+        { required: true, message: t('collectTask.portRequired'), trigger: 'blur' }
       ],
       operationNote: [
-        { required: true, message: '请描述操作内容', trigger: 'blur' }
+        { required: true, message: t('collectTask.operationNoteRequired'), trigger: 'blur' }
       ]
     }
 
@@ -1004,7 +1006,7 @@ export default {
 
     const basicRules = {
       name: [
-        { required: true, message: '请输入任务名称', trigger: 'blur' },
+        { required: true, message: t('collectTask.taskNameRequired'), trigger: 'blur' },
       ],
     }
 
@@ -1015,7 +1017,7 @@ export default {
 
     const strategyRules = {
       strategyId: [
-        { required: true, message: '请选择采集策略', trigger: 'change' },
+        { required: true, message: t('collectTask.collectStrategyRequired'), trigger: 'change' },
       ],
     }
 
@@ -1029,14 +1031,14 @@ export default {
 
     const environmentRules = {
       regionId: [
-        { required: true, message: '请选择地域', trigger: 'change' },
+        { required: true, message: t('collectTask.regionRequired'), trigger: 'change' },
       ],
     }
     
     // 逻辑环境选择验证
     const validateEnvironmentSelection = () => {
       if (selectedEnvironmentIds.value.length === 0) {
-        ElMessage.error('请至少选择一个逻辑环境')
+        ElMessage.error(t('collectTask.selectAtLeastOneEnvironment'))
         return false
       }
       return true
@@ -1056,13 +1058,13 @@ export default {
 
     const getStatusText = (status) => {
       const textMap = {
-        'RUNNING': '运行中',
-        'COMPLETED': '已完成',
-        'STOPPED': '已停止',
-        'PAUSED': '已暂停',
-        'FAILED': '已停止',
+        'RUNNING': t('collectTask.statusRunning'),
+        'COMPLETED': t('collectTask.statusCompleted'),
+        'STOPPED': t('collectTask.statusStopped'),
+        'PAUSED': t('collectTask.statusPaused'),
+        'FAILED': t('collectTask.statusFailed'),
       }
-      return textMap[status] || '未知'
+      return textMap[status] || t('collectTask.statusUnknown')
     }
 
     // 表格进度相关方法
@@ -1075,14 +1077,14 @@ export default {
       const running = row.runningCount || 0
       
       if (total === 0) {
-        return '暂无数据'
+        return t('collectTask.noData')
       }
       
       const parts = []
-      if (success > 0) parts.push(`${success}成功`)
-      if (failed > 0) parts.push(`${failed}失败`)
-      if (blocked > 0) parts.push(`${blocked}阻塞`)
-      if (running > 0) parts.push(`${running}执行中`)
+      if (success > 0) parts.push(`${success}${t('collectTask.progressSuccess')}`)
+      if (failed > 0) parts.push(`${failed}${t('collectTask.progressFailed')}`)
+      if (blocked > 0) parts.push(`${blocked}${t('collectTask.progressBlocked')}`)
+      if (running > 0) parts.push(`${running}${t('collectTask.progressRunning')}`)
       
       return `${completed}/${total} (${parts.join(', ')})`
     }
@@ -1220,10 +1222,10 @@ export default {
       loading.value = true
       try {
         await loadData()
-        ElMessage.success('数据刷新成功')
+        ElMessage.success(t('collectTask.dataRefreshSuccess'))
       } catch (error) {
         console.error('刷新数据失败:', error)
-        ElMessage.error('刷新数据失败')
+        ElMessage.error(t('collectTask.dataRefreshFailed'))
       } finally {
         loading.value = false
       }
@@ -1325,7 +1327,7 @@ export default {
     }
 
     const handleAdd = () => {
-      dialogTitle.value = '新建采集任务'
+      dialogTitle.value = t('collectTask.createTask')
       dialogVisible.value = true
       resetForm()
       loadRegionOptions()
@@ -1392,7 +1394,7 @@ export default {
       const keys = validParams.map(param => param.key.trim())
       const uniqueKeys = [...new Set(keys)]
       if (keys.length !== uniqueKeys.length) {
-        ElMessage.error('参数名不能重复')
+        ElMessage.error(t('collectTask.paramNameCannotBeEmpty'))
         return
       }
       
@@ -1404,7 +1406,7 @@ export default {
       }
       
       showCustomParamsEditor.value = false
-      ElMessage.success('自定义参数保存成功')
+      ElMessage.success(t('collectTask.customParamsSaved'))
     }
     
     // 取消自定义参数编辑
@@ -1511,18 +1513,18 @@ export default {
           url: `/collect-task/${row.id}/stop`,
           method: 'post',
         })
-        ElMessage.success('停止成功')
+        ElMessage.success(t('collectTask.stopSuccess'))
         loadData()
       } catch (error) {
-        ElMessage.error('停止失败')
+        ElMessage.error(t('collectTask.stopFailed'))
       }
     }
 
     const handleDelete = async (row) => {
       try {
-        await ElMessageBox.confirm('确定要删除这个任务吗？', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
+        await ElMessageBox.confirm(t('collectTask.deleteConfirm'), t('common.info'), {
+          confirmButtonText: t('common.confirm'),
+          cancelButtonText: t('common.cancel'),
           type: 'warning',
         })
         
@@ -1530,11 +1532,11 @@ export default {
           url: `/collect-task/${row.id}`,
           method: 'delete',
         })
-        ElMessage.success('删除成功')
+        ElMessage.success(t('collectTask.deleteSuccess'))
         loadData()
       } catch (error) {
         if (error !== 'cancel') {
-          ElMessage.error('删除失败')
+          ElMessage.error(t('collectTask.deleteFailed'))
         }
       }
     }
@@ -1579,7 +1581,7 @@ export default {
           data: submitData,
         })
         
-        ElMessage.success('任务创建成功')
+        ElMessage.success(t('collectTask.taskCreatedSuccess'))
         dialogVisible.value = false
         loadData()
       } catch (error) {
@@ -1587,7 +1589,7 @@ export default {
         if (error.message) {
           ElMessage.error(error.message)
         } else {
-          ElMessage.error('任务创建失败')
+          ElMessage.error(t('collectTask.taskCreatedFailed'))
         }
       } finally {
         submitLoading.value = false
@@ -1859,14 +1861,14 @@ export default {
 
     const getInstanceStatusText = (status) => {
       const textMap = {
-        'PENDING': '待执行',
-        'RUNNING': '执行中',
-        'COMPLETED': '已完成',
-        'FAILED': '执行失败',
-        'STOPPED': '已停止',
-        'BLOCKED': '阻塞',
+        'PENDING': t('collectTask.statusPending'),
+        'RUNNING': t('collectTask.statusRunningInstance'),
+        'COMPLETED': t('collectTask.statusCompletedInstance'),
+        'FAILED': t('collectTask.statusFailedInstance'),
+        'STOPPED': t('collectTask.statusStoppedInstance'),
+        'BLOCKED': t('collectTask.statusBlockedInstance'),
       }
-      return textMap[status] || '阻塞'
+      return textMap[status] || t('collectTask.statusBlockedInstance')
     }
 
     const getInstanceResultType = (result) => {
@@ -1880,16 +1882,16 @@ export default {
 
     const getInstanceResultText = (result) => {
       const textMap = {
-        'SUCCESS': '成功',
-        'FAILED': '失败',
-        'BLOCKED': '阻塞',
+        'SUCCESS': t('collectTask.resultSuccess'),
+        'FAILED': t('collectTask.resultFailed'),
+        'BLOCKED': t('collectTask.resultBlocked'),
       }
-      return textMap[result] || '阻塞'
+      return textMap[result] || t('collectTask.resultBlocked')
     }
 
     const viewInstanceResult = (instance) => {
       // 这里可以打开一个新的对话框显示执行结果详情
-      ElMessage.info(`查看用例 ${instance.testCaseNumber} 第 ${instance.round} 轮执行详情，执行任务ID: ${instance.executionTaskId}`)
+      ElMessage.info(`${t('collectTask.viewDetail')} ${instance.testCaseNumber} ${t('collectTask.round')} ${instance.round} ${t('collectTask.executionTaskId')}: ${instance.executionTaskId}`)
     }
 
     // 远程登录相关方法
@@ -1951,15 +1953,15 @@ export default {
             await connectVNC(connectionInfo)
           }
           
-          ElMessage.success('连接成功！')
+          ElMessage.success(t('collectTask.connectionSuccess'))
           closeRemoteLoginDialog()
         } else {
-          throw new Error(response.message || '记录登录日志失败')
+          throw new Error(response.message || t('collectTask.connectionFailed'))
         }
         
       } catch (error) {
         console.error('远程连接失败:', error)
-        ElMessage.error('连接失败：' + error.message)
+        ElMessage.error(t('collectTask.connectionFailed') + '：' + error.message)
       } finally {
         connecting.value = false
       }
@@ -1974,7 +1976,7 @@ export default {
       if (navigator.clipboard) {
         try {
           await navigator.clipboard.writeText(sshCommand)
-          ElMessage.success('SSH连接命令已复制到剪贴板')
+          ElMessage.success(t('collectTask.sshCommandCopied'))
         } catch (err) {
           console.error('复制到剪贴板失败:', err)
         }
@@ -1982,10 +1984,10 @@ export default {
       
       // 显示连接信息
       ElMessageBox.alert(
-        `SSH连接命令: ${sshCommand}\n\n请使用终端执行此命令进行连接。`,
-        'SSH连接信息',
+        `${t('collectTask.sshCommand')}: ${sshCommand}\n\n请使用终端执行此命令进行连接。`,
+        t('collectTask.sshConnectionInfo'),
         {
-          confirmButtonText: '确定',
+          confirmButtonText: t('common.confirm'),
           type: 'info'
         }
       )
@@ -2003,14 +2005,14 @@ export default {
         const rdpWindow = window.open(rdpUrl, '_blank')
         
         if (rdpWindow) {
-          ElMessage.success('正在启动RDP连接...')
+          ElMessage.success(t('collectTask.vncConnectionStarted'))
           
           // 同时提供下载RDP文件的功能
           setTimeout(() => {
             downloadRdpFile(connectionInfo)
           }, 1000)
         } else {
-          throw new Error('无法打开RDP连接窗口')
+          throw new Error(t('collectTask.connectionFailed'))
         }
       } catch (error) {
         console.error('RDP连接失败:', error)
@@ -2018,16 +2020,16 @@ export default {
         // 如果直接连接失败，提供RDP文件下载
         ElMessageBox.confirm(
           `直接RDP连接失败，是否下载RDP连接文件？\n\n连接信息：\n服务器: ${connectionInfo.executorIp}:${connectionInfo.port}\n用户名: ${connectionInfo.username}`,
-          'RDP连接',
+          t('collectTask.rdpConnection'),
           {
-            confirmButtonText: '下载RDP文件',
-            cancelButtonText: '取消',
+            confirmButtonText: t('collectTask.rdpFileDownload'),
+            cancelButtonText: t('common.cancel'),
             type: 'warning'
           }
         ).then(() => {
           downloadRdpFile(connectionInfo)
         }).catch(() => {
-          ElMessage.info('已取消RDP连接')
+          ElMessage.info(t('collectTask.vncConnectionCancelled'))
         })
       }
     }
@@ -2046,10 +2048,10 @@ export default {
         document.body.removeChild(link)
         window.URL.revokeObjectURL(url)
         
-        ElMessage.success('RDP文件已下载，请双击文件进行连接')
+        ElMessage.success(t('collectTask.rdpFileDownloaded'))
       } catch (error) {
         console.error('下载RDP文件失败:', error)
-        ElMessage.error('下载RDP文件失败: ' + error.message)
+        ElMessage.error(t('collectTask.rdpFileDownloadFailed') + ': ' + error.message)
       }
     }
 
@@ -2061,13 +2063,13 @@ export default {
       // 尝试打开VNC连接
       try {
         window.open(vncUrl, '_blank')
-        ElMessage.success('正在启动VNC连接...')
+        ElMessage.success(t('collectTask.vncConnectionStarted'))
       } catch (error) {
         ElMessageBox.alert(
-          `VNC连接URL: ${vncUrl}\n\n请使用VNC客户端连接到此地址。`,
-          'VNC连接信息',
+          `${t('collectTask.vncConnectionUrl')}: ${vncUrl}\n\n${t('collectTask.vncClientTip')}`,
+          t('collectTask.vncConnectionInfo'),
           {
-            confirmButtonText: '确定',
+            confirmButtonText: t('common.confirm'),
             type: 'info'
           }
         )

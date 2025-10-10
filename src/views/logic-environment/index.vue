@@ -1,25 +1,25 @@
 <template>
   <div class="logic-environment-page">
     <div class="page-header">
-      <h2 class="page-title">逻辑环境管理</h2>
-      <p class="page-description">管理执行机和UE的组合逻辑环境</p>
+      <h2 class="page-title">{{ $t('pageTitle.logicEnvironment') }}</h2>
+      <p class="page-description">{{ $t('logicEnvironment.description') }}</p>
     </div>
 
     <el-card>
       <div class="table-operations">
         <el-button type="primary" @click="handleAdd">
           <el-icon><Plus /></el-icon>
-          新增逻辑环境
+          {{ $t('logicEnvironment.addLogicEnvironment') }}
         </el-button>
         <el-button @click="loadData">
           <el-icon><Refresh /></el-icon>
-          刷新
+          {{ $t('logicEnvironment.refresh') }}
         </el-button>
       </div>
 
       <el-table :data="tableData" v-loading="loading" style="width: 100%">
-        <el-table-column prop="name" label="逻辑环境名称" />
-        <el-table-column label="执行机" min-width="200">
+        <el-table-column prop="name" :label="$t('logicEnvironment.logicEnvironmentName')" />
+        <el-table-column :label="$t('logicEnvironment.executor')" min-width="200">
           <template #default="scope">
             <div>
               <div>{{ scope.row.executorName }}</div>
@@ -27,7 +27,7 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="UE信息" min-width="300">
+        <el-table-column :label="$t('logicEnvironment.ueInfo')" min-width="300">
           <template #default="scope">
             <div v-if="scope.row.ueList && scope.row.ueList.length > 0">
               <div v-for="ue in scope.row.ueList" :key="ue.id" style="margin-bottom: 8px;">
@@ -36,10 +36,10 @@
                 </el-tag>
               </div>
             </div>
-            <span v-else style="color: #909399;">暂无UE</span>
+            <span v-else style="color: #909399;">{{ $t('logicEnvironment.noUe') }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="逻辑组网" min-width="200">
+        <el-table-column :label="$t('logicEnvironment.logicNetwork')" min-width="200">
           <template #default="scope">
             <div v-if="scope.row.networkList && scope.row.networkList.length > 0">
               <div v-for="network in scope.row.networkList" :key="network.id" style="margin-bottom: 8px;">
@@ -48,24 +48,24 @@
                 </el-tag>
               </div>
             </div>
-            <span v-else style="color: #909399;">暂无组网</span>
+            <span v-else style="color: #909399;">{{ $t('logicEnvironment.noNetwork') }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="description" label="描述" />
-        <el-table-column prop="status" label="状态">
+        <el-table-column prop="description" :label="$t('logicEnvironment.description')" />
+        <el-table-column prop="status" :label="$t('logicEnvironment.status')">
           <template #default="scope">
             <el-tag :type="scope.row.status === 1 ? 'success' : 'danger'">
-              {{ scope.row.status === 1 ? '启用' : '禁用' }}
+              {{ scope.row.status === 1 ? $t('logicEnvironment.enabled') : $t('logicEnvironment.disabled') }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="createTime" label="创建时间" />
-        <el-table-column label="操作" width="300">
+        <el-table-column prop="createTime" :label="$t('logicEnvironment.createTime')" />
+        <el-table-column :label="$t('logicEnvironment.operations')" width="300">
           <template #default="scope">
-            <el-button size="small" @click="handleEdit(scope.row)">编辑</el-button>
-            <el-button size="small" type="primary" @click="handleManageUe(scope.row)">管理UE</el-button>
-            <el-button size="small" type="warning" @click="handleManageNetwork(scope.row)">管理组网</el-button>
-            <el-button size="small" type="danger" @click="handleDelete(scope.row)">删除</el-button>
+            <el-button size="small" @click="handleEdit(scope.row)">{{ $t('logicEnvironment.edit') }}</el-button>
+            <el-button size="small" type="primary" @click="handleManageUe(scope.row)">{{ $t('logicEnvironment.manageUe') }}</el-button>
+            <el-button size="small" type="warning" @click="handleManageNetwork(scope.row)">{{ $t('logicEnvironment.manageNetwork') }}</el-button>
+            <el-button size="small" type="danger" @click="handleDelete(scope.row)">{{ $t('logicEnvironment.delete') }}</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -96,11 +96,11 @@
         :rules="rules"
         label-width="120px"
       >
-        <el-form-item label="逻辑环境名称" prop="name">
-          <el-input v-model="form.name" placeholder="请输入逻辑环境名称" />
+        <el-form-item :label="$t('logicEnvironment.logicEnvironmentNameLabel')" prop="name">
+          <el-input v-model="form.name" :placeholder="$t('logicEnvironment.logicEnvironmentNamePlaceholder')" />
         </el-form-item>
-        <el-form-item label="执行机" prop="executorId">
-          <el-select v-model="form.executorId" placeholder="请选择执行机" style="width: 100%">
+        <el-form-item :label="$t('logicEnvironment.executorLabel')" prop="executorId">
+          <el-select v-model="form.executorId" :placeholder="$t('logicEnvironment.executorPlaceholder')" style="width: 100%">
             <el-option
               v-for="item in executorOptions"
               :key="item.id"
@@ -109,12 +109,12 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="UE选择" prop="selectedUeIds">
+        <el-form-item :label="$t('logicEnvironment.ueSelection')" prop="selectedUeIds">
           <el-select
             v-model="form.selectedUeIds"
             multiple
             filterable
-            placeholder="请选择UE"
+            :placeholder="$t('logicEnvironment.uePlaceholder')"
             style="width: 100%"
             @change="handleUeSelectionChange"
           >
@@ -126,7 +126,7 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="已选UE" v-if="form.selectedUeIds && form.selectedUeIds.length > 0">
+        <el-form-item :label="$t('logicEnvironment.selectedUe')" v-if="form.selectedUeIds && form.selectedUeIds.length > 0">
           <div class="selected-ue-list">
             <el-tag
               v-for="ueId in form.selectedUeIds"
@@ -139,18 +139,18 @@
             </el-tag>
           </div>
         </el-form-item>
-        <el-form-item label="逻辑组网选择" prop="selectedNetworkIds">
+        <el-form-item :label="$t('logicEnvironment.logicNetworkSelection')" prop="selectedNetworkIds">
           <div style="margin-bottom: 10px;">
             <el-button size="small" type="primary" @click="showAddNetworkDialog">
               <el-icon><Plus /></el-icon>
-              快速添加组网
+              {{ $t('logicEnvironment.quickAddNetwork') }}
             </el-button>
           </div>
           <el-select
             v-model="form.selectedNetworkIds"
             multiple
             filterable
-            placeholder="请选择逻辑组网"
+            :placeholder="$t('logicEnvironment.logicNetworkPlaceholder')"
             style="width: 100%"
             @change="handleNetworkSelectionChange"
           >
@@ -162,7 +162,7 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="已选组网" v-if="form.selectedNetworkIds && form.selectedNetworkIds.length > 0">
+        <el-form-item :label="$t('logicEnvironment.selectedNetwork')" v-if="form.selectedNetworkIds && form.selectedNetworkIds.length > 0">
           <div class="selected-network-list">
             <el-tag
               v-for="networkId in form.selectedNetworkIds"
@@ -175,25 +175,25 @@
             </el-tag>
           </div>
         </el-form-item>
-        <el-form-item label="描述" prop="description">
+        <el-form-item :label="$t('logicEnvironment.descriptionLabel')" prop="description">
           <el-input
             v-model="form.description"
             type="textarea"
             :rows="3"
-            placeholder="请输入描述"
+            :placeholder="$t('logicEnvironment.descriptionPlaceholder')"
           />
         </el-form-item>
-        <el-form-item label="状态" prop="status">
+        <el-form-item :label="$t('logicEnvironment.statusLabel')" prop="status">
           <el-radio-group v-model="form.status">
-            <el-radio :label="1">启用</el-radio>
-            <el-radio :label="0">禁用</el-radio>
+            <el-radio :label="1">{{ $t('logicEnvironment.enabled') }}</el-radio>
+            <el-radio :label="0">{{ $t('logicEnvironment.disabled') }}</el-radio>
           </el-radio-group>
         </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="handleSubmit">确定</el-button>
+          <el-button @click="dialogVisible = false">{{ $t('common.cancel') }}</el-button>
+          <el-button type="primary" @click="handleSubmit">{{ $t('common.confirm') }}</el-button>
         </span>
       </template>
     </el-dialog>
@@ -201,29 +201,29 @@
     <!-- UE管理对话框 -->
     <el-dialog
       v-model="ueDialogVisible"
-      title="管理UE"
+      :title="$t('logicEnvironment.manageUe')"
       width="600px"
     >
       <div class="ue-management">
         <div class="ue-section">
-          <h4>当前UE列表</h4>
+          <h4>{{ $t('logicEnvironment.currentUeList') }}</h4>
           <el-table :data="currentUes" style="width: 100%">
-            <el-table-column prop="name" label="UE名称" />
-            <el-table-column prop="ueId" label="UE ID" />
-            <el-table-column prop="purpose" label="用途" />
-            <el-table-column label="操作" width="100">
+            <el-table-column prop="name" :label="$t('logicEnvironment.ueName')" />
+            <el-table-column prop="ueId" :label="$t('logicEnvironment.ueId')" />
+            <el-table-column prop="purpose" :label="$t('logicEnvironment.purpose')" />
+            <el-table-column :label="$t('logicEnvironment.operations')" width="100">
               <template #default="scope">
-                <el-button size="small" type="danger" @click="removeUe(scope.row)">移除</el-button>
+                <el-button size="small" type="danger" @click="removeUe(scope.row)">{{ $t('logicEnvironment.remove') }}</el-button>
               </template>
             </el-table-column>
           </el-table>
         </div>
         
         <div class="ue-section">
-          <h4>添加UE</h4>
+          <h4>{{ $t('logicEnvironment.addUe') }}</h4>
           <el-select
             v-model="selectedUeId"
-            placeholder="请选择要添加的UE"
+            :placeholder="$t('logicEnvironment.selectUeToAdd')"
             style="width: 100%"
             @change="addUe"
           >
@@ -241,28 +241,28 @@
     <!-- 逻辑组网管理对话框 -->
     <el-dialog
       v-model="networkDialogVisible"
-      title="管理逻辑组网"
+      :title="$t('logicEnvironment.manageLogicNetwork')"
       width="600px"
     >
       <div class="network-management">
         <div class="network-section">
-          <h4>当前组网列表</h4>
+          <h4>{{ $t('logicEnvironment.currentNetworkList') }}</h4>
           <el-table :data="currentNetworks" style="width: 100%">
-            <el-table-column prop="name" label="组网名称" />
-            <el-table-column prop="description" label="描述" />
-            <el-table-column label="操作" width="100">
+            <el-table-column prop="name" :label="$t('logicEnvironment.networkName')" />
+            <el-table-column prop="description" :label="$t('logicEnvironment.networkDescription')" />
+            <el-table-column :label="$t('logicEnvironment.operations')" width="100">
               <template #default="scope">
-                <el-button size="small" type="danger" @click="removeNetwork(scope.row)">移除</el-button>
+                <el-button size="small" type="danger" @click="removeNetwork(scope.row)">{{ $t('logicEnvironment.remove') }}</el-button>
               </template>
             </el-table-column>
           </el-table>
         </div>
         
         <div class="network-section">
-          <h4>添加组网</h4>
+          <h4>{{ $t('logicEnvironment.addNetwork') }}</h4>
           <el-select
             v-model="selectedNetworkId"
-            placeholder="请选择要添加的组网"
+            :placeholder="$t('logicEnvironment.selectNetworkToAdd')"
             style="width: 100%"
             @change="addNetwork"
           >
@@ -280,23 +280,23 @@
     <!-- 快速添加逻辑组网对话框 -->
     <el-dialog
       v-model="quickAddNetworkDialogVisible"
-      title="快速添加逻辑组网"
+      :title="$t('logicEnvironment.quickAddLogicNetwork')"
       width="500px"
     >
       <div class="quick-add-network">
         <div class="network-list">
           <div v-for="(network, index) in quickAddNetworks" :key="index" class="network-item">
-            <el-form-item :label="`组网 ${index + 1}`" :prop="`networks.${index}.name`">
+            <el-form-item :label="`${$t('logicEnvironment.network')} ${index + 1}`" :prop="`networks.${index}.name`">
               <el-input
                 v-model="network.name"
-                placeholder="请输入组网名称"
+                :placeholder="$t('logicEnvironment.networkNamePlaceholder')"
                 style="width: 100%; margin-bottom: 8px;"
               />
               <el-input
                 v-model="network.description"
                 type="textarea"
                 :rows="2"
-                placeholder="请输入组网描述（可选）"
+                :placeholder="$t('logicEnvironment.networkDescriptionPlaceholder')"
                 style="width: 100%;"
               />
             </el-form-item>
@@ -307,7 +307,7 @@
               @click="removeQuickAddNetwork(index)"
               style="margin-top: 8px;"
             >
-              删除
+              {{ $t('logicEnvironment.delete') }}
             </el-button>
           </div>
         </div>
@@ -315,15 +315,15 @@
         <div class="add-network-button">
           <el-button type="primary" @click="addQuickAddNetwork">
             <el-icon><Plus /></el-icon>
-            添加更多组网
+            {{ $t('logicEnvironment.addMoreNetworks') }}
           </el-button>
         </div>
       </div>
       
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="quickAddNetworkDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="submitQuickAddNetworks">确定</el-button>
+          <el-button @click="quickAddNetworkDialogVisible = false">{{ $t('common.cancel') }}</el-button>
+          <el-button type="primary" @click="submitQuickAddNetworks">{{ $t('common.confirm') }}</el-button>
         </span>
       </template>
     </el-dialog>
@@ -333,11 +333,13 @@
 <script>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useI18n } from 'vue-i18n'
 import request from '@/utils/request'
 
 export default {
   name: 'LogicEnvironment',
   setup() {
+    const { t } = useI18n()
     const loading = ref(false)
     const tableData = ref([])
     const dialogVisible = ref(false)
@@ -382,13 +384,13 @@ export default {
 
     const rules = {
       name: [
-        { required: true, message: '请输入逻辑环境名称', trigger: 'blur' },
+        { required: true, message: t('logicEnvironment.logicEnvironmentNameRequired'), trigger: 'blur' },
       ],
       executorId: [
-        { required: true, message: '请选择执行机', trigger: 'change' },
+        { required: true, message: t('logicEnvironment.executorRequired'), trigger: 'change' },
       ],
       selectedUeIds: [
-        { required: true, message: '请选择UE', trigger: 'change' },
+        { required: true, message: t('logicEnvironment.ueRequired'), trigger: 'change' },
       ],
     }
 
@@ -407,7 +409,7 @@ export default {
         tableData.value = res.data.records
         pagination.total = res.data.total
       } catch (error) {
-        console.error('加载数据失败:', error)
+        console.error(t('logicEnvironment.loadDataFailed'), error)
       } finally {
         loading.value = false
       }
@@ -421,7 +423,7 @@ export default {
         })
         executorOptions.value = res.data
       } catch (error) {
-        console.error('加载执行机数据失败:', error)
+        console.error(t('logicEnvironment.loadExecutorDataFailed'), error)
       }
     }
 
@@ -433,7 +435,7 @@ export default {
         })
         ueOptions.value = res.data
       } catch (error) {
-        console.error('加载UE数据失败:', error)
+        console.error(t('logicEnvironment.loadUeDataFailed'), error)
       }
     }
 
@@ -445,7 +447,7 @@ export default {
         })
         networkOptions.value = res.data
       } catch (error) {
-        console.error('加载组网数据失败:', error)
+        console.error(t('logicEnvironment.loadNetworkDataFailed'), error)
       }
     }
 
@@ -482,7 +484,7 @@ export default {
     }
 
     const handleAdd = () => {
-      dialogTitle.value = '新增逻辑环境'
+      dialogTitle.value = t('logicEnvironment.addLogicEnvironment')
       dialogVisible.value = true
       resetForm()
       loadExecutorOptions()
@@ -491,7 +493,7 @@ export default {
     }
 
     const handleEdit = (row) => {
-      dialogTitle.value = '编辑逻辑环境'
+      dialogTitle.value = t('logicEnvironment.editLogicEnvironment')
       Object.assign(form, row)
       
       // 处理UE回显：将ueList中的UE ID提取到selectedUeIds
@@ -516,9 +518,9 @@ export default {
 
     const handleDelete = async (row) => {
       try {
-        await ElMessageBox.confirm('确定要删除这个逻辑环境吗？', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
+        await ElMessageBox.confirm(t('logicEnvironment.deleteConfirm'), t('common.info'), {
+          confirmButtonText: t('common.confirm'),
+          cancelButtonText: t('common.cancel'),
           type: 'warning',
         })
         
@@ -526,11 +528,11 @@ export default {
           url: `/logic-environment/${row.id}`,
           method: 'delete',
         })
-        ElMessage.success('删除成功')
+        ElMessage.success(t('logicEnvironment.deleteSuccess'))
         loadData()
       } catch (error) {
         if (error !== 'cancel') {
-          ElMessage.error('删除失败')
+          ElMessage.error(t('logicEnvironment.deleteFailed'))
         }
       }
     }
@@ -557,7 +559,7 @@ export default {
             method: 'put',
             data: requestData,
           })
-          ElMessage.success('更新成功')
+          ElMessage.success(t('logicEnvironment.updateSuccess'))
         } else {
           // 新增逻辑环境，同时关联UE
           const requestData = {
@@ -576,14 +578,14 @@ export default {
             method: 'post',
             data: requestData,
           })
-          ElMessage.success('创建成功')
+          ElMessage.success(t('logicEnvironment.createSuccess'))
         }
         
         dialogVisible.value = false
         loadData()
       } catch (error) {
-        console.error('提交失败:', error)
-        ElMessage.error('操作失败')
+        console.error(t('logicEnvironment.submitFailed'), error)
+        ElMessage.error(t('logicEnvironment.operationFailed'))
       }
     }
 
@@ -618,7 +620,7 @@ export default {
         })
         currentUes.value = res.data
       } catch (error) {
-        console.error('加载当前UE失败:', error)
+        console.error(t('logicEnvironment.loadCurrentUeFailed'), error)
       }
     }
 
@@ -630,7 +632,7 @@ export default {
         })
         availableUes.value = res.data
       } catch (error) {
-        console.error('加载可用UE失败:', error)
+        console.error(t('logicEnvironment.loadAvailableUeFailed'), error)
       }
     }
 
@@ -643,12 +645,12 @@ export default {
           method: 'post',
           data: [selectedUeId.value],
         })
-        ElMessage.success('添加UE成功')
+        ElMessage.success(t('logicEnvironment.addUeSuccess'))
         selectedUeId.value = null
         await loadCurrentUes(currentLogicEnvironmentId.value)
         await loadAvailableUes()
       } catch (error) {
-        ElMessage.error('添加UE失败')
+        ElMessage.error(t('logicEnvironment.addUeFailed'))
       }
     }
 
@@ -658,11 +660,11 @@ export default {
           url: `/logic-environment/${currentLogicEnvironmentId.value}/ue/${ue.ueId}`,
           method: 'delete',
         })
-        ElMessage.success('移除UE成功')
+        ElMessage.success(t('logicEnvironment.removeUeSuccess'))
         await loadCurrentUes(currentLogicEnvironmentId.value)
         await loadAvailableUes()
       } catch (error) {
-        ElMessage.error('移除UE失败')
+        ElMessage.error(t('logicEnvironment.removeUeFailed'))
       }
     }
 
@@ -682,7 +684,7 @@ export default {
         })
         currentNetworks.value = res.data
       } catch (error) {
-        console.error('加载当前组网失败:', error)
+        console.error(t('logicEnvironment.loadCurrentNetworkFailed'), error)
       }
     }
 
@@ -694,7 +696,7 @@ export default {
         })
         availableNetworks.value = res.data
       } catch (error) {
-        console.error('加载可用组网失败:', error)
+        console.error(t('logicEnvironment.loadAvailableNetworkFailed'), error)
       }
     }
 
@@ -707,12 +709,12 @@ export default {
           method: 'post',
           data: [selectedNetworkId.value],
         })
-        ElMessage.success('添加组网成功')
+        ElMessage.success(t('logicEnvironment.addNetworkSuccess'))
         selectedNetworkId.value = null
         await loadCurrentNetworks(currentLogicEnvironmentId.value)
         await loadAvailableNetworks()
       } catch (error) {
-        ElMessage.error('添加组网失败')
+        ElMessage.error(t('logicEnvironment.addNetworkFailed'))
       }
     }
 
@@ -722,11 +724,11 @@ export default {
           url: `/logic-environment/${currentLogicEnvironmentId.value}/network/${network.id}`,
           method: 'delete',
         })
-        ElMessage.success('移除组网成功')
+        ElMessage.success(t('logicEnvironment.removeNetworkSuccess'))
         await loadCurrentNetworks(currentLogicEnvironmentId.value)
         await loadAvailableNetworks()
       } catch (error) {
-        ElMessage.error('移除组网失败')
+        ElMessage.error(t('logicEnvironment.removeNetworkFailed'))
       }
     }
 
@@ -750,7 +752,7 @@ export default {
       for (let i = 0; i < quickAddNetworks.value.length; i++) {
         const network = quickAddNetworks.value[i]
         if (!network.name || !network.name.trim()) {
-          ElMessage.warning(`请填写组网 ${i + 1} 的名称`)
+          ElMessage.warning(t('logicEnvironment.fillNetworkName', { index: i + 1 }))
           return
         }
         // 描述字段不是必需的，可以为空
@@ -782,11 +784,11 @@ export default {
         // 刷新组网选项列表
         await loadNetworkOptions()
         
-        ElMessage.success(`成功创建 ${createdNetworks.length} 个逻辑组网`)
+        ElMessage.success(t('logicEnvironment.quickAddNetworkSuccess', { count: createdNetworks.length }))
         quickAddNetworkDialogVisible.value = false
       } catch (error) {
-        console.error('快速添加组网失败:', error)
-        ElMessage.error('快速添加组网失败')
+        console.error(t('logicEnvironment.quickAddNetworkFailed'), error)
+        ElMessage.error(t('logicEnvironment.quickAddNetworkFailed'))
       }
     }
 
