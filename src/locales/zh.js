@@ -302,6 +302,7 @@ export default {
     testCases: '测试用例',
     file: '文件',
     viewFile: '查看文件',
+    fileAccess: '文件访问',
     businessCategory: '业务大类',
     app: 'App',
     logicNetwork: '逻辑组网',

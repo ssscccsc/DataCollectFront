@@ -302,6 +302,7 @@ export default {
     testCases: 'Test Cases',
     file: 'File',
     viewFile: 'View File',
+    fileAccess: 'File Access',
     businessCategory: 'Business Category',
     app: 'App',
     logicNetwork: 'Logic Network',

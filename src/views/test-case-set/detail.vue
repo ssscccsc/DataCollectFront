@@ -3,40 +3,40 @@
     <div class="page-header">
       <el-button @click="goBack" type="text" class="back-button">
         <el-icon><ArrowLeft /></el-icon>
-        返回
+        {{ $t('common.back') }}
       </el-button>
-      <h2 class="page-title">用例集详情</h2>
+      <h2 class="page-title">{{ $t('pageTitle.testCaseSetDetail') }}</h2>
     </div>
 
     <el-card v-if="testCaseSet" class="test-case-set-info">
       <template #header>
         <div class="card-header">
-          <span class="card-title">用例集信息</span>
+          <span class="card-title">{{ $t('testCaseSet.testCaseSetInfo') }}</span>
         </div>
       </template>
       
       <el-descriptions :column="2" border>
-        <el-descriptions-item label="用例集名称">
+        <el-descriptions-item :label="$t('testCaseSet.testCaseSetName')">
           {{ testCaseSet.name }}
         </el-descriptions-item>
-        <el-descriptions-item label="版本">
+        <el-descriptions-item :label="$t('testCaseSet.version')">
           {{ testCaseSet.version }}
         </el-descriptions-item>
-        <el-descriptions-item label="描述">
-          {{ testCaseSet.description || '暂无描述' }}
+        <el-descriptions-item :label="$t('testCaseSet.description')">
+          {{ testCaseSet.description || $t('testCaseSet.noDescription') }}
         </el-descriptions-item>
-        <el-descriptions-item label="文件大小">
+        <el-descriptions-item :label="$t('testCaseSet.fileSize')">
           {{ formatFileSize(testCaseSet.fileSize) }}
         </el-descriptions-item>
-        <el-descriptions-item label="状态">
+        <el-descriptions-item :label="$t('testCaseSet.status')">
           <el-tag :type="testCaseSet.status === 1 ? 'success' : 'danger'">
-            {{ testCaseSet.status === 1 ? '启用' : '禁用' }}
+            {{ testCaseSet.status === 1 ? $t('testCaseSet.enabled') : $t('testCaseSet.disabled') }}
           </el-tag>
         </el-descriptions-item>
-        <el-descriptions-item label="创建时间">
+        <el-descriptions-item :label="$t('testCaseSet.createTime')">
           {{ formatDateTime(testCaseSet.createTime) }}
         </el-descriptions-item>
-        <el-descriptions-item label="文件访问" :span="2" v-if="testCaseSet.gohttpserverUrl">
+        <el-descriptions-item :label="$t('testCaseSet.fileAccess')" :span="2" v-if="testCaseSet.gohttpserverUrl">
           <el-link 
             type="primary" 
             :href="testCaseSet.gohttpserverUrl" 
@@ -61,14 +61,14 @@
     <el-card class="test-cases-list">
       <template #header>
         <div class="card-header">
-          <span class="card-title">测试用例列表 ({{ testCases.length }})</span>
+          <span class="card-title">{{ $t('testCaseSet.testCases') }} ({{ testCases.length }})</span>
         </div>
       </template>
 
       <el-table :data="testCases" v-loading="loading" style="width: 100%">
-        <el-table-column prop="name" label="用例名称" min-width="150" />
-        <el-table-column prop="number" label="用例编号" width="100" />
-        <el-table-column prop="logicNetwork" label="逻辑组网" min-width="150">
+        <el-table-column prop="name" :label="$t('testCaseSet.testCaseName')" min-width="150" />
+        <el-table-column prop="number" :label="$t('testCaseSet.testCaseNumber')" width="100" />
+        <el-table-column prop="logicNetwork" :label="$t('testCaseSet.logicNetwork')" min-width="150">
           <template #default="scope">
             <div v-if="scope.row.logicNetwork">
               <el-tag 
@@ -117,6 +117,7 @@
 <script>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { ArrowLeft, Link, CopyDocument } from '@element-plus/icons-vue'
 import request from '@/utils/request'
@@ -126,6 +127,7 @@ export default {
   setup() {
     const route = useRoute()
     const router = useRouter()
+    const { t } = useI18n()
     const loading = ref(false)
     const testCaseSet = ref(null)
     const testCases = ref([])
@@ -185,7 +187,7 @@ export default {
         testCaseSet.value = res.data
       } catch (error) {
         console.error('加载用例集信息失败:', error)
-        ElMessage.error('加载用例集信息失败')
+        ElMessage.error(t('testCaseSet.loadDataFailed'))
       } finally {
         loading.value = false
       }
@@ -203,7 +205,7 @@ export default {
         testCases.value = res.data
       } catch (error) {
         console.error('加载测试用例失败:', error)
-        ElMessage.error('加载测试用例失败')
+        ElMessage.error(t('testCaseSet.loadDataFailed'))
       }
     }
 
