@@ -66,8 +66,8 @@
       </template>
 
       <el-table :data="testCases" v-loading="loading" style="width: 100%">
-        <el-table-column prop="name" :label="$t('testCaseSet.testCaseName')" min-width="150" />
-        <el-table-column prop="number" :label="$t('testCaseSet.testCaseNumber')" width="100" />
+        <el-table-column prop="name" :label="$t('testCaseSet.testCaseName')" min-width="150" fixed="left" />
+        <el-table-column prop="number" :label="$t('testCaseSet.testCaseNumber')" width="120" />
         <el-table-column prop="logicNetwork" :label="$t('testCaseSet.logicNetwork')" min-width="150">
           <template #default="scope">
             <div v-if="scope.row.logicNetwork">
@@ -89,13 +89,31 @@
             <span v-else style="color: #909399;">未配置</span>
           </template>
         </el-table-column>
-        <el-table-column prop="app" label="App" width="120">
+        <el-table-column prop="app" label="APP" width="120">
           <template #default="scope">
             <span v-if="scope.row.app">{{ scope.row.app }}</span>
             <span v-else style="color: #909399;">未配置</span>
           </template>
         </el-table-column>
-        <el-table-column prop="testSteps" label="测试步骤" min-width="200">
+        <el-table-column prop="appEn" label="APPEN" width="120">
+          <template #default="scope">
+            <span v-if="scope.row.appEn">{{ scope.row.appEn }}</span>
+            <span v-else style="color: #909399;">未配置</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="modelScenario" label="模型场景" width="120">
+          <template #default="scope">
+            <span v-if="scope.row.modelScenario">{{ scope.row.modelScenario }}</span>
+            <span v-else style="color: #909399;">未配置</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="phoneOsType" label="手机OS类" width="120">
+          <template #default="scope">
+            <span v-if="scope.row.phoneOsType">{{ scope.row.phoneOsType }}</span>
+            <span v-else style="color: #909399;">未配置</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="testSteps" label="操作步骤" min-width="200">
           <template #default="scope">
             <div class="test-steps">
               <pre>{{ scope.row.testSteps }}</pre>
