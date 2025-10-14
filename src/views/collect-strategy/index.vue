@@ -341,6 +341,19 @@
                   </template>
                 </el-table-column>
               </el-table>
+              
+              <!-- 下一步按钮 -->
+              <div class="next-step-container">
+                <el-button 
+                  type="primary" 
+                  size="large"
+                  @click="handleNextStep"
+                  :disabled="filteredTestCaseList.length === 0"
+                >
+                  {{ $t('collectStrategy.nextStep') }}
+                  <el-icon><ArrowRight /></el-icon>
+                </el-button>
+              </div>
             </div>
           </div>
         </el-form-item>
@@ -363,6 +376,150 @@
         <span class="dialog-footer">
           <el-button @click="dialogVisible = false">{{ $t('common.cancel') }}</el-button>
           <el-button type="primary" @click="handleSubmit">{{ $t('common.confirm') }}</el-button>
+        </span>
+      </template>
+    </el-dialog>
+
+    <!-- 批量配置用例对话框 -->
+    <el-dialog
+      v-model="batchConfigDialogVisible"
+      :title="$t('collectStrategy.batchConfigTitle')"
+      width="90%"
+      top="5vh"
+      :close-on-click-modal="false"
+    >
+      <div class="batch-config-container">
+        <el-alert
+          :title="$t('collectStrategy.batchConfigTip')"
+          type="info"
+          :closable="false"
+          show-icon
+          style="margin-bottom: 16px;"
+        >
+          <template #default>
+            {{ $t('collectStrategy.batchConfigDescription', { count: filteredTestCaseList.length }) }}
+          </template>
+        </el-alert>
+
+        <el-collapse v-model="activeBatchConfigItems" accordion>
+          <el-collapse-item 
+            v-for="(testCase, index) in filteredTestCaseList" 
+            :key="testCase.id"
+            :name="testCase.id"
+          >
+            <template #title>
+              <div class="batch-config-item-title">
+                <el-tag type="primary" size="small" style="margin-right: 8px;">{{ index + 1 }}</el-tag>
+                <strong style="margin-right: 12px;">{{ testCase.name }}</strong>
+                <el-tag size="small" type="info">{{ testCase.number }}</el-tag>
+                <span style="margin-left: auto; margin-right: 12px; font-size: 12px; color: #909399;">
+                  <el-icon v-if="getTestCaseExecutionCount(testCase.id) > 0" style="color: #e6a23c;"><Clock /></el-icon>
+                  {{ getTestCaseExecutionCount(testCase.id) > 0 ? `${getTestCaseExecutionCount(testCase.id)} 次` : $t('collectStrategy.notConfigured') }}
+                  <el-divider direction="vertical" />
+                  <el-icon v-if="getTestCaseParamCount(testCase.id) > 0" style="color: #67c23a;"><Setting /></el-icon>
+                  {{ getTestCaseParamCount(testCase.id) > 0 ? `${getTestCaseParamCount(testCase.id)} 个参数` : $t('collectStrategy.noParams') }}
+                </span>
+              </div>
+            </template>
+            
+            <div class="batch-config-item-content">
+              <!-- 用例基本信息 -->
+              <el-descriptions :column="3" border size="small" style="margin-bottom: 16px;">
+                <el-descriptions-item :label="$t('collectStrategy.businessCategory')">
+                  {{ testCase.businessCategory || $t('collectStrategy.notConfigured') }}
+                </el-descriptions-item>
+                <el-descriptions-item :label="$t('collectStrategy.app')">
+                  {{ testCase.app || $t('collectStrategy.notConfigured') }}
+                </el-descriptions-item>
+                <el-descriptions-item :label="$t('collectStrategy.logicNetwork')">
+                  <div v-if="testCase.logicNetwork">
+                    <el-tag 
+                      v-for="network in testCase.logicNetwork.split(';')" 
+                      :key="network"
+                      size="small"
+                      style="margin-right: 4px;"
+                    >
+                      {{ network }}
+                    </el-tag>
+                  </div>
+                  <span v-else>{{ $t('collectStrategy.notConfigured') }}</span>
+                </el-descriptions-item>
+              </el-descriptions>
+
+              <!-- 执行次数配置 -->
+              <div class="config-section">
+                <div class="config-section-title">
+                  <el-icon><Clock /></el-icon>
+                  <span>{{ $t('collectStrategy.executionConfig') }}</span>
+                </div>
+                <el-input-number
+                  v-model="form.testCaseExecutionCounts[testCase.id]"
+                  :min="1"
+                  :max="100"
+                  :placeholder="$t('collectStrategy.executionCountPlaceholder')"
+                  style="width: 200px;"
+                />
+                <span style="margin-left: 12px; color: #909399; font-size: 12px;">
+                  {{ $t('collectStrategy.executionCountTip') }}
+                </span>
+              </div>
+
+              <!-- 自定义参数配置 -->
+              <div class="config-section">
+                <div class="config-section-title">
+                  <el-icon><Setting /></el-icon>
+                  <span>{{ $t('collectStrategy.customParamsLabel') }}</span>
+                  <el-button 
+                    type="primary" 
+                    size="small" 
+                    @click="addBatchTestCaseParam(testCase.id)"
+                    :icon="Plus"
+                    style="margin-left: auto;"
+                  >
+                    {{ $t('collectStrategy.addParam') }}
+                  </el-button>
+                </div>
+                
+                <div v-if="!form.testCaseCustomParams[testCase.id] || form.testCaseCustomParams[testCase.id].length === 0" class="empty-params-inline">
+                  <span style="color: #909399; font-size: 12px;">{{ $t('collectStrategy.noTestCaseParams') }}</span>
+                </div>
+                
+                <div v-else class="params-list-inline">
+                  <div 
+                    v-for="(param, paramIndex) in form.testCaseCustomParams[testCase.id]" 
+                    :key="paramIndex" 
+                    class="param-item-inline"
+                  >
+                    <div class="param-index-small">{{ paramIndex + 1 }}</div>
+                    <el-input 
+                      v-model="param.key" 
+                      :placeholder="$t('collectStrategy.paramKey')" 
+                      size="small"
+                      style="flex: 1;"
+                    />
+                    <el-input 
+                      v-model="param.value" 
+                      :placeholder="$t('collectStrategy.paramValue')" 
+                      size="small"
+                      style="flex: 1;"
+                    />
+                    <el-button 
+                      type="danger" 
+                      size="small" 
+                      @click="removeBatchTestCaseParam(testCase.id, paramIndex)"
+                      :icon="Delete"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </el-collapse-item>
+        </el-collapse>
+      </div>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="batchConfigDialogVisible = false">{{ $t('common.back') }}</el-button>
+          <el-button type="primary" @click="saveBatchConfig">{{ $t('common.confirm') }}</el-button>
         </span>
       </template>
     </el-dialog>
@@ -473,7 +630,7 @@
 <script>
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Link, Plus, Delete, Setting } from '@element-plus/icons-vue'
+import { Link, Plus, Delete, Setting, ArrowRight, Clock } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import request from '@/utils/request'
 
@@ -493,6 +650,10 @@ export default {
     const businessCategoryOptions = ref([])
     const appOptions = ref([])
     const intentOptions = ref([])
+    
+    // 批量配置对话框
+    const batchConfigDialogVisible = ref(false)
+    const activeBatchConfigItems = ref([])
     
     // 用例自定义参数配置
     const testCaseParamsDialogVisible = ref(false)
@@ -661,6 +822,59 @@ export default {
     // 获取用例的执行次数
     const getTestCaseExecutionCount = (testCaseId) => {
       return form.testCaseExecutionCounts[testCaseId] || 0
+    }
+    
+    // 点击下一步，打开批量配置对话框
+    const handleNextStep = () => {
+      // 初始化执行次数（如果未设置，默认为1）
+      filteredTestCaseList.value.forEach(testCase => {
+        if (!form.testCaseExecutionCounts[testCase.id]) {
+          form.testCaseExecutionCounts[testCase.id] = 1
+        }
+        // 初始化参数数组（如果未设置）
+        if (!form.testCaseCustomParams[testCase.id]) {
+          form.testCaseCustomParams[testCase.id] = []
+        }
+      })
+      
+      batchConfigDialogVisible.value = true
+      // 默认展开第一个
+      if (filteredTestCaseList.value.length > 0) {
+        activeBatchConfigItems.value = [filteredTestCaseList.value[0].id]
+      }
+    }
+    
+    // 为批量配置的用例添加参数
+    const addBatchTestCaseParam = (testCaseId) => {
+      if (!form.testCaseCustomParams[testCaseId]) {
+        form.testCaseCustomParams[testCaseId] = []
+      }
+      form.testCaseCustomParams[testCaseId].push({ key: '', value: '', })
+    }
+    
+    // 删除批量配置的用例参数
+    const removeBatchTestCaseParam = (testCaseId, paramIndex) => {
+      if (form.testCaseCustomParams[testCaseId]) {
+        form.testCaseCustomParams[testCaseId].splice(paramIndex, 1)
+      }
+    }
+    
+    // 保存批量配置
+    const saveBatchConfig = () => {
+      // 清理空的参数
+      Object.keys(form.testCaseCustomParams).forEach(testCaseId => {
+        const params = form.testCaseCustomParams[testCaseId]
+        if (params && Array.isArray(params)) {
+          form.testCaseCustomParams[testCaseId] = params.filter(param => param.key && param.value)
+          // 如果过滤后为空，删除该key
+          if (form.testCaseCustomParams[testCaseId].length === 0) {
+            delete form.testCaseCustomParams[testCaseId]
+          }
+        }
+      })
+      
+      ElMessage.success(t('collectStrategy.batchConfigSuccess'))
+      batchConfigDialogVisible.value = false
     }
     
     // 打开用例自定义参数配置对话框
@@ -889,12 +1103,18 @@ export default {
       intentOptions,
       customParamRules,
       filteredTestCaseList,
+      batchConfigDialogVisible,
+      activeBatchConfigItems,
       testCaseParamsDialogVisible,
       currentTestCase,
       currentTestCaseParams,
       currentTestCaseExecutionCount,
       getTestCaseParamCount,
       getTestCaseExecutionCount,
+      handleNextStep,
+      addBatchTestCaseParam,
+      removeBatchTestCaseParam,
+      saveBatchConfig,
       handleConfigTestCaseParams,
       addTestCaseParam,
       removeTestCaseParam,
@@ -1133,6 +1353,95 @@ export default {
 
 .test-case-table .el-table th {
   background-color: #f5f7fa;
+}
+
+/* 下一步按钮容器 */
+.next-step-container {
+  margin-top: 16px;
+  padding: 16px;
+  background-color: #f9fafb;
+  border-top: 1px solid #e4e7ed;
+  text-align: center;
+}
+
+/* 批量配置对话框样式 */
+.batch-config-container {
+  padding: 8px;
+}
+
+.batch-config-item-title {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding-right: 16px;
+}
+
+.batch-config-item-content {
+  padding: 16px;
+  background-color: #fafafa;
+}
+
+.config-section {
+  margin-bottom: 16px;
+  padding: 16px;
+  background-color: #fff;
+  border: 1px solid #e4e7ed;
+  border-radius: 4px;
+}
+
+.config-section:last-child {
+  margin-bottom: 0;
+}
+
+.config-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.config-section-title .el-icon {
+  font-size: 16px;
+  color: #409eff;
+}
+
+.empty-params-inline {
+  padding: 20px;
+  text-align: center;
+  background-color: #f5f7fa;
+  border-radius: 4px;
+}
+
+.params-list-inline {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.param-item-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background-color: #f5f7fa;
+  border-radius: 4px;
+}
+
+.param-index-small {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background-color: #409eff;
+  color: white;
+  border-radius: 50%;
+  font-weight: bold;
+  font-size: 12px;
+  flex-shrink: 0;
 }
 
 
