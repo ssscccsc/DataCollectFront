@@ -306,6 +306,14 @@
                     <span v-else style="color: #909399;">{{ $t('collectStrategy.notConfigured') }}</span>
                   </template>
                 </el-table-column>
+                <el-table-column :label="$t('collectStrategy.executionCount')" width="100" align="center">
+                  <template #default="scope">
+                    <el-tag v-if="getTestCaseExecutionCount(scope.row.id) > 0" type="warning" size="small">
+                      {{ getTestCaseExecutionCount(scope.row.id) }} 次
+                    </el-tag>
+                    <span v-else style="color: #909399;">{{ $t('collectStrategy.notConfigured') }}</span>
+                  </template>
+                </el-table-column>
                 <el-table-column :label="$t('collectStrategy.testCaseCustomParams')" width="120" align="center">
                   <template #default="scope">
                     <el-tooltip 
@@ -382,6 +390,26 @@
               {{ currentTestCase.app || $t('collectStrategy.notConfigured') }}
             </el-descriptions-item>
           </el-descriptions>
+        </div>
+
+        <!-- 执行次数配置 -->
+        <el-divider>{{ $t('collectStrategy.executionConfig') }}</el-divider>
+        
+        <div class="execution-config-section">
+          <el-form label-width="120px">
+            <el-form-item :label="$t('collectStrategy.executionCount')">
+              <el-input-number
+                v-model="currentTestCaseExecutionCount"
+                :min="1"
+                :max="100"
+                :placeholder="$t('collectStrategy.executionCountPlaceholder')"
+                style="width: 200px;"
+              />
+              <span style="margin-left: 12px; color: #909399; font-size: 12px;">
+                {{ $t('collectStrategy.executionCountTip') }}
+              </span>
+            </el-form-item>
+          </el-form>
         </div>
 
         <el-divider>{{ $t('collectStrategy.customParamsLabel') }}</el-divider>
@@ -470,13 +498,14 @@ export default {
     const testCaseParamsDialogVisible = ref(false)
     const currentTestCase = ref(null)
     const currentTestCaseParams = ref([])
+    const currentTestCaseExecutionCount = ref(1)
     const customParamRules = reactive({
       key: [
-        { required: true, message: t('collectStrategy.paramKeyRequired'), trigger: 'blur' }
+        { required: true, message: t('collectStrategy.paramKeyRequired'), trigger: 'blur' },
       ],
       value: [
-        { required: true, message: t('collectStrategy.paramValueRequired'), trigger: 'blur' }
-      ]
+        { required: true, message: t('collectStrategy.paramValueRequired'), trigger: 'blur' },
+      ],
     })
 
     const pagination = reactive({
@@ -495,6 +524,7 @@ export default {
       intent: '',
       customParams: [],
       testCaseCustomParams: {}, // 用例级别的自定义参数 { testCaseId: [{ key: '', value: '' }] }
+      testCaseExecutionCounts: {}, // 用例级别的执行次数 { testCaseId: count }
       description: '',
       status: 1,
     })
@@ -628,12 +658,19 @@ export default {
       return params ? params.length : 0
     }
     
+    // 获取用例的执行次数
+    const getTestCaseExecutionCount = (testCaseId) => {
+      return form.testCaseExecutionCounts[testCaseId] || 0
+    }
+    
     // 打开用例自定义参数配置对话框
     const handleConfigTestCaseParams = (testCase) => {
       currentTestCase.value = testCase
       // 深拷贝当前用例的参数
       const existingParams = form.testCaseCustomParams[testCase.id] || []
       currentTestCaseParams.value = JSON.parse(JSON.stringify(existingParams))
+      // 获取当前用例的执行次数
+      currentTestCaseExecutionCount.value = form.testCaseExecutionCounts[testCase.id] || 1
       testCaseParamsDialogVisible.value = true
     }
     
@@ -659,6 +696,13 @@ export default {
         delete form.testCaseCustomParams[currentTestCase.value.id]
       }
       
+      // 保存执行次数
+      if (currentTestCaseExecutionCount.value > 0) {
+        form.testCaseExecutionCounts[currentTestCase.value.id] = currentTestCaseExecutionCount.value
+      } else {
+        delete form.testCaseExecutionCounts[currentTestCase.value.id]
+      }
+      
       ElMessage.success(t('collectStrategy.saveParamsSuccess'))
       testCaseParamsDialogVisible.value = false
     }
@@ -667,6 +711,7 @@ export default {
     const resetTestCaseParamsDialog = () => {
       currentTestCase.value = null
       currentTestCaseParams.value = []
+      currentTestCaseExecutionCount.value = 1
     }
 
     // 筛选后的用例列表（根据策略配置的筛选条件）
@@ -711,6 +756,7 @@ export default {
         intent: row.intent || '',
         customParams: row.customParamList || [],
         testCaseCustomParams: row.testCaseCustomParams || {},
+        testCaseExecutionCounts: row.testCaseExecutionCounts || {},
         description: row.description,
         status: row.status,
       })
@@ -757,6 +803,7 @@ export default {
           intent: form.intent || null,
           customParams: form.customParams.length > 0 ? JSON.stringify(form.customParams) : null,
           testCaseCustomParams: Object.keys(form.testCaseCustomParams).length > 0 ? JSON.stringify(form.testCaseCustomParams) : null,
+          testCaseExecutionCounts: Object.keys(form.testCaseExecutionCounts).length > 0 ? JSON.stringify(form.testCaseExecutionCounts) : null,
           description: form.description,
           status: form.status,
         }
@@ -795,6 +842,7 @@ export default {
         intent: '',
         customParams: [],
         testCaseCustomParams: {},
+        testCaseExecutionCounts: {},
         description: '',
         status: 1,
       })
@@ -844,7 +892,9 @@ export default {
       testCaseParamsDialogVisible,
       currentTestCase,
       currentTestCaseParams,
+      currentTestCaseExecutionCount,
       getTestCaseParamCount,
+      getTestCaseExecutionCount,
       handleConfigTestCaseParams,
       addTestCaseParam,
       removeTestCaseParam,
@@ -1017,6 +1067,14 @@ export default {
 }
 
 .test-case-info-header {
+  margin-bottom: 16px;
+}
+
+/* 执行次数配置样式 */
+.execution-config-section {
+  background-color: #f5f7fa;
+  padding: 16px;
+  border-radius: 4px;
   margin-bottom: 16px;
 }
 

@@ -347,7 +347,20 @@ export default {
     descriptionPlaceholder: '请输入描述',
     statusLabel: '状态',
     enabled: '启用',
+    // 用例自定义参数
+    testCaseCustomParams: '用例参数',
+    configParams: '配置参数',
+    configTestCaseParams: '配置用例自定义参数',
+    testCaseParamList: '参数列表',
+    noTestCaseParams: '暂无参数，点击"添加参数"按钮添加',
+    configuredParams: '已配置 {count} 个参数',
+    saveParamsSuccess: '保存成功',
     disabled: '禁用',
+    // 执行次数配置
+    executionConfig: '执行配置',
+    executionCount: '执行次数',
+    executionCountPlaceholder: '请输入执行次数',
+    executionCountTip: '该用例在本策略中的执行次数（默认1次）',
     // 表单验证
     strategyNameRequired: '请输入策略名称',
     collectCountRequired: '请输入采集次数',

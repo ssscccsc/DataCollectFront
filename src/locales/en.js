@@ -347,7 +347,20 @@ export default {
     descriptionPlaceholder: 'Please enter description',
     statusLabel: 'Status',
     enabled: 'Enabled',
+    // Test Case Custom Parameters
+    testCaseCustomParams: 'Test Case Parameters',
+    configParams: 'Configure Parameters',
+    configTestCaseParams: 'Configure Test Case Custom Parameters',
+    testCaseParamList: 'Parameter List',
+    noTestCaseParams: 'No parameters yet, click "Add Parameter" to add',
+    configuredParams: 'Configured {count} parameters',
+    saveParamsSuccess: 'Save successful',
     disabled: 'Disabled',
+    // Execution Count Configuration
+    executionConfig: 'Execution Configuration',
+    executionCount: 'Execution Count',
+    executionCountPlaceholder: 'Please enter execution count',
+    executionCountTip: 'Number of times this test case will be executed in this strategy (default: 1)',
     // Form Validation
     strategyNameRequired: 'Please enter strategy name',
     collectCountRequired: 'Please enter collection count',
