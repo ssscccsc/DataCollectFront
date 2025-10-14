@@ -374,6 +374,21 @@ export default {
     notUploaded: '未上传',
     enabled: '启用',
     disabled: '禁用',
+    noDescription: '无描述',
+    // 详情页面
+    testCaseSetInfo: '用例集信息',
+    testCases: '测试用例',
+    testCaseName: '用例名称',
+    testCaseNumber: '用例编号',
+    logicNetwork: '用例逻辑组网',
+    businessCategory: '业务大类',
+    app: 'APP',
+    appEn: 'APPEN',
+    modelScenario: '模型场景',
+    phoneOsType: '手机OS类',
+    testSteps: '操作步骤',
+    expectedResult: '预期结果',
+    fileAccess: '文件访问',
     // 上传对话框
     uploadTestCaseSet: '上传用例集',
     testCaseSetFile: '用例集文件',
@@ -396,6 +411,7 @@ export default {
     deleteConfirm: '确定要删除这个用例集吗？',
     deleteSuccess: '删除成功',
     deleteFailed: '删除失败',
+    testCaseSetIdRequired: '用例集ID不能为空',
   },
   
   // 逻辑环境管理

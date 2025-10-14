@@ -80,47 +80,47 @@
                 {{ network }}
               </el-tag>
             </div>
-            <span v-else style="color: #909399;">未配置</span>
+            <span v-else style="color: #909399;">{{ $t('collectTask.notConfigured') }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="businessCategory" label="业务大类" width="120">
+        <el-table-column prop="businessCategory" :label="$t('testCaseSet.businessCategory')" width="120">
           <template #default="scope">
             <span v-if="scope.row.businessCategory">{{ scope.row.businessCategory }}</span>
-            <span v-else style="color: #909399;">未配置</span>
+            <span v-else style="color: #909399;">{{ $t('collectTask.notConfigured') }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="app" label="APP" width="120">
+        <el-table-column prop="app" :label="$t('testCaseSet.app')" width="120">
           <template #default="scope">
             <span v-if="scope.row.app">{{ scope.row.app }}</span>
-            <span v-else style="color: #909399;">未配置</span>
+            <span v-else style="color: #909399;">{{ $t('collectTask.notConfigured') }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="appEn" label="APPEN" width="120">
+        <el-table-column prop="appEn" :label="$t('testCaseSet.appEn')" width="120">
           <template #default="scope">
             <span v-if="scope.row.appEn">{{ scope.row.appEn }}</span>
-            <span v-else style="color: #909399;">未配置</span>
+            <span v-else style="color: #909399;">{{ $t('collectTask.notConfigured') }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="modelScenario" label="模型场景" width="120">
+        <el-table-column prop="modelScenario" :label="$t('testCaseSet.modelScenario')" width="120">
           <template #default="scope">
             <span v-if="scope.row.modelScenario">{{ scope.row.modelScenario }}</span>
-            <span v-else style="color: #909399;">未配置</span>
+            <span v-else style="color: #909399;">{{ $t('collectTask.notConfigured') }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="phoneOsType" label="手机OS类" width="120">
+        <el-table-column prop="phoneOsType" :label="$t('testCaseSet.phoneOsType')" width="120">
           <template #default="scope">
             <span v-if="scope.row.phoneOsType">{{ scope.row.phoneOsType }}</span>
-            <span v-else style="color: #909399;">未配置</span>
+            <span v-else style="color: #909399;">{{ $t('collectTask.notConfigured') }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="testSteps" label="操作步骤" min-width="200">
+        <el-table-column prop="testSteps" :label="$t('testCaseSet.testSteps')" min-width="200">
           <template #default="scope">
             <div class="test-steps">
               <pre>{{ scope.row.testSteps }}</pre>
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="expectedResult" label="预期结果" min-width="200">
+        <el-table-column prop="expectedResult" :label="$t('testCaseSet.expectedResult')" min-width="200">
           <template #default="scope">
             <div class="expected-result">
               <pre>{{ scope.row.expectedResult }}</pre>
@@ -145,7 +145,7 @@ export default {
   setup() {
     const route = useRoute()
     const router = useRouter()
-    const { t } = useI18n()
+    const { t, locale } = useI18n()
     const loading = ref(false)
     const testCaseSet = ref(null)
     const testCases = ref([])
@@ -160,7 +160,8 @@ export default {
 
     const formatDateTime = (dateTime) => {
       if (!dateTime) return ''
-      return new Date(dateTime).toLocaleString('zh-CN')
+      const currentLocale = locale.value === 'zh' ? 'zh-CN' : 'en-US'
+      return new Date(dateTime).toLocaleString(currentLocale)
     }
 
     const getShortUrl = (url) => {
@@ -176,7 +177,7 @@ export default {
     const copyUrl = async (url) => {
       try {
         await navigator.clipboard.writeText(url)
-        ElMessage.success('URL已复制到剪贴板')
+        ElMessage.success(t('testCaseSet.urlCopied'))
       } catch (err) {
         // 降级方案
         const textArea = document.createElement('textarea')
@@ -185,14 +186,14 @@ export default {
         textArea.select()
         document.execCommand('copy')
         document.body.removeChild(textArea)
-        ElMessage.success('URL已复制到剪贴板')
+        ElMessage.success(t('testCaseSet.urlCopied'))
       }
     }
 
     const loadTestCaseSet = async () => {
       const id = route.params.id
       if (!id) {
-        ElMessage.error('用例集ID不能为空')
+        ElMessage.error(t('testCaseSet.testCaseSetIdRequired'))
         return
       }
 
@@ -204,7 +205,7 @@ export default {
         })
         testCaseSet.value = res.data
       } catch (error) {
-        console.error('加载用例集信息失败:', error)
+        console.error('Load test case set failed:', error)
         ElMessage.error(t('testCaseSet.loadDataFailed'))
       } finally {
         loading.value = false
@@ -222,7 +223,7 @@ export default {
         })
         testCases.value = res.data
       } catch (error) {
-        console.error('加载测试用例失败:', error)
+        console.error('Load test cases failed:', error)
         ElMessage.error(t('testCaseSet.loadDataFailed'))
       }
     }

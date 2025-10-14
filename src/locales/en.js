@@ -374,6 +374,21 @@ export default {
     notUploaded: 'Not uploaded',
     enabled: 'Enabled',
     disabled: 'Disabled',
+    noDescription: 'No description',
+    // Detail Page
+    testCaseSetInfo: 'Test Case Set Information',
+    testCases: 'Test Cases',
+    testCaseName: 'Test Case Name',
+    testCaseNumber: 'Test Case Number',
+    logicNetwork: 'Logic Network',
+    businessCategory: 'Business Category',
+    app: 'APP',
+    appEn: 'APP EN',
+    modelScenario: 'Model Scenario',
+    phoneOsType: 'Phone OS Type',
+    testSteps: 'Test Steps',
+    expectedResult: 'Expected Result',
+    fileAccess: 'File Access',
     // Upload Dialog
     uploadTestCaseSet: 'Upload Test Case Set',
     testCaseSetFile: 'Test Case Set File',
@@ -396,6 +411,7 @@ export default {
     deleteConfirm: 'Are you sure to delete this test case set?',
     deleteSuccess: 'Delete successful',
     deleteFailed: 'Delete failed',
+    testCaseSetIdRequired: 'Test case set ID cannot be empty',
   },
   
   // Logic Environment Management
