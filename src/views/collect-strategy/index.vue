@@ -123,7 +123,7 @@
     <el-dialog
       v-model="dialogVisible"
       :title="dialogTitle"
-      width="500px"
+      width="800px"
       @close="resetForm"
     >
       <el-form
@@ -175,26 +175,25 @@
                 :key="index" 
                 class="param-item"
               >
+                <div class="param-index">{{ index + 1 }}</div>
                 <el-form-item 
                   :prop="`customParams.${index}.key`" 
                   :rules="customParamRules.key"
-                  style="margin-bottom: 0;"
+                  style="margin-bottom: 0; flex: 1;"
                 >
                   <el-input 
                     v-model="param.key" 
                     :placeholder="$t('collectStrategy.paramKey')" 
-                    style="width: 200px;"
                   />
                 </el-form-item>
                 <el-form-item 
                   :prop="`customParams.${index}.value`" 
                   :rules="customParamRules.value"
-                  style="margin-bottom: 0;"
+                  style="margin-bottom: 0; flex: 1;"
                 >
                   <el-input 
                     v-model="param.value" 
                     :placeholder="$t('collectStrategy.paramValue')" 
-                    style="width: 200px;"
                   />
                 </el-form-item>
                 <el-button 
@@ -307,6 +306,32 @@
                     <span v-else style="color: #909399;">{{ $t('collectStrategy.notConfigured') }}</span>
                   </template>
                 </el-table-column>
+                <el-table-column :label="$t('collectStrategy.testCaseCustomParams')" width="120" align="center">
+                  <template #default="scope">
+                    <el-tooltip 
+                      v-if="getTestCaseParamCount(scope.row.id) > 0" 
+                      :content="$t('collectStrategy.configuredParams', { count: getTestCaseParamCount(scope.row.id) })"
+                      placement="top"
+                    >
+                      <el-badge :value="getTestCaseParamCount(scope.row.id)" type="success">
+                        <el-icon style="font-size: 18px; color: #67c23a;"><Setting /></el-icon>
+                      </el-badge>
+                    </el-tooltip>
+                    <span v-else style="color: #909399;">{{ $t('collectStrategy.notConfigured') }}</span>
+                  </template>
+                </el-table-column>
+                <el-table-column :label="$t('collectStrategy.operations')" width="100" align="center" fixed="right">
+                  <template #default="scope">
+                    <el-button 
+                      type="primary" 
+                      size="small" 
+                      text
+                      @click="handleConfigTestCaseParams(scope.row)"
+                    >
+                      {{ $t('collectStrategy.configParams') }}
+                    </el-button>
+                  </template>
+                </el-table-column>
               </el-table>
             </div>
           </div>
@@ -333,13 +358,94 @@
         </span>
       </template>
     </el-dialog>
+
+    <!-- 用例自定义参数配置对话框 -->
+    <el-dialog
+      v-model="testCaseParamsDialogVisible"
+      :title="$t('collectStrategy.configTestCaseParams')"
+      width="700px"
+      @close="resetTestCaseParamsDialog"
+    >
+      <div v-if="currentTestCase" class="test-case-params-dialog">
+        <div class="test-case-info-header">
+          <el-descriptions :column="2" border size="small">
+            <el-descriptions-item :label="$t('collectStrategy.testCaseName')">
+              <strong>{{ currentTestCase.name }}</strong>
+            </el-descriptions-item>
+            <el-descriptions-item :label="$t('collectStrategy.testCaseNumber')">
+              <el-tag type="info" size="small">{{ currentTestCase.number }}</el-tag>
+            </el-descriptions-item>
+            <el-descriptions-item :label="$t('collectStrategy.businessCategory')">
+              {{ currentTestCase.businessCategory || $t('collectStrategy.notConfigured') }}
+            </el-descriptions-item>
+            <el-descriptions-item :label="$t('collectStrategy.app')">
+              {{ currentTestCase.app || $t('collectStrategy.notConfigured') }}
+            </el-descriptions-item>
+          </el-descriptions>
+        </div>
+
+        <el-divider>{{ $t('collectStrategy.customParamsLabel') }}</el-divider>
+
+        <div class="custom-params-section">
+          <div class="params-header">
+            <span class="section-title">{{ $t('collectStrategy.testCaseParamList') }}</span>
+            <el-button 
+              type="primary" 
+              size="small" 
+              @click="addTestCaseParam"
+              :icon="Plus"
+            >
+              {{ $t('collectStrategy.addParam') }}
+            </el-button>
+          </div>
+          
+          <div v-if="currentTestCaseParams.length === 0" class="empty-params">
+            <el-empty :description="$t('collectStrategy.noTestCaseParams')" :image-size="80" />
+          </div>
+          
+          <div v-else class="params-list">
+            <div 
+              v-for="(param, index) in currentTestCaseParams" 
+              :key="index" 
+              class="param-item-row"
+            >
+              <div class="param-index">{{ index + 1 }}</div>
+              <el-input 
+                v-model="param.key" 
+                :placeholder="$t('collectStrategy.paramKey')" 
+                class="param-input"
+              />
+              <el-input 
+                v-model="param.value" 
+                :placeholder="$t('collectStrategy.paramValue')" 
+                class="param-input"
+              />
+              <el-button 
+                type="danger" 
+                size="small" 
+                @click="removeTestCaseParam(index)"
+                :icon="Delete"
+              >
+                {{ $t('common.delete') }}
+              </el-button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="testCaseParamsDialogVisible = false">{{ $t('common.cancel') }}</el-button>
+          <el-button type="primary" @click="saveTestCaseParams">{{ $t('common.save') }}</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script>
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Link, Plus, Delete } from '@element-plus/icons-vue'
+import { Link, Plus, Delete, Setting } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import request from '@/utils/request'
 
@@ -359,6 +465,11 @@ export default {
     const businessCategoryOptions = ref([])
     const appOptions = ref([])
     const intentOptions = ref([])
+    
+    // 用例自定义参数配置
+    const testCaseParamsDialogVisible = ref(false)
+    const currentTestCase = ref(null)
+    const currentTestCaseParams = ref([])
     const customParamRules = reactive({
       key: [
         { required: true, message: t('collectStrategy.paramKeyRequired'), trigger: 'blur' }
@@ -383,6 +494,7 @@ export default {
       app: '',
       intent: '',
       customParams: [],
+      testCaseCustomParams: {}, // 用例级别的自定义参数 { testCaseId: [{ key: '', value: '' }] }
       description: '',
       status: 1,
     })
@@ -509,6 +621,53 @@ export default {
     const removeCustomParam = (index) => {
       form.customParams.splice(index, 1)
     }
+    
+    // 获取用例的自定义参数数量
+    const getTestCaseParamCount = (testCaseId) => {
+      const params = form.testCaseCustomParams[testCaseId]
+      return params ? params.length : 0
+    }
+    
+    // 打开用例自定义参数配置对话框
+    const handleConfigTestCaseParams = (testCase) => {
+      currentTestCase.value = testCase
+      // 深拷贝当前用例的参数
+      const existingParams = form.testCaseCustomParams[testCase.id] || []
+      currentTestCaseParams.value = JSON.parse(JSON.stringify(existingParams))
+      testCaseParamsDialogVisible.value = true
+    }
+    
+    // 添加用例参数
+    const addTestCaseParam = () => {
+      currentTestCaseParams.value.push({ key: '', value: '', })
+    }
+    
+    // 删除用例参数
+    const removeTestCaseParam = (index) => {
+      currentTestCaseParams.value.splice(index, 1)
+    }
+    
+    // 保存用例自定义参数
+    const saveTestCaseParams = () => {
+      // 过滤掉空的参数
+      const validParams = currentTestCaseParams.value.filter(param => param.key && param.value)
+      
+      if (validParams.length > 0) {
+        form.testCaseCustomParams[currentTestCase.value.id] = validParams
+      } else {
+        // 如果没有有效参数，删除该用例的参数配置
+        delete form.testCaseCustomParams[currentTestCase.value.id]
+      }
+      
+      ElMessage.success(t('collectStrategy.saveParamsSuccess'))
+      testCaseParamsDialogVisible.value = false
+    }
+    
+    // 重置用例参数对话框
+    const resetTestCaseParamsDialog = () => {
+      currentTestCase.value = null
+      currentTestCaseParams.value = []
+    }
 
     // 筛选后的用例列表（根据策略配置的筛选条件）
     const filteredTestCaseList = computed(() => {
@@ -551,6 +710,7 @@ export default {
         app: row.app || '',
         intent: row.intent || '',
         customParams: row.customParamList || [],
+        testCaseCustomParams: row.testCaseCustomParams || {},
         description: row.description,
         status: row.status,
       })
@@ -596,6 +756,7 @@ export default {
           app: form.app || null,
           intent: form.intent || null,
           customParams: form.customParams.length > 0 ? JSON.stringify(form.customParams) : null,
+          testCaseCustomParams: Object.keys(form.testCaseCustomParams).length > 0 ? JSON.stringify(form.testCaseCustomParams) : null,
           description: form.description,
           status: form.status,
         }
@@ -633,6 +794,7 @@ export default {
         app: '',
         intent: '',
         customParams: [],
+        testCaseCustomParams: {},
         description: '',
         status: 1,
       })
@@ -679,6 +841,15 @@ export default {
       intentOptions,
       customParamRules,
       filteredTestCaseList,
+      testCaseParamsDialogVisible,
+      currentTestCase,
+      currentTestCaseParams,
+      getTestCaseParamCount,
+      handleConfigTestCaseParams,
+      addTestCaseParam,
+      removeTestCaseParam,
+      saveTestCaseParams,
+      resetTestCaseParamsDialog,
       loadData,
       loadTestCaseSetOptions,
       loadIntentOptions,
@@ -800,17 +971,32 @@ export default {
 .custom-params-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 
 .param-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px;
+  gap: 12px;
+  padding: 12px;
   background-color: #fff;
   border: 1px solid #e4e7ed;
   border-radius: 4px;
+  border-left: 3px solid #409eff;
+}
+
+.param-item .param-index {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background-color: #409eff;
+  color: white;
+  border-radius: 50%;
+  font-weight: bold;
+  font-size: 12px;
+  flex-shrink: 0;
 }
 
 .param-tag {
@@ -823,6 +1009,68 @@ export default {
 
 .test-case-table .el-table {
   background-color: white;
+}
+
+/* 用例自定义参数配置对话框样式 */
+.test-case-params-dialog {
+  padding: 0;
+}
+
+.test-case-info-header {
+  margin-bottom: 16px;
+}
+
+.custom-params-section {
+  margin-top: 16px;
+}
+
+.params-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.params-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.param-item-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background-color: #f5f7fa;
+  border-radius: 4px;
+  border-left: 3px solid #409eff;
+}
+
+.param-index {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background-color: #409eff;
+  color: white;
+  border-radius: 50%;
+  font-weight: bold;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.param-input {
+  flex: 1;
 }
 
 .test-case-table .el-table th {
