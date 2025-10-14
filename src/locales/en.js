@@ -123,6 +123,8 @@ export default {
     executionStatus: 'Execution Status',
     executionResult: 'Execution Result',
     failureReason: 'Failure Reason',
+    logFilePath: 'Log File Path',
+    viewLog: 'View Log',
     executionTaskId: 'Execution Task ID',
     updateTime: 'Update Time',
     viewDetail: 'View Detail',
@@ -209,6 +211,10 @@ export default {
     ueDevices: 'UE Devices',
     environmentNetworking: 'Environment Networking',
     notConfigured: 'Not configured',
+    available: 'Available',
+    unavailable: 'Unavailable',
+    noFilter: 'No Filter',
+    logicNetwork: 'Logic Network',
     // Remote Login
     remoteLogin: 'Remote Login Executor',
     executorInfo: 'Executor Information',
@@ -247,6 +253,8 @@ export default {
     vncClientTip: 'Please use VNC client to connect to this address',
     vncConnectionStarted: 'Starting VNC connection...',
     vncConnectionCancelled: 'VNC connection cancelled',
+    rdpConnectionStarted: 'Starting RDP connection...',
+    rdpConnectionCancelled: 'RDP connection cancelled',
     // Form Validation
     taskNameRequired: 'Please enter task name',
     collectStrategyRequired: 'Please select collection strategy',

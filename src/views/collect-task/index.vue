@@ -1,8 +1,8 @@
 <template>
   <div class="collect-task-page">
     <div class="page-header">
-      <h2 class="page-title">采集任务管理</h2>
-      <p class="page-description">管理采集任务，支持任务的停止、删除等操作</p>
+      <h2 class="page-title">{{ $t('pageTitle.collectTask') }}</h2>
+      <p class="page-description">{{ $t('collectTask.description') }}</p>
     </div>
 
     <!-- 主内容区域 -->
@@ -10,21 +10,21 @@
       <el-card>
         <!-- Tab切换 -->
         <el-tabs v-model="activeTab" @tab-click="handleTabClick" @tab-remove="handleTabRemove">
-          <el-tab-pane label="任务列表" name="list">
+          <el-tab-pane :label="$t('collectTask.taskList')" name="list">
             <div class="table-operations">
               <el-button type="primary" @click="handleAdd">
                 <el-icon><Plus /></el-icon>
-                新增任务
+                {{ $t('collectTask.addTask') }}
               </el-button>
               <el-button @click="refreshAllData" :loading="loading">
                 <el-icon><Refresh /></el-icon>
-                刷新
+                {{ $t('collectTask.refresh') }}
               </el-button>
             </div>
 
             <el-table :data="tableData" v-loading="loading" style="width: 100%">
-        <el-table-column prop="id" label="任务ID" width="80" />
-        <el-table-column prop="name" label="任务名称">
+        <el-table-column prop="id" :label="$t('collectTask.taskId')" width="80" />
+        <el-table-column prop="name" :label="$t('collectTask.taskName')">
           <template #default="scope">
             <el-button 
               type="text" 
@@ -35,14 +35,14 @@
             </el-button>
           </template>
         </el-table-column>
-        <el-table-column prop="status" label="状态">
+        <el-table-column prop="status" :label="$t('collectTask.status')">
           <template #default="scope">
             <el-tag :type="getStatusType(scope.row.status)">
               {{ getStatusText(scope.row.status) }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="执行进度" width="200">
+        <el-table-column :label="$t('collectTask.executionProgress')" width="200">
           <template #default="scope">
             <div class="progress-display">
               <div class="progress-info">
@@ -59,8 +59,8 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="createTime" label="创建时间" />
-        <el-table-column label="操作" width="150">
+        <el-table-column prop="createTime" :label="$t('collectTask.createTime')" />
+        <el-table-column :label="$t('collectTask.operations')" width="150">
           <template #default="scope">
             <el-button 
               size="small" 
@@ -68,9 +68,9 @@
               @click="handleStop(scope.row)"
               :disabled="scope.row.status === 'STOPPED' || scope.row.status === 'COMPLETED'"
             >
-              停止
+              {{ $t('collectTask.stop') }}
             </el-button>
-            <el-button size="small" type="danger" @click="handleDelete(scope.row)">删除</el-button>
+            <el-button size="small" type="danger" @click="handleDelete(scope.row)">{{ $t('collectTask.delete') }}</el-button>
           </template>
         </el-table-column>
             </el-table>
@@ -92,7 +92,7 @@
           <el-tab-pane 
             v-for="task in openedTasks"
             :key="task.id"
-            :label="`任务详情 - ${task.name}`" 
+            :label="`${$t('collectTask.taskDetail')} - ${task.name}`" 
             :name="`detail-${task.id}`"
             closable
           >
@@ -101,19 +101,19 @@
               <el-card class="detail-card">
                 <template #header>
                   <div class="card-header">
-                    <span>基本信息</span>
+                    <span>{{ $t('collectTask.basicInfo') }}</span>
                   </div>
                 </template>
                 <el-descriptions :column="2" border>
-                  <el-descriptions-item label="任务ID">{{ getCurrentTask().id }}</el-descriptions-item>
-                  <el-descriptions-item label="任务名称">{{ getCurrentTask().name }}</el-descriptions-item>
-                  <el-descriptions-item label="任务状态">
+                  <el-descriptions-item :label="$t('collectTask.taskId')">{{ getCurrentTask().id }}</el-descriptions-item>
+                  <el-descriptions-item :label="$t('collectTask.taskName')">{{ getCurrentTask().name }}</el-descriptions-item>
+                  <el-descriptions-item :label="$t('collectTask.status')">
                     <el-tag :type="getStatusType(getCurrentTask().status)">
                       {{ getStatusText(getCurrentTask().status) }}
                     </el-tag>
                   </el-descriptions-item>
-                  <el-descriptions-item label="创建时间">{{ getCurrentTask().createTime }}</el-descriptions-item>
-                  <el-descriptions-item label="任务描述">{{ getCurrentTask().description || '无' }}</el-descriptions-item>
+                  <el-descriptions-item :label="$t('collectTask.createTime')">{{ getCurrentTask().createTime }}</el-descriptions-item>
+                  <el-descriptions-item :label="$t('collectTask.taskDescription')">{{ getCurrentTask().description || $t('collectTask.noDescription') }}</el-descriptions-item>
                 </el-descriptions>
               </el-card>
 
@@ -121,8 +121,8 @@
               <el-card class="detail-card">
                 <template #header>
                   <div class="card-header">
-                    <span>执行进度</span>
-                    <el-button size="small" @click="refreshTaskProgress">刷新</el-button>
+                    <span>{{ $t('collectTask.executionProgressTitle') }}</span>
+                    <el-button size="small" @click="refreshTaskProgress">{{ $t('collectTask.refresh') }}</el-button>
                   </div>
                 </template>
                 <div class="progress-section">
@@ -131,37 +131,37 @@
                       <el-col :span="4">
                         <div class="progress-item">
                           <div class="progress-number">{{ getCalculatedProgress().totalCount }}</div>
-                          <div class="progress-label">总用例数</div>
+                          <div class="progress-label">{{ $t('collectTask.totalCases') }}</div>
                         </div>
                       </el-col>
                       <el-col :span="4">
                         <div class="progress-item">
                           <div class="progress-number success">{{ getCalculatedProgress().successCount }}</div>
-                          <div class="progress-label">成功用例数</div>
+                          <div class="progress-label">{{ $t('collectTask.successCases') }}</div>
                         </div>
                       </el-col>
                       <el-col :span="4">
                         <div class="progress-item">
                           <div class="progress-number warning">{{ getCalculatedProgress().failedCount }}</div>
-                          <div class="progress-label">失败用例数</div>
+                          <div class="progress-label">{{ $t('collectTask.failedCases') }}</div>
                         </div>
                       </el-col>
                       <el-col :span="4">
                         <div class="progress-item">
                           <div class="progress-number info">{{ getCalculatedProgress().runningCount }}</div>
-                          <div class="progress-label">执行中用例数</div>
+                          <div class="progress-label">{{ $t('collectTask.runningCases') }}</div>
                         </div>
                       </el-col>
                       <el-col :span="4">
                         <div class="progress-item">
                           <div class="progress-number danger">{{ getCalculatedProgress().blockedCount }}</div>
-                          <div class="progress-label">阻塞用例数</div>
+                          <div class="progress-label">{{ $t('collectTask.blockedCases') }}</div>
                         </div>
                       </el-col>
                       <el-col :span="4">
                         <div class="progress-item">
                           <div class="progress-number">{{ getCalculatedProgress().pendingCount }}</div>
-                          <div class="progress-label">待执行用例数</div>
+                          <div class="progress-label">{{ $t('collectTask.pendingCases') }}</div>
                         </div>
                       </el-col>
                     </el-row>
@@ -169,7 +169,7 @@
                   
                   <div class="progress-bar-section">
                     <div class="progress-bar-label">
-                      执行进度: {{ getProgressPercentage() }}%
+                      {{ $t('collectTask.progressLabel') }}: {{ getProgressPercentage() }}%
                     </div>
                     <el-progress 
                       :percentage="getProgressPercentage()" 
@@ -184,26 +184,26 @@
               <el-card class="detail-card">
                 <template #header>
                   <div class="card-header">
-                    <span>用例例次执行信息</span>
-                    <el-button size="small" @click="refreshExecutionInstances">刷新</el-button>
+                    <span>{{ $t('collectTask.executionInstances') }}</span>
+                    <el-button size="small" @click="refreshExecutionInstances">{{ $t('collectTask.refresh') }}</el-button>
                   </div>
                 </template>
                 <div class="instances-section">
                   <el-table :data="executionInstances" v-loading="instancesLoading" style="width: 100%">
-                    <el-table-column prop="testCaseId" label="用例ID" width="100" />
-                    <el-table-column prop="testCaseNumber" label="用例编号" width="120" />
-                    <el-table-column prop="testCaseName" label="用例名称" />
-                    <el-table-column prop="round" label="轮次" width="80" />
-                    <el-table-column prop="logicEnvironmentName" label="逻辑环境" width="150" />
-                    <el-table-column prop="executorIp" label="执行机IP" width="120" />
-                    <el-table-column prop="status" label="执行状态" width="100">
+                    <el-table-column prop="testCaseId" :label="$t('collectTask.testCaseId')" width="100" />
+                    <el-table-column prop="testCaseNumber" :label="$t('collectTask.testCaseNumber')" width="120" />
+                    <el-table-column prop="testCaseName" :label="$t('collectTask.testCaseName')" />
+                    <el-table-column prop="round" :label="$t('collectTask.round')" width="80" />
+                    <el-table-column prop="logicEnvironmentName" :label="$t('collectTask.logicEnvironment')" width="150" />
+                    <el-table-column prop="executorIp" :label="$t('collectTask.executorIp')" width="120" />
+                    <el-table-column prop="status" :label="$t('collectTask.executionStatus')" width="100">
                       <template #default="scope">
                         <el-tag :type="getInstanceStatusType(scope.row.status)">
                           {{ getInstanceStatusText(scope.row.status) }}
                         </el-tag>
                       </template>
                     </el-table-column>
-                    <el-table-column prop="result" label="执行结果" width="100">
+                    <el-table-column prop="result" :label="$t('collectTask.executionResult')" width="100">
                       <template #default="scope">
                         <el-tag v-if="scope.row.result" :type="getInstanceResultType(scope.row.result)">
                           {{ getInstanceResultText(scope.row.result) }}
@@ -211,7 +211,7 @@
                         <span v-else>-</span>
                       </template>
                     </el-table-column>
-                    <el-table-column prop="failureReason" label="失败原因" width="200">
+                    <el-table-column prop="failureReason" :label="$t('collectTask.failureReason')" width="200">
                       <template #default="scope">
                         <div v-if="scope.row.failureReason">
                           <el-tooltip :content="scope.row.failureReason" placement="top" :show-after="500">
@@ -221,7 +221,7 @@
                         <span v-else>-</span>
                       </template>
                     </el-table-column>
-                    <el-table-column prop="logFilePath" label="日志文件" width="200">
+                    <el-table-column prop="logFilePath" :label="$t('collectTask.logFilePath')" width="200">
                       <template #default="scope">
                         <div v-if="scope.row.logFilePath">
                           <el-tooltip :content="scope.row.logFilePath" placement="top" :show-after="500">
@@ -232,7 +232,7 @@
                               target="_blank"
                               :underline="false"
                             >
-                              查看日志
+                              {{ $t('collectTask.viewLog') }}
                             </el-link>
                             <span v-else class="log-file-path">{{ scope.row.logFilePath }}</span>
                           </el-tooltip>
@@ -240,15 +240,15 @@
                         <span v-else>-</span>
                       </template>
                     </el-table-column>
-                    <el-table-column prop="executionTaskId" label="执行任务ID" width="200" />
-                    <el-table-column prop="createTime" label="创建时间" width="160" />
-                    <el-table-column prop="updateTime" label="更新时间" width="160" />
+                    <el-table-column prop="executionTaskId" :label="$t('collectTask.executionTaskId')" width="200" />
+                    <el-table-column prop="createTime" :label="$t('collectTask.createTime')" width="160" />
+                    <el-table-column prop="updateTime" :label="$t('collectTask.updateTime')" width="160" />
                   </el-table>
                 </div>
               </el-card>
             </div>
             <div v-else class="no-task-selected">
-              <el-empty description="请先选择一个任务查看详情" />
+              <el-empty :description="$t('collectTask.noTaskSelected')" />
             </div>
           </el-tab-pane>
         </el-tabs>
@@ -266,22 +266,22 @@
       <div class="step-content">
         <!-- 步骤1：基本信息 -->
         <div class="step-panel">
-          <h3 class="step-title">基本信息</h3>
+          <h3 class="step-title">{{ $t('collectTask.basicInfoTitle') }}</h3>
           <el-form
             ref="basicFormRef"
             :model="basicForm"
             :rules="basicRules"
             label-width="120px"
           >
-            <el-form-item label="任务名称" prop="name">
-              <el-input v-model="basicForm.name" placeholder="请输入采集任务名称" />
+            <el-form-item :label="$t('collectTask.taskNameLabel')" prop="name">
+              <el-input v-model="basicForm.name" :placeholder="$t('collectTask.taskNamePlaceholder')" />
             </el-form-item>
-            <el-form-item label="任务描述" prop="description">
+            <el-form-item :label="$t('collectTask.taskDescriptionLabel')" prop="description">
               <el-input
                 v-model="basicForm.description"
                 type="textarea"
                 :rows="3"
-                placeholder="请输入任务描述"
+                :placeholder="$t('collectTask.taskDescriptionPlaceholder')"
               />
             </el-form-item>
           </el-form>
@@ -289,63 +289,63 @@
 
         <!-- 步骤2：采集策略 -->
         <div class="step-panel">
-          <h3 class="step-title">采集策略</h3>
+          <h3 class="step-title">{{ $t('collectTask.collectStrategyTitle') }}</h3>
           <el-form
             ref="strategyFormRef"
             :model="strategyForm"
             :rules="strategyRules"
             label-width="120px"
           >
-            <el-form-item label="采集策略" prop="strategyId">
-              <el-select v-model="strategyForm.strategyId" placeholder="请选择采集策略" style="width: 100%" @change="handleStrategyChange">
+            <el-form-item :label="$t('collectTask.collectStrategyLabel')" prop="strategyId">
+              <el-select v-model="strategyForm.strategyId" :placeholder="$t('collectTask.collectStrategyPlaceholder')" style="width: 100%" @change="handleStrategyChange">
                 <el-option
                   v-for="item in strategyOptions"
                   :key="item.id"
-                  :label="`${item.name} (${item.collectCount}次采集)`"
+                  :label="`${item.name} (${item.collectCount}${$t('collectTask.collectCount')})`"
                   :value="item.id"
                 />
               </el-select>
             </el-form-item>
             <div v-if="selectedStrategy" class="strategy-info">
-              <h4>策略详情</h4>
+              <h4>{{ $t('collectTask.strategyDetails') }}</h4>
               <el-descriptions :column="2" border size="small">
-                <el-descriptions-item label="策略名称">{{ selectedStrategy.name }}</el-descriptions-item>
-                <el-descriptions-item label="采集意图">
+                <el-descriptions-item :label="$t('collectTask.strategyName')">{{ selectedStrategy.name }}</el-descriptions-item>
+                <el-descriptions-item :label="$t('collectTask.collectIntent')">
                   <el-tag v-if="selectedStrategy.intentName" size="small" type="warning">
                     {{ selectedStrategy.intentName }}
                   </el-tag>
-                  <span v-else style="color: #909399;">未配置</span>
+                  <span v-else style="color: #909399;">{{ $t('collectTask.notConfigured') }}</span>
                 </el-descriptions-item>
-                <el-descriptions-item label="采集次数">{{ selectedStrategy.collectCount }}次</el-descriptions-item>
-                <el-descriptions-item label="关联用例集">{{ selectedStrategy.testCaseSetName }} ({{ selectedStrategy.testCaseSetVersion }})</el-descriptions-item>
-                <el-descriptions-item label="业务大类筛选">
+                <el-descriptions-item :label="$t('collectTask.collectCount')">{{ selectedStrategy.collectCount }}次</el-descriptions-item>
+                <el-descriptions-item :label="$t('collectTask.relatedTestCaseSet')">{{ selectedStrategy.testCaseSetName }} ({{ selectedStrategy.testCaseSetVersion }})</el-descriptions-item>
+                <el-descriptions-item :label="$t('collectTask.businessCategoryFilter')">
                   <el-tag v-if="selectedStrategy.businessCategory" size="small" type="info">
                     {{ selectedStrategy.businessCategory }}
                   </el-tag>
-                  <span v-else style="color: #909399;">无筛选</span>
+                  <span v-else style="color: #909399;">{{ $t('collectTask.noFilter') }}</span>
                 </el-descriptions-item>
-                <el-descriptions-item label="APP筛选">
+                <el-descriptions-item :label="$t('collectTask.appFilter')">
                   <el-tag v-if="selectedStrategy.app" size="small" type="success">
                     {{ selectedStrategy.app }}
                   </el-tag>
-                  <span v-else style="color: #909399;">无筛选</span>
+                  <span v-else style="color: #909399;">{{ $t('collectTask.noFilter') }}</span>
                 </el-descriptions-item>
-                <el-descriptions-item label="测试用例数量" :span="2">
+                <el-descriptions-item :label="$t('collectTask.testCaseCount')" :span="2">
                   <span>{{ getFilteredTestCaseCount() }}个</span>
                   <span v-if="selectedStrategy.businessCategory || selectedStrategy.app" style="color: #909399; margin-left: 8px;">
-                    (已筛选)
+                    ({{ $t('collectTask.filtered') }})
                   </span>
                 </el-descriptions-item>
-                <el-descriptions-item label="自定义参数" :span="2">
+                <el-descriptions-item :label="$t('collectTask.customParams')" :span="2">
                   <div class="custom-params-section">
                     <div class="custom-params-header">
-                      <span>自定义参数配置</span>
+                      <span>{{ $t('collectTask.customParamsConfig') }}</span>
                       <el-button 
                         type="text" 
                         size="small" 
                         @click="showCustomParamsEditor = !showCustomParamsEditor"
                       >
-                        {{ showCustomParamsEditor ? '收起' : '编辑' }}
+                        {{ showCustomParamsEditor ? $t('collectTask.collapse') : $t('collectTask.edit') }}
                       </el-button>
                     </div>
                     
@@ -358,12 +358,12 @@
                       >
                         <el-input 
                           v-model="param.key" 
-                          placeholder="参数名" 
+                          :placeholder="$t('collectTask.paramName')" 
                           style="width: 150px; margin-right: 8px;"
                         />
                         <el-input 
                           v-model="param.value" 
-                          placeholder="参数值" 
+                          :placeholder="$t('collectTask.paramValue')" 
                           style="width: 200px; margin-right: 8px;"
                         />
                         <el-button 
@@ -372,7 +372,7 @@
                           @click="removeCustomParam(index)"
                           :disabled="editableCustomParams.length === 1"
                         >
-                          删除
+                          {{ $t('collectTask.delete') }}
                         </el-button>
                       </div>
                       <el-button 
@@ -381,7 +381,7 @@
                         @click="addCustomParam"
                         style="margin-top: 8px;"
                       >
-                        添加参数
+                        {{ $t('collectTask.addParam') }}
                       </el-button>
                       <div class="param-actions" style="margin-top: 12px;">
                         <el-button 
@@ -389,13 +389,13 @@
                           size="small" 
                           @click="saveCustomParams"
                         >
-                          保存
+                          {{ $t('collectTask.save') }}
                         </el-button>
                         <el-button 
                           size="small" 
                           @click="cancelCustomParamsEdit"
                         >
-                          取消
+                          {{ $t('collectTask.cancel') }}
                         </el-button>
                       </div>
                     </div>
@@ -413,7 +413,7 @@
                           {{ param.key }}: {{ param.value }}
                         </el-tag>
                       </div>
-                      <span v-else style="color: #909399;">无参数</span>
+                      <span v-else style="color: #909399;">{{ $t('collectTask.noParams') }}</span>
                     </div>
                   </div>
                 </el-descriptions-item>
@@ -421,34 +421,34 @@
               
               <!-- 筛选后的用例列表 -->
               <div v-if="selectedStrategy.testCaseList && selectedStrategy.testCaseList.length > 0" class="filtered-test-cases">
-                <h4>筛选后的测试用例</h4>
+                <h4>{{ $t('collectTask.filteredTestCases') }}</h4>
                 <div class="test-cases-summary">
-                  <span class="summary-text">共 {{ getFilteredTestCaseCount() }} 个测试用例</span>
+                  <span class="summary-text">{{ $t('collectTask.totalTestCases', { count: getFilteredTestCaseCount() }) }}</span>
                   <el-button 
                     type="text" 
                     size="small" 
                     @click="showFilteredTestCases = !showFilteredTestCases"
                   >
-                    {{ showFilteredTestCases ? '收起' : '展开' }}
+                    {{ showFilteredTestCases ? $t('collectTask.collapse') : $t('collectTask.expand') }}
                   </el-button>
                 </div>
                 <div v-if="showFilteredTestCases" class="test-cases-table">
                   <el-table :data="getFilteredTestCases()" size="small" max-height="300">
-                    <el-table-column prop="name" label="用例名称" min-width="150" />
-                    <el-table-column prop="number" label="用例编号" width="100" />
-                    <el-table-column prop="businessCategory" label="业务大类" width="120">
+                    <el-table-column prop="name" :label="$t('collectTask.testCaseName')" min-width="150" />
+                    <el-table-column prop="number" :label="$t('collectTask.testCaseNumber')" width="100" />
+                    <el-table-column prop="businessCategory" :label="$t('collectTask.businessCategoryFilter')" width="120">
                       <template #default="scope">
                         <span v-if="scope.row.businessCategory">{{ scope.row.businessCategory }}</span>
-                        <span v-else style="color: #909399;">未配置</span>
+                        <span v-else style="color: #909399;">{{ $t('collectTask.notConfigured') }}</span>
                       </template>
                     </el-table-column>
-                    <el-table-column prop="app" label="App" width="100">
+                    <el-table-column prop="app" :label="$t('collectTask.appFilter')" width="100">
                       <template #default="scope">
                         <span v-if="scope.row.app">{{ scope.row.app }}</span>
-                        <span v-else style="color: #909399;">未配置</span>
+                        <span v-else style="color: #909399;">{{ $t('collectTask.notConfigured') }}</span>
                       </template>
                     </el-table-column>
-                    <el-table-column prop="logicNetwork" label="逻辑组网" min-width="150">
+                    <el-table-column prop="logicNetwork" :label="$t('collectTask.logicNetwork')" min-width="150">
                       <template #default="scope">
                         <div v-if="scope.row.logicNetwork">
                           <el-tag 
@@ -460,7 +460,7 @@
                             {{ network }}
                           </el-tag>
                         </div>
-                        <span v-else style="color: #909399;">未配置</span>
+                        <span v-else style="color: #909399;">{{ $t('collectTask.notConfigured') }}</span>
                       </template>
                     </el-table-column>
                   </el-table>
@@ -472,15 +472,15 @@
 
         <!-- 步骤3：环境编排 -->
         <div class="step-panel">
-          <h3 class="step-title">环境编排</h3>
+          <h3 class="step-title">{{ $t('collectTask.environmentOrchestration') }}</h3>
           <el-form
             ref="environmentFormRef"
             :model="environmentForm"
             :rules="environmentRules"
             label-width="120px"
           >
-            <el-form-item label="地域筛选" prop="regionId">
-              <el-select v-model="environmentForm.regionId" placeholder="请选择地域" style="width: 100%" @change="handleRegionChange">
+            <el-form-item :label="$t('collectTask.regionFilter')" prop="regionId">
+              <el-select v-model="environmentForm.regionId" :placeholder="$t('collectTask.regionPlaceholder')" style="width: 100%" @change="handleRegionChange">
                 <el-option
                   v-for="item in regionOptions"
                   :key="item.id"
@@ -489,8 +489,8 @@
                 />
               </el-select>
             </el-form-item>
-            <el-form-item label="国家筛选" prop="countryId">
-              <el-select v-model="environmentForm.countryId" placeholder="请选择国家" style="width: 100%" @change="handleCountryChange" :disabled="!environmentForm.regionId">
+            <el-form-item :label="$t('collectTask.countryFilter')" prop="countryId">
+              <el-select v-model="environmentForm.countryId" :placeholder="$t('collectTask.countryPlaceholder')" style="width: 100%" @change="handleCountryChange" :disabled="!environmentForm.regionId">
                 <el-option
                   v-for="item in countryOptions"
                   :key="item.id"
@@ -499,8 +499,8 @@
                 />
               </el-select>
             </el-form-item>
-            <el-form-item label="省份筛选" prop="provinceId">
-              <el-select v-model="environmentForm.provinceId" placeholder="请选择省份" style="width: 100%" @change="handleProvinceChange" :disabled="!environmentForm.countryId">
+            <el-form-item :label="$t('collectTask.provinceFilter')" prop="provinceId">
+              <el-select v-model="environmentForm.provinceId" :placeholder="$t('collectTask.provincePlaceholder')" style="width: 100%" @change="handleProvinceChange" :disabled="!environmentForm.countryId">
                 <el-option
                   v-for="item in provinceOptions"
                   :key="item.id"
@@ -509,8 +509,8 @@
                 />
               </el-select>
             </el-form-item>
-            <el-form-item label="城市筛选" prop="cityId">
-              <el-select v-model="environmentForm.cityId" placeholder="请选择城市" style="width: 100%" @change="handleCityChange" :disabled="!environmentForm.provinceId">
+            <el-form-item :label="$t('collectTask.cityFilter')" prop="cityId">
+              <el-select v-model="environmentForm.cityId" :placeholder="$t('collectTask.cityPlaceholder')" style="width: 100%" @change="handleCityChange" :disabled="!environmentForm.provinceId">
                 <el-option
                   v-for="item in cityOptions"
                   :key="item.id"
@@ -520,7 +520,7 @@
               </el-select>
             </el-form-item>
             <div class="environment-summary">
-              <h4>环境配置摘要</h4>
+              <h4>{{ $t('collectTask.environmentConfigSummary') }}</h4>
               <el-alert
                 :title="environmentSummary"
                 type="info"
@@ -532,10 +532,10 @@
           
           <!-- 可用逻辑环境列表 -->
           <div v-if="selectedStrategy && (environmentForm.regionId || environmentForm.countryId || environmentForm.provinceId || environmentForm.cityId)" class="available-environments">
-            <h4>可用逻辑环境列表</h4>
+            <h4>{{ $t('collectTask.availableLogicEnvironments') }}</h4>
             <div v-loading="environmentsLoading" class="environments-content">
               <div v-if="availableEnvironments.length === 0" class="no-environments">
-                <el-empty description="暂无可用的逻辑环境" />
+                <el-empty :description="$t('collectTask.noAvailableEnvironments')" />
               </div>
               <div v-else class="environments-list">
                 <el-card 
@@ -550,7 +550,7 @@
                     <h5 class="environment-name">{{ env.name }}</h5>
                     <div class="environment-status">
                       <el-tag :type="env.status === 1 ? 'success' : 'danger'" size="small">
-                        {{ env.status === 1 ? '可用' : '不可用' }}
+                        {{ env.status === 1 ? $t('collectTask.available') : $t('collectTask.unavailable') }}
                       </el-tag>
                       <el-checkbox 
                         v-model="selectedEnvironmentIds" 
@@ -561,12 +561,12 @@
                     </div>
                   </div>
                   <div class="environment-info">
-                    <p><strong>执行机：</strong>{{ env.executorName }} ({{ env.executorIpAddress }})</p>
-                    <p><strong>地域：</strong>{{ env.executorRegionName }}</p>
-                    <p v-if="env.description"><strong>描述：</strong>{{ env.description }}</p>
+                    <p><strong>{{ $t('collectTask.executor') }}：</strong>{{ env.executorName }} ({{ env.executorIpAddress }})</p>
+                    <p><strong>{{ $t('collectTask.region') }}：</strong>{{ env.executorRegionName }}</p>
+                    <p v-if="env.description"><strong>{{ $t('collectTask.description') }}：</strong>{{ env.description }}</p>
                   </div>
                   <div v-if="env.ueList && env.ueList.length > 0" class="environment-ue">
-                    <p><strong>UE设备：</strong></p>
+                    <p><strong>{{ $t('collectTask.ueDevices') }}：</strong></p>
                     <div class="ue-list">
                       <el-tag 
                         v-for="ue in env.ueList" 
@@ -579,7 +579,7 @@
                     </div>
                   </div>
                   <div v-if="env.networkList && env.networkList.length > 0" class="environment-networks">
-                    <p><strong>环境组网：</strong></p>
+                    <p><strong>{{ $t('collectTask.environmentNetworking') }}：</strong></p>
                     <div class="network-list">
                       <el-tag 
                         v-for="network in env.networkList" 
@@ -599,7 +599,7 @@
             <!-- 选择提示 -->
             <div v-if="availableEnvironments.length > 0" class="selection-tip">
               <el-alert
-                :title="`已选择 ${selectedEnvironmentIds.length} 个逻辑环境`"
+                :title="$t('collectTask.selectedEnvironments', { count: selectedEnvironmentIds.length })"
                 type="info"
                 :closable="false"
                 show-icon
@@ -614,13 +614,13 @@
       <!-- 操作按钮 -->
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="dialogVisible = false">取消</el-button>
+          <el-button @click="dialogVisible = false">{{ $t('collectTask.cancel') }}</el-button>
           <el-button 
             type="success" 
             @click="handleSubmit"
             :loading="submitLoading"
           >
-            创建任务
+            {{ $t('collectTask.createTask') }}
           </el-button>
         </span>
       </template>
@@ -816,76 +816,76 @@
     <!-- 远程登录弹窗 -->
     <el-dialog
       v-model="remoteLoginDialogVisible"
-      title="远程登录执行机"
+      :title="$t('collectTask.remoteLogin')"
       width="600px"
       :close-on-click-modal="false"
     >
       <div class="remote-login-content">
         <el-form :model="remoteLoginForm" :rules="remoteLoginRules" ref="remoteLoginFormRef" label-width="100px">
-          <el-form-item label="执行机信息">
+          <el-form-item :label="$t('collectTask.executorInfo')">
             <div class="executor-info">
-              <p><strong>IP地址：</strong>{{ remoteLoginForm.executorIp }}</p>
-              <p><strong>逻辑环境：</strong>{{ remoteLoginForm.logicEnvironmentName }}</p>
+              <p><strong>{{ $t('collectTask.ipAddress') }}：</strong>{{ remoteLoginForm.executorIp }}</p>
+              <p><strong>{{ $t('collectTask.logicEnvironmentName') }}：</strong>{{ remoteLoginForm.logicEnvironmentName }}</p>
             </div>
           </el-form-item>
           
-          <el-form-item label="操作系统" prop="osType">
+          <el-form-item :label="$t('collectTask.operatingSystem')" prop="osType">
             <el-radio-group v-model="remoteLoginForm.osType">
               <el-radio label="linux">Linux</el-radio>
               <el-radio label="windows">Windows</el-radio>
             </el-radio-group>
           </el-form-item>
 
-          <el-form-item label="连接方式" prop="connectionType">
+          <el-form-item :label="$t('collectTask.connectionMethod')" prop="connectionType">
             <el-radio-group v-model="remoteLoginForm.connectionType">
-              <el-radio label="ssh" v-if="remoteLoginForm.osType === 'linux'">SSH</el-radio>
-              <el-radio label="rdp" v-if="remoteLoginForm.osType === 'windows'">RDP (远程桌面)</el-radio>
-              <el-radio label="vnc" v-if="remoteLoginForm.osType === 'linux'">VNC</el-radio>
+              <el-radio label="ssh" v-if="remoteLoginForm.osType === 'linux'">{{ $t('collectTask.ssh') }}</el-radio>
+              <el-radio label="rdp" v-if="remoteLoginForm.osType === 'windows'">{{ $t('collectTask.rdp') }}</el-radio>
+              <el-radio label="vnc" v-if="remoteLoginForm.osType === 'linux'">{{ $t('collectTask.vnc') }}</el-radio>
             </el-radio-group>
             <div v-if="remoteLoginForm.connectionType === 'rdp'" class="connection-tip">
               <el-alert 
-                title="RDP连接提示" 
+                :title="$t('collectTask.rdpConnectionTip')" 
                 type="info" 
                 :closable="false"
                 show-icon
               >
                 <template #default>
-                  <p>• 确保目标Windows机器已启用远程桌面</p>
-                  <p>• 确保防火墙允许RDP连接（端口3389）</p>
-                  <p>• 如果连接失败，系统将自动提供RDP文件下载</p>
+                  <p>• {{ $t('collectTask.rdpTip1') }}</p>
+                  <p>• {{ $t('collectTask.rdpTip2') }}</p>
+                  <p>• {{ $t('collectTask.rdpTip3') }}</p>
                 </template>
               </el-alert>
             </div>
           </el-form-item>
 
-          <el-form-item label="用户名" prop="username">
-            <el-input v-model="remoteLoginForm.username" placeholder="请输入用户名" />
+          <el-form-item :label="$t('collectTask.username')" prop="username">
+            <el-input v-model="remoteLoginForm.username" :placeholder="$t('collectTask.usernamePlaceholder')" />
           </el-form-item>
 
-          <el-form-item label="密码" prop="password">
+          <el-form-item :label="$t('collectTask.password')" prop="password">
             <el-input 
               v-model="remoteLoginForm.password" 
               type="password" 
-              placeholder="请输入密码"
+              :placeholder="$t('collectTask.passwordPlaceholder')"
               show-password
             />
           </el-form-item>
 
-          <el-form-item label="端口" prop="port">
+          <el-form-item :label="$t('collectTask.port')" prop="port">
             <el-input-number 
               v-model="remoteLoginForm.port" 
               :min="1" 
               :max="65535"
-              placeholder="端口号"
+              :placeholder="$t('collectTask.portPlaceholder')"
             />
           </el-form-item>
 
-          <el-form-item label="操作说明" prop="operationNote">
+          <el-form-item :label="$t('collectTask.operationNote')" prop="operationNote">
             <el-input 
               v-model="remoteLoginForm.operationNote" 
               type="textarea" 
               :rows="3"
-              placeholder="请描述您将要执行的操作..."
+              :placeholder="$t('collectTask.operationNotePlaceholder')"
             />
           </el-form-item>
         </el-form>
@@ -893,9 +893,9 @@
 
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="closeRemoteLoginDialog">取消</el-button>
+          <el-button @click="closeRemoteLoginDialog">{{ $t('collectTask.cancel') }}</el-button>
           <el-button type="primary" @click="connectRemoteMachine" :loading="connecting">
-            连接
+            {{ $t('collectTask.connect') }}
           </el-button>
         </div>
       </template>
@@ -905,11 +905,13 @@
 <script>
 import { ref, reactive, onMounted, onUnmounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useI18n } from 'vue-i18n'
 import request from '@/utils/request'
 
 export default {
   name: 'CollectTask',
   setup() {
+    const { t } = useI18n()
     const loading = ref(false)
     const tableData = ref([])
     const dialogVisible = ref(false)
@@ -971,23 +973,23 @@ export default {
     })
     const remoteLoginRules = {
       osType: [
-        { required: true, message: '请选择操作系统', trigger: 'change' }
+        { required: true, message: t('collectTask.osTypeRequired'), trigger: 'change' },
       ],
       connectionType: [
-        { required: true, message: '请选择连接方式', trigger: 'change' }
+        { required: true, message: t('collectTask.connectionTypeRequired'), trigger: 'change' },
       ],
       username: [
-        { required: true, message: '请输入用户名', trigger: 'blur' }
+        { required: true, message: t('collectTask.usernameRequired'), trigger: 'blur' },
       ],
       password: [
-        { required: true, message: '请输入密码', trigger: 'blur' }
+        { required: true, message: t('collectTask.passwordRequired'), trigger: 'blur' },
       ],
       port: [
-        { required: true, message: '请输入端口号', trigger: 'blur' }
+        { required: true, message: t('collectTask.portRequired'), trigger: 'blur' },
       ],
       operationNote: [
-        { required: true, message: '请描述操作内容', trigger: 'blur' }
-      ]
+        { required: true, message: t('collectTask.operationNoteRequired'), trigger: 'blur' },
+      ],
     }
 
     const pagination = reactive({
@@ -1004,7 +1006,7 @@ export default {
 
     const basicRules = {
       name: [
-        { required: true, message: '请输入任务名称', trigger: 'blur' },
+        { required: true, message: t('collectTask.taskNameRequired'), trigger: 'blur' },
       ],
     }
 
@@ -1015,7 +1017,7 @@ export default {
 
     const strategyRules = {
       strategyId: [
-        { required: true, message: '请选择采集策略', trigger: 'change' },
+        { required: true, message: t('collectTask.collectStrategyRequired'), trigger: 'change' },
       ],
     }
 
@@ -1029,14 +1031,14 @@ export default {
 
     const environmentRules = {
       regionId: [
-        { required: true, message: '请选择地域', trigger: 'change' },
+        { required: true, message: t('collectTask.regionRequired'), trigger: 'change' },
       ],
     }
     
     // 逻辑环境选择验证
     const validateEnvironmentSelection = () => {
       if (selectedEnvironmentIds.value.length === 0) {
-        ElMessage.error('请至少选择一个逻辑环境')
+        ElMessage.error(t('collectTask.selectAtLeastOneEnvironment'))
         return false
       }
       return true
@@ -1056,13 +1058,13 @@ export default {
 
     const getStatusText = (status) => {
       const textMap = {
-        'RUNNING': '运行中',
-        'COMPLETED': '已完成',
-        'STOPPED': '已停止',
-        'PAUSED': '已暂停',
-        'FAILED': '已停止',
+        'RUNNING': t('collectTask.statusRunning'),
+        'COMPLETED': t('collectTask.statusCompleted'),
+        'STOPPED': t('collectTask.statusStopped'),
+        'PAUSED': t('collectTask.statusPaused'),
+        'FAILED': t('collectTask.statusFailed'),
       }
-      return textMap[status] || '未知'
+      return textMap[status] || t('collectTask.statusUnknown')
     }
 
     // 表格进度相关方法
@@ -1075,14 +1077,14 @@ export default {
       const running = row.runningCount || 0
       
       if (total === 0) {
-        return '暂无数据'
+        return t('collectTask.noData')
       }
       
       const parts = []
-      if (success > 0) parts.push(`${success}成功`)
-      if (failed > 0) parts.push(`${failed}失败`)
-      if (blocked > 0) parts.push(`${blocked}阻塞`)
-      if (running > 0) parts.push(`${running}执行中`)
+      if (success > 0) parts.push(`${success}${t('collectTask.progressSuccess')}`)
+      if (failed > 0) parts.push(`${failed}${t('collectTask.progressFailed')}`)
+      if (blocked > 0) parts.push(`${blocked}${t('collectTask.progressBlocked')}`)
+      if (running > 0) parts.push(`${running}${t('collectTask.progressRunning')}`)
       
       return `${completed}/${total} (${parts.join(', ')})`
     }
@@ -1220,10 +1222,10 @@ export default {
       loading.value = true
       try {
         await loadData()
-        ElMessage.success('数据刷新成功')
+        ElMessage.success(t('collectTask.dataRefreshSuccess'))
       } catch (error) {
         console.error('刷新数据失败:', error)
-        ElMessage.error('刷新数据失败')
+        ElMessage.error(t('collectTask.dataRefreshFailed'))
       } finally {
         loading.value = false
       }
@@ -1325,7 +1327,7 @@ export default {
     }
 
     const handleAdd = () => {
-      dialogTitle.value = '新建采集任务'
+      dialogTitle.value = t('collectTask.createTask')
       dialogVisible.value = true
       resetForm()
       loadRegionOptions()
@@ -1392,7 +1394,7 @@ export default {
       const keys = validParams.map(param => param.key.trim())
       const uniqueKeys = [...new Set(keys)]
       if (keys.length !== uniqueKeys.length) {
-        ElMessage.error('参数名不能重复')
+        ElMessage.error(t('collectTask.paramNameCannotBeEmpty'))
         return
       }
       
@@ -1404,7 +1406,7 @@ export default {
       }
       
       showCustomParamsEditor.value = false
-      ElMessage.success('自定义参数保存成功')
+      ElMessage.success(t('collectTask.customParamsSaved'))
     }
     
     // 取消自定义参数编辑
@@ -1511,18 +1513,18 @@ export default {
           url: `/collect-task/${row.id}/stop`,
           method: 'post',
         })
-        ElMessage.success('停止成功')
+        ElMessage.success(t('collectTask.stopSuccess'))
         loadData()
       } catch (error) {
-        ElMessage.error('停止失败')
+        ElMessage.error(t('collectTask.stopFailed'))
       }
     }
 
     const handleDelete = async (row) => {
       try {
-        await ElMessageBox.confirm('确定要删除这个任务吗？', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
+        await ElMessageBox.confirm(t('collectTask.deleteConfirm'), t('common.warning'), {
+          confirmButtonText: t('common.confirm'),
+          cancelButtonText: t('common.cancel'),
           type: 'warning',
         })
         
@@ -1530,11 +1532,11 @@ export default {
           url: `/collect-task/${row.id}`,
           method: 'delete',
         })
-        ElMessage.success('删除成功')
+        ElMessage.success(t('collectTask.deleteSuccess'))
         loadData()
       } catch (error) {
         if (error !== 'cancel') {
-          ElMessage.error('删除失败')
+          ElMessage.error(t('collectTask.deleteFailed'))
         }
       }
     }
@@ -1579,7 +1581,7 @@ export default {
           data: submitData,
         })
         
-        ElMessage.success('任务创建成功')
+        ElMessage.success(t('collectTask.taskCreatedSuccess'))
         dialogVisible.value = false
         loadData()
       } catch (error) {
@@ -1587,7 +1589,7 @@ export default {
         if (error.message) {
           ElMessage.error(error.message)
         } else {
-          ElMessage.error('任务创建失败')
+          ElMessage.error(t('collectTask.taskCreatedFailed'))
         }
       } finally {
         submitLoading.value = false
@@ -1859,14 +1861,14 @@ export default {
 
     const getInstanceStatusText = (status) => {
       const textMap = {
-        'PENDING': '待执行',
-        'RUNNING': '执行中',
-        'COMPLETED': '已完成',
-        'FAILED': '执行失败',
-        'STOPPED': '已停止',
-        'BLOCKED': '阻塞',
+        'PENDING': t('collectTask.statusPending'),
+        'RUNNING': t('collectTask.statusRunningInstance'),
+        'COMPLETED': t('collectTask.statusCompletedInstance'),
+        'FAILED': t('collectTask.statusFailedInstance'),
+        'STOPPED': t('collectTask.statusStoppedInstance'),
+        'BLOCKED': t('collectTask.statusBlockedInstance'),
       }
-      return textMap[status] || '阻塞'
+      return textMap[status] || t('collectTask.statusBlockedInstance')
     }
 
     const getInstanceResultType = (result) => {
@@ -1880,11 +1882,11 @@ export default {
 
     const getInstanceResultText = (result) => {
       const textMap = {
-        'SUCCESS': '成功',
-        'FAILED': '失败',
-        'BLOCKED': '阻塞',
+        'SUCCESS': t('collectTask.resultSuccess'),
+        'FAILED': t('collectTask.resultFailed'),
+        'BLOCKED': t('collectTask.resultBlocked'),
       }
-      return textMap[result] || '阻塞'
+      return textMap[result] || t('collectTask.resultBlocked')
     }
 
     const viewInstanceResult = (instance) => {
@@ -1951,15 +1953,15 @@ export default {
             await connectVNC(connectionInfo)
           }
           
-          ElMessage.success('连接成功！')
+          ElMessage.success(t('collectTask.connectionSuccess'))
           closeRemoteLoginDialog()
         } else {
-          throw new Error(response.message || '记录登录日志失败')
+          throw new Error(response.message || t('collectTask.connectionFailed'))
         }
         
       } catch (error) {
         console.error('远程连接失败:', error)
-        ElMessage.error('连接失败：' + error.message)
+        ElMessage.error(t('collectTask.connectionFailed') + '：' + error.message)
       } finally {
         connecting.value = false
       }
@@ -1974,7 +1976,7 @@ export default {
       if (navigator.clipboard) {
         try {
           await navigator.clipboard.writeText(sshCommand)
-          ElMessage.success('SSH连接命令已复制到剪贴板')
+          ElMessage.success(t('collectTask.sshCommandCopied'))
         } catch (err) {
           console.error('复制到剪贴板失败:', err)
         }
@@ -1982,11 +1984,11 @@ export default {
       
       // 显示连接信息
       ElMessageBox.alert(
-        `SSH连接命令: ${sshCommand}\n\n请使用终端执行此命令进行连接。`,
-        'SSH连接信息',
+        `${t('collectTask.sshCommand')}: ${sshCommand}\n\n请使用终端执行此命令进行连接。`,
+        t('collectTask.sshConnectionInfo'),
         {
-          confirmButtonText: '确定',
-          type: 'info'
+          confirmButtonText: t('common.confirm'),
+          type: 'info',
         }
       )
     }
@@ -2003,7 +2005,7 @@ export default {
         const rdpWindow = window.open(rdpUrl, '_blank')
         
         if (rdpWindow) {
-          ElMessage.success('正在启动RDP连接...')
+          ElMessage.success(t('collectTask.rdpConnectionStarted'))
           
           // 同时提供下载RDP文件的功能
           setTimeout(() => {
@@ -2018,16 +2020,16 @@ export default {
         // 如果直接连接失败，提供RDP文件下载
         ElMessageBox.confirm(
           `直接RDP连接失败，是否下载RDP连接文件？\n\n连接信息：\n服务器: ${connectionInfo.executorIp}:${connectionInfo.port}\n用户名: ${connectionInfo.username}`,
-          'RDP连接',
+          t('collectTask.rdpConnection'),
           {
-            confirmButtonText: '下载RDP文件',
-            cancelButtonText: '取消',
-            type: 'warning'
+            confirmButtonText: t('collectTask.rdpFileDownload'),
+            cancelButtonText: t('common.cancel'),
+            type: 'warning',
           }
         ).then(() => {
           downloadRdpFile(connectionInfo)
         }).catch(() => {
-          ElMessage.info('已取消RDP连接')
+          ElMessage.info(t('collectTask.rdpConnectionCancelled'))
         })
       }
     }
@@ -2046,10 +2048,10 @@ export default {
         document.body.removeChild(link)
         window.URL.revokeObjectURL(url)
         
-        ElMessage.success('RDP文件已下载，请双击文件进行连接')
+        ElMessage.success(t('collectTask.rdpFileDownloaded'))
       } catch (error) {
         console.error('下载RDP文件失败:', error)
-        ElMessage.error('下载RDP文件失败: ' + error.message)
+        ElMessage.error(t('collectTask.rdpFileDownloadFailed') + ': ' + error.message)
       }
     }
 
@@ -2061,14 +2063,14 @@ export default {
       // 尝试打开VNC连接
       try {
         window.open(vncUrl, '_blank')
-        ElMessage.success('正在启动VNC连接...')
+        ElMessage.success(t('collectTask.vncConnectionStarted'))
       } catch (error) {
         ElMessageBox.alert(
-          `VNC连接URL: ${vncUrl}\n\n请使用VNC客户端连接到此地址。`,
-          'VNC连接信息',
+          `${t('collectTask.vncConnectionUrl')}: ${vncUrl}\n\n${t('collectTask.vncClientTip')}`,
+          t('collectTask.vncConnectionInfo'),
           {
-            confirmButtonText: '确定',
-            type: 'info'
+            confirmButtonText: t('common.confirm'),
+            type: 'info',
           }
         )
       }

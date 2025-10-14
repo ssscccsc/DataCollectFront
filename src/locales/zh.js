@@ -123,6 +123,8 @@ export default {
     executionStatus: '执行状态',
     executionResult: '执行结果',
     failureReason: '失败原因',
+    logFilePath: '日志文件',
+    viewLog: '查看日志',
     executionTaskId: '执行任务ID',
     updateTime: '更新时间',
     viewDetail: '查看详情',
@@ -209,6 +211,10 @@ export default {
     ueDevices: 'UE设备',
     environmentNetworking: '环境组网',
     notConfigured: '未配置',
+    available: '可用',
+    unavailable: '不可用',
+    noFilter: '无筛选',
+    logicNetwork: '逻辑组网',
     // 远程登录
     remoteLogin: '远程登录执行机',
     executorInfo: '执行机信息',
@@ -247,6 +253,8 @@ export default {
     vncClientTip: '请使用VNC客户端连接到此地址',
     vncConnectionStarted: '正在启动VNC连接...',
     vncConnectionCancelled: '已取消VNC连接',
+    rdpConnectionStarted: '正在启动RDP连接...',
+    rdpConnectionCancelled: '已取消RDP连接',
     // 表单验证
     taskNameRequired: '请输入任务名称',
     collectStrategyRequired: '请选择采集策略',
