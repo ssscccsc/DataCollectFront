@@ -361,8 +361,15 @@ export default {
     executionCount: 'Execution Count',
     executionCountPlaceholder: 'Please enter execution count',
     executionCountTip: 'Number of times this test case will be executed in this strategy (default: 1)',
+    // Step Navigation
+    step1Title: 'Basic Information',
+    step1Desc: 'Configure strategy name, collection intent and test case set',
+    step2Title: 'Test Case Processing',
+    step2Desc: 'Filter test cases and configure parameters',
+    nextStep: 'Next Step',
+    prevStep: 'Previous Step',
+    batchConfig: 'Batch Configuration',
     // Batch Configuration
-    nextStep: 'Next Step, Batch Config',
     batchConfigTitle: 'Batch Configure Test Case Parameters and Execution Count',
     batchConfigTip: 'Batch Configuration Instructions',
     batchConfigDescription: 'Total {count} test cases, click to expand and configure execution count and custom parameters for each test case',

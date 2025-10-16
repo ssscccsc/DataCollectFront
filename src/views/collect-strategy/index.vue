@@ -1089,7 +1089,7 @@ export default {
       try {
         await formRef.value.validate()
         
-        // 只发送必要的字段
+        // 发送所有字段到后端
         const submitData = {
           name: form.name,
           collectCount: form.collectCount,
