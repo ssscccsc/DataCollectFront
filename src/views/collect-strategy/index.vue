@@ -1041,6 +1041,33 @@ export default {
 
     const handleEdit = (row) => {
       dialogTitle.value = t('collectStrategy.editStrategy')
+      
+      // 解析JSON字符串格式的字段
+      let testCaseCustomParams = {}
+      let testCaseExecutionCounts = {}
+      
+      try {
+        if (row.testCaseCustomParams && typeof row.testCaseCustomParams === 'string') {
+          testCaseCustomParams = JSON.parse(row.testCaseCustomParams)
+        } else if (row.testCaseCustomParams && typeof row.testCaseCustomParams === 'object') {
+          testCaseCustomParams = row.testCaseCustomParams
+        }
+      } catch (error) {
+        console.warn('Failed to parse testCaseCustomParams:', error)
+        testCaseCustomParams = {}
+      }
+      
+      try {
+        if (row.testCaseExecutionCounts && typeof row.testCaseExecutionCounts === 'string') {
+          testCaseExecutionCounts = JSON.parse(row.testCaseExecutionCounts)
+        } else if (row.testCaseExecutionCounts && typeof row.testCaseExecutionCounts === 'object') {
+          testCaseExecutionCounts = row.testCaseExecutionCounts
+        }
+      } catch (error) {
+        console.warn('Failed to parse testCaseExecutionCounts:', error)
+        testCaseExecutionCounts = {}
+      }
+      
       // 只复制必要的字段，避免传递额外字段
       Object.assign(form, {
         id: row.id,
@@ -1051,8 +1078,8 @@ export default {
         app: row.app || '',
         intent: row.intent || '',
         customParams: row.customParamList || [],
-        testCaseCustomParams: row.testCaseCustomParams || {},
-        testCaseExecutionCounts: row.testCaseExecutionCounts || {},
+        testCaseCustomParams: testCaseCustomParams,
+        testCaseExecutionCounts: testCaseExecutionCounts,
         description: row.description,
         status: row.status,
       })
