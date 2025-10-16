@@ -126,7 +126,7 @@
       width="800px"
       @close="resetForm"
     >
-      <!-- 步骤导航 -->
+      <!-- 步骤导航 - 仅在新增策略时显示 -->
       <div class="step-navigation" v-if="!form.id">
         <el-steps :active="currentStep" align-center>
           <el-step :title="$t('collectStrategy.step1Title')" :description="$t('collectStrategy.step1Desc')" />
@@ -141,7 +141,7 @@
         label-width="120px"
       >
         <!-- 第一步：基本信息配置 -->
-        <div v-if="currentStep === 0" class="step-content">
+        <div v-if="currentStep === 0 || form.id" class="step-content">
           <el-form-item :label="$t('collectStrategy.strategyNameLabel')" prop="name">
             <el-input v-model="form.name" :placeholder="$t('collectStrategy.strategyNamePlaceholder')" />
           </el-form-item>
@@ -240,7 +240,7 @@
         </div>
         
         <!-- 第二步：用例处理配置 -->
-        <div v-if="currentStep === 1" class="step-content">
+        <div v-if="currentStep === 1 || form.id" class="step-content">
           <!-- 筛选条件配置 -->
           <el-form-item :label="$t('collectStrategy.businessCategoryFilter')" v-if="selectedTestCaseSet">
             <el-select 
@@ -394,15 +394,22 @@
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="dialogVisible = false">{{ $t('common.cancel') }}</el-button>
-          <el-button v-if="currentStep === 0" type="primary" @click="handleNextStep" :disabled="!canProceedToNextStep">
-            {{ $t('collectStrategy.nextStep') }}
-            <el-icon><ArrowRight /></el-icon>
-          </el-button>
-          <el-button v-if="currentStep === 1" @click="handlePrevStep">
-            <el-icon><ArrowLeft /></el-icon>
-            {{ $t('collectStrategy.prevStep') }}
-          </el-button>
-          <el-button v-if="currentStep === 1 || form.id" type="primary" @click="handleSubmit">
+          <!-- 新增策略的步骤导航按钮 -->
+          <template v-if="!form.id">
+            <el-button v-if="currentStep === 0" type="primary" @click="handleNextStep" :disabled="!canProceedToNextStep">
+              {{ $t('collectStrategy.nextStep') }}
+              <el-icon><ArrowRight /></el-icon>
+            </el-button>
+            <el-button v-if="currentStep === 1" @click="handlePrevStep">
+              <el-icon><ArrowLeft /></el-icon>
+              {{ $t('collectStrategy.prevStep') }}
+            </el-button>
+            <el-button v-if="currentStep === 1" type="primary" @click="handleSubmit">
+              {{ $t('common.confirm') }}
+            </el-button>
+          </template>
+          <!-- 编辑策略的按钮 -->
+          <el-button v-if="form.id" type="primary" @click="handleSubmit">
             {{ $t('common.confirm') }}
           </el-button>
         </span>
