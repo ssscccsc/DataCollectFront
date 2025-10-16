@@ -361,8 +361,15 @@ export default {
     executionCount: '执行次数',
     executionCountPlaceholder: '请输入执行次数',
     executionCountTip: '该用例在本策略中的执行次数（默认1次）',
+    // 步骤导航
+    step1Title: '基本信息',
+    step1Desc: '配置策略名称、采集意图和用例集',
+    step2Title: '用例处理',
+    step2Desc: '筛选用例并配置参数',
+    nextStep: '下一步',
+    prevStep: '上一步',
+    batchConfig: '批量配置',
     // 批量配置
-    nextStep: '下一步，批量配置',
     batchConfigTitle: '批量配置用例参数和执行次数',
     batchConfigTip: '批量配置说明',
     batchConfigDescription: '共 {count} 个用例，点击展开可为每个用例单独配置执行次数和自定义参数',

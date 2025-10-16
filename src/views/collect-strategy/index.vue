@@ -126,256 +126,285 @@
       width="800px"
       @close="resetForm"
     >
+      <!-- 步骤导航 -->
+      <div class="step-navigation" v-if="!form.id">
+        <el-steps :active="currentStep" align-center>
+          <el-step :title="$t('collectStrategy.step1Title')" :description="$t('collectStrategy.step1Desc')" />
+          <el-step :title="$t('collectStrategy.step2Title')" :description="$t('collectStrategy.step2Desc')" />
+        </el-steps>
+      </div>
+      
       <el-form
         ref="formRef"
         :model="form"
         :rules="rules"
         label-width="120px"
       >
-        <el-form-item :label="$t('collectStrategy.strategyNameLabel')" prop="name">
-          <el-input v-model="form.name" :placeholder="$t('collectStrategy.strategyNamePlaceholder')" />
-        </el-form-item>
-        <el-form-item :label="$t('collectStrategy.collectIntentLabel')" prop="intent">
-          <el-select 
-            v-model="form.intent" 
-            :placeholder="$t('collectStrategy.collectIntentPlaceholder')" 
-            style="width: 100%"
-          >
-            <el-option
-              v-for="intent in intentOptions"
-              :key="intent.code"
-              :label="intent.name"
-              :value="intent.code"
-            />
-          </el-select>
-        </el-form-item>
-        
-        <!-- 自定义参数列表 -->
-        <el-form-item :label="$t('collectStrategy.customParamsLabel')">
-          <div class="custom-params-container">
-            <div class="custom-params-header">
-              <span class="params-title">{{ $t('collectStrategy.paramList') }}</span>
-              <el-button 
-                type="primary" 
-                size="small" 
-                @click="addCustomParam"
-                :icon="Plus"
-              >
-                {{ $t('collectStrategy.addParam') }}
-              </el-button>
-            </div>
-            
-            <div v-if="form.customParams.length === 0" class="empty-params">
-              <el-empty :description="$t('collectStrategy.noCustomParams')" :image-size="60" />
-            </div>
-            
-            <div v-else class="custom-params-list">
-              <div 
-                v-for="(param, index) in form.customParams" 
-                :key="index" 
-                class="param-item"
-              >
-                <div class="param-index">{{ index + 1 }}</div>
-                <el-form-item 
-                  :prop="`customParams.${index}.key`" 
-                  :rules="customParamRules.key"
-                  style="margin-bottom: 0; flex: 1;"
-                >
-                  <el-input 
-                    v-model="param.key" 
-                    :placeholder="$t('collectStrategy.paramKey')" 
-                  />
-                </el-form-item>
-                <el-form-item 
-                  :prop="`customParams.${index}.value`" 
-                  :rules="customParamRules.value"
-                  style="margin-bottom: 0; flex: 1;"
-                >
-                  <el-input 
-                    v-model="param.value" 
-                    :placeholder="$t('collectStrategy.paramValue')" 
-                  />
-                </el-form-item>
-                <el-button 
-                  type="danger" 
-                  size="small" 
-                  @click="removeCustomParam(index)"
-                  :icon="Delete"
-                >
-                  {{ $t('collectStrategy.delete') }}
-                </el-button>
-              </div>
-            </div>
-          </div>
-        </el-form-item>
-        <el-form-item :label="$t('collectStrategy.collectCountLabel')" prop="collectCount">
-          <el-input-number
-            v-model="form.collectCount"
-            :min="1"
-            :max="1000"
-            :placeholder="$t('collectStrategy.collectCountPlaceholder')"
-            style="width: 100%"
-          />
-        </el-form-item>
-        <el-form-item :label="$t('collectStrategy.testCaseSetLabel')" prop="testCaseSetId">
-          <el-select v-model="form.testCaseSetId" :placeholder="$t('collectStrategy.testCaseSetPlaceholder')" style="width: 100%" @change="handleTestCaseSetChange">
-            <el-option
-              v-for="item in testCaseSetOptions"
-              :key="item.id"
-              :label="`${item.name} (${item.version})`"
-              :value="item.id"
-            />
-          </el-select>
-        </el-form-item>
-        
-        <!-- 筛选条件配置 -->
-        <el-form-item :label="$t('collectStrategy.businessCategoryFilter')" v-if="selectedTestCaseSet">
-          <el-select 
-            v-model="form.businessCategory" 
-            :placeholder="$t('collectStrategy.businessCategoryPlaceholder')" 
-            clearable 
-            style="width: 100%"
-          >
-            <el-option
-              v-for="category in businessCategoryOptions"
-              :key="category"
-              :label="category"
-              :value="category"
-            />
-          </el-select>
-        </el-form-item>
-        
-        <el-form-item :label="$t('collectStrategy.appFilter')" v-if="selectedTestCaseSet">
-          <el-select 
-            v-model="form.app" 
-            :placeholder="$t('collectStrategy.appPlaceholder')" 
-            clearable 
-            style="width: 100%"
-          >
-            <el-option
-              v-for="app in appOptions"
-              :key="app"
-              :label="app"
-              :value="app"
-            />
-          </el-select>
-        </el-form-item>
-        
-        <!-- 用例列表显示 -->
-        <el-form-item :label="$t('collectStrategy.includedTestCases')" v-if="selectedTestCaseSet">
-          <div class="test-case-list-container">
-            <div class="test-case-summary">
-              <span class="summary-text">{{ $t('collectStrategy.totalTestCases', { count: filteredTestCaseList.length }) }}</span>
-              <el-button 
-                type="text" 
-                size="small" 
-                @click="showTestCaseList = !showTestCaseList"
-              >
-                {{ showTestCaseList ? $t('collectStrategy.collapse') : $t('collectStrategy.expand') }}
-              </el-button>
-            </div>
-            
-            <div v-if="showTestCaseList" class="test-case-table">
-              <el-table :data="filteredTestCaseList" size="small" max-height="300">
-                <el-table-column prop="name" :label="$t('collectStrategy.testCaseName')" min-width="150" />
-                <el-table-column prop="number" :label="$t('collectStrategy.testCaseNumber')" width="100" />
-                <el-table-column prop="businessCategory" :label="$t('collectStrategy.businessCategory')" width="120">
-                  <template #default="scope">
-                    <span v-if="scope.row.businessCategory">{{ scope.row.businessCategory }}</span>
-                    <span v-else style="color: #909399;">{{ $t('collectStrategy.notConfigured') }}</span>
-                  </template>
-                </el-table-column>
-                <el-table-column prop="app" :label="$t('collectStrategy.app')" width="100">
-                  <template #default="scope">
-                    <span v-if="scope.row.app">{{ scope.row.app }}</span>
-                    <span v-else style="color: #909399;">{{ $t('collectStrategy.notConfigured') }}</span>
-                  </template>
-                </el-table-column>
-                <el-table-column prop="logicNetwork" :label="$t('collectStrategy.logicNetwork')" min-width="150">
-                  <template #default="scope">
-                    <div v-if="scope.row.logicNetwork">
-                      <el-tag 
-                        v-for="network in scope.row.logicNetwork.split(';')" 
-                        :key="network"
-                        size="small"
-                        style="margin-right: 4px; margin-bottom: 4px;"
-                      >
-                        {{ network }}
-                      </el-tag>
-                    </div>
-                    <span v-else style="color: #909399;">{{ $t('collectStrategy.notConfigured') }}</span>
-                  </template>
-                </el-table-column>
-                <el-table-column :label="$t('collectStrategy.executionCount')" width="100" align="center">
-                  <template #default="scope">
-                    <el-tag v-if="getTestCaseExecutionCount(scope.row.id) > 0" type="warning" size="small">
-                      {{ getTestCaseExecutionCount(scope.row.id) }} 次
-                    </el-tag>
-                    <span v-else style="color: #909399;">{{ $t('collectStrategy.notConfigured') }}</span>
-                  </template>
-                </el-table-column>
-                <el-table-column :label="$t('collectStrategy.testCaseCustomParams')" width="120" align="center">
-                  <template #default="scope">
-                    <el-tooltip 
-                      v-if="getTestCaseParamCount(scope.row.id) > 0" 
-                      :content="$t('collectStrategy.configuredParams', { count: getTestCaseParamCount(scope.row.id) })"
-                      placement="top"
-                    >
-                      <el-badge :value="getTestCaseParamCount(scope.row.id)" type="success">
-                        <el-icon style="font-size: 18px; color: #67c23a;"><Setting /></el-icon>
-                      </el-badge>
-                    </el-tooltip>
-                    <span v-else style="color: #909399;">{{ $t('collectStrategy.notConfigured') }}</span>
-                  </template>
-                </el-table-column>
-                <el-table-column :label="$t('collectStrategy.operations')" width="100" align="center" fixed="right">
-                  <template #default="scope">
-                    <el-button 
-                      type="primary" 
-                      size="small" 
-                      text
-                      @click="handleConfigTestCaseParams(scope.row)"
-                    >
-                      {{ $t('collectStrategy.configParams') }}
-                    </el-button>
-                  </template>
-                </el-table-column>
-              </el-table>
-              
-              <!-- 下一步按钮 -->
-              <div class="next-step-container">
+        <!-- 第一步：基本信息配置 -->
+        <div v-if="currentStep === 0" class="step-content">
+          <el-form-item :label="$t('collectStrategy.strategyNameLabel')" prop="name">
+            <el-input v-model="form.name" :placeholder="$t('collectStrategy.strategyNamePlaceholder')" />
+          </el-form-item>
+          <el-form-item :label="$t('collectStrategy.collectIntentLabel')" prop="intent">
+            <el-select 
+              v-model="form.intent" 
+              :placeholder="$t('collectStrategy.collectIntentPlaceholder')" 
+              style="width: 100%"
+            >
+              <el-option
+                v-for="intent in intentOptions"
+                :key="intent.code"
+                :label="intent.name"
+                :value="intent.code"
+              />
+            </el-select>
+          </el-form-item>
+          
+          <!-- 自定义参数列表 -->
+          <el-form-item :label="$t('collectStrategy.customParamsLabel')">
+            <div class="custom-params-container">
+              <div class="custom-params-header">
+                <span class="params-title">{{ $t('collectStrategy.paramList') }}</span>
                 <el-button 
                   type="primary" 
-                  size="large"
-                  @click="handleNextStep"
-                  :disabled="filteredTestCaseList.length === 0"
+                  size="small" 
+                  @click="addCustomParam"
+                  :icon="Plus"
                 >
-                  {{ $t('collectStrategy.nextStep') }}
-                  <el-icon><ArrowRight /></el-icon>
+                  {{ $t('collectStrategy.addParam') }}
                 </el-button>
               </div>
+              
+              <div v-if="form.customParams.length === 0" class="empty-params">
+                <el-empty :description="$t('collectStrategy.noCustomParams')" :image-size="60" />
+              </div>
+              
+              <div v-else class="custom-params-list">
+                <div 
+                  v-for="(param, index) in form.customParams" 
+                  :key="index" 
+                  class="param-item"
+                >
+                  <div class="param-index">{{ index + 1 }}</div>
+                  <el-form-item 
+                    :prop="`customParams.${index}.key`" 
+                    :rules="customParamRules.key"
+                    style="margin-bottom: 0; flex: 1;"
+                  >
+                    <el-input 
+                      v-model="param.key" 
+                      :placeholder="$t('collectStrategy.paramKey')" 
+                    />
+                  </el-form-item>
+                  <el-form-item 
+                    :prop="`customParams.${index}.value`" 
+                    :rules="customParamRules.value"
+                    style="margin-bottom: 0; flex: 1;"
+                  >
+                    <el-input 
+                      v-model="param.value" 
+                      :placeholder="$t('collectStrategy.paramValue')" 
+                    />
+                  </el-form-item>
+                  <el-button 
+                    type="danger" 
+                    size="small" 
+                    @click="removeCustomParam(index)"
+                    :icon="Delete"
+                  >
+                    {{ $t('collectStrategy.delete') }}
+                  </el-button>
+                </div>
+              </div>
             </div>
-          </div>
-        </el-form-item>
-        <el-form-item :label="$t('collectStrategy.descriptionLabel')" prop="description">
-          <el-input
-            v-model="form.description"
-            type="textarea"
-            :rows="3"
-            :placeholder="$t('collectStrategy.descriptionPlaceholder')"
-          />
-        </el-form-item>
-        <el-form-item :label="$t('collectStrategy.statusLabel')" prop="status">
-          <el-radio-group v-model="form.status">
-            <el-radio :label="1">{{ $t('collectStrategy.enabled') }}</el-radio>
-            <el-radio :label="0">{{ $t('collectStrategy.disabled') }}</el-radio>
-          </el-radio-group>
-        </el-form-item>
+          </el-form-item>
+          <el-form-item :label="$t('collectStrategy.collectCountLabel')" prop="collectCount">
+            <el-input-number
+              v-model="form.collectCount"
+              :min="1"
+              :max="1000"
+              :placeholder="$t('collectStrategy.collectCountPlaceholder')"
+              style="width: 100%"
+            />
+          </el-form-item>
+          <el-form-item :label="$t('collectStrategy.testCaseSetLabel')" prop="testCaseSetId">
+            <el-select v-model="form.testCaseSetId" :placeholder="$t('collectStrategy.testCaseSetPlaceholder')" style="width: 100%" @change="handleTestCaseSetChange">
+              <el-option
+                v-for="item in testCaseSetOptions"
+                :key="item.id"
+                :label="`${item.name} (${item.version})`"
+                :value="item.id"
+              />
+            </el-select>
+          </el-form-item>
+        </div>
+        
+        <!-- 第二步：用例处理配置 -->
+        <div v-if="currentStep === 1" class="step-content">
+          <!-- 筛选条件配置 -->
+          <el-form-item :label="$t('collectStrategy.businessCategoryFilter')" v-if="selectedTestCaseSet">
+            <el-select 
+              v-model="form.businessCategory" 
+              :placeholder="$t('collectStrategy.businessCategoryPlaceholder')" 
+              clearable 
+              style="width: 100%"
+            >
+              <el-option
+                v-for="category in businessCategoryOptions"
+                :key="category"
+                :label="category"
+                :value="category"
+              />
+            </el-select>
+          </el-form-item>
+          
+          <el-form-item :label="$t('collectStrategy.appFilter')" v-if="selectedTestCaseSet">
+            <el-select 
+              v-model="form.app" 
+              :placeholder="$t('collectStrategy.appPlaceholder')" 
+              clearable 
+              style="width: 100%"
+            >
+              <el-option
+                v-for="app in appOptions"
+                :key="app"
+                :label="app"
+                :value="app"
+              />
+            </el-select>
+          </el-form-item>
+          
+          <!-- 用例列表显示 -->
+          <el-form-item :label="$t('collectStrategy.includedTestCases')" v-if="selectedTestCaseSet">
+            <div class="test-case-list-container">
+              <div class="test-case-summary">
+                <span class="summary-text">{{ $t('collectStrategy.totalTestCases', { count: filteredTestCaseList.length }) }}</span>
+                <el-button 
+                  type="text" 
+                  size="small" 
+                  @click="showTestCaseList = !showTestCaseList"
+                >
+                  {{ showTestCaseList ? $t('collectStrategy.collapse') : $t('collectStrategy.expand') }}
+                </el-button>
+              </div>
+              
+              <div v-if="showTestCaseList" class="test-case-table">
+                <el-table :data="filteredTestCaseList" size="small" max-height="300">
+                  <el-table-column prop="name" :label="$t('collectStrategy.testCaseName')" min-width="150" />
+                  <el-table-column prop="number" :label="$t('collectStrategy.testCaseNumber')" width="100" />
+                  <el-table-column prop="businessCategory" :label="$t('collectStrategy.businessCategory')" width="120">
+                    <template #default="scope">
+                      <span v-if="scope.row.businessCategory">{{ scope.row.businessCategory }}</span>
+                      <span v-else style="color: #909399;">{{ $t('collectStrategy.notConfigured') }}</span>
+                    </template>
+                  </el-table-column>
+                  <el-table-column prop="app" :label="$t('collectStrategy.app')" width="100">
+                    <template #default="scope">
+                      <span v-if="scope.row.app">{{ scope.row.app }}</span>
+                      <span v-else style="color: #909399;">{{ $t('collectStrategy.notConfigured') }}</span>
+                    </template>
+                  </el-table-column>
+                  <el-table-column prop="logicNetwork" :label="$t('collectStrategy.logicNetwork')" min-width="150">
+                    <template #default="scope">
+                      <div v-if="scope.row.logicNetwork">
+                        <el-tag 
+                          v-for="network in scope.row.logicNetwork.split(';')" 
+                          :key="network"
+                          size="small"
+                          style="margin-right: 4px; margin-bottom: 4px;"
+                        >
+                          {{ network }}
+                        </el-tag>
+                      </div>
+                      <span v-else style="color: #909399;">{{ $t('collectStrategy.notConfigured') }}</span>
+                    </template>
+                  </el-table-column>
+                  <el-table-column :label="$t('collectStrategy.executionCount')" width="100" align="center">
+                    <template #default="scope">
+                      <el-tag v-if="getTestCaseExecutionCount(scope.row.id) > 0" type="warning" size="small">
+                        {{ getTestCaseExecutionCount(scope.row.id) }} 次
+                      </el-tag>
+                      <span v-else style="color: #909399;">{{ $t('collectStrategy.notConfigured') }}</span>
+                    </template>
+                  </el-table-column>
+                  <el-table-column :label="$t('collectStrategy.testCaseCustomParams')" width="120" align="center">
+                    <template #default="scope">
+                      <el-tooltip 
+                        v-if="getTestCaseParamCount(scope.row.id) > 0" 
+                        :content="$t('collectStrategy.configuredParams', { count: getTestCaseParamCount(scope.row.id) })"
+                        placement="top"
+                      >
+                        <el-badge :value="getTestCaseParamCount(scope.row.id)" type="success">
+                          <el-icon style="font-size: 18px; color: #67c23a;"><Setting /></el-icon>
+                        </el-badge>
+                      </el-tooltip>
+                      <span v-else style="color: #909399;">{{ $t('collectStrategy.notConfigured') }}</span>
+                    </template>
+                  </el-table-column>
+                  <el-table-column :label="$t('collectStrategy.operations')" width="100" align="center" fixed="right">
+                    <template #default="scope">
+                      <el-button 
+                        type="primary" 
+                        size="small" 
+                        text
+                        @click="handleConfigTestCaseParams(scope.row)"
+                      >
+                        {{ $t('collectStrategy.configParams') }}
+                      </el-button>
+                    </template>
+                  </el-table-column>
+                </el-table>
+                
+                <!-- 批量配置按钮 -->
+                <div class="next-step-container">
+                  <el-button 
+                    type="primary" 
+                    size="large"
+                    @click="handleNextStep"
+                    :disabled="filteredTestCaseList.length === 0"
+                  >
+                    {{ $t('collectStrategy.batchConfig') }}
+                    <el-icon><Setting /></el-icon>
+                  </el-button>
+                </div>
+              </div>
+            </div>
+          </el-form-item>
+        </div>
+        
+        <!-- 描述和状态字段（仅在编辑时显示） -->
+        <div v-if="form.id" class="step-content">
+          <el-form-item :label="$t('collectStrategy.descriptionLabel')" prop="description">
+            <el-input
+              v-model="form.description"
+              type="textarea"
+              :rows="3"
+              :placeholder="$t('collectStrategy.descriptionPlaceholder')"
+            />
+          </el-form-item>
+          <el-form-item :label="$t('collectStrategy.statusLabel')" prop="status">
+            <el-radio-group v-model="form.status">
+              <el-radio :label="1">{{ $t('collectStrategy.enabled') }}</el-radio>
+              <el-radio :label="0">{{ $t('collectStrategy.disabled') }}</el-radio>
+            </el-radio-group>
+          </el-form-item>
+        </div>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="dialogVisible = false">{{ $t('common.cancel') }}</el-button>
-          <el-button type="primary" @click="handleSubmit">{{ $t('common.confirm') }}</el-button>
+          <el-button v-if="currentStep === 0" type="primary" @click="handleNextStep" :disabled="!canProceedToNextStep">
+            {{ $t('collectStrategy.nextStep') }}
+            <el-icon><ArrowRight /></el-icon>
+          </el-button>
+          <el-button v-if="currentStep === 1" @click="handlePrevStep">
+            <el-icon><ArrowLeft /></el-icon>
+            {{ $t('collectStrategy.prevStep') }}
+          </el-button>
+          <el-button v-if="currentStep === 1" type="primary" @click="handleSubmit">
+            {{ $t('common.confirm') }}
+          </el-button>
+          <el-button v-if="form.id" type="primary" @click="handleSubmit">{{ $t('common.confirm') }}</el-button>
         </span>
       </template>
     </el-dialog>
@@ -651,6 +680,9 @@ export default {
     const appOptions = ref([])
     const intentOptions = ref([])
     
+    // 步骤控制
+    const currentStep = ref(0)
+    
     // 批量配置对话框
     const batchConfigDialogVisible = ref(false)
     const activeBatchConfigItems = ref([])
@@ -824,25 +856,48 @@ export default {
       return form.testCaseExecutionCounts[testCaseId] || 0
     }
     
-    // 点击下一步，打开批量配置对话框
+    // 步骤控制方法
     const handleNextStep = () => {
-      // 初始化执行次数（如果未设置，默认为1）
-      filteredTestCaseList.value.forEach(testCase => {
-        if (!form.testCaseExecutionCounts[testCase.id]) {
-          form.testCaseExecutionCounts[testCase.id] = 1
+      if (currentStep.value === 0) {
+        // 从第一步到第二步
+        currentStep.value = 1
+        // 自动展开用例列表
+        showTestCaseList.value = true
+      } else {
+        // 从第二步到批量配置对话框
+        // 初始化执行次数（如果未设置，默认为1）
+        filteredTestCaseList.value.forEach(testCase => {
+          if (!form.testCaseExecutionCounts[testCase.id]) {
+            form.testCaseExecutionCounts[testCase.id] = 1
+          }
+          // 初始化参数数组（如果未设置）
+          if (!form.testCaseCustomParams[testCase.id]) {
+            form.testCaseCustomParams[testCase.id] = []
+          }
+        })
+        
+        batchConfigDialogVisible.value = true
+        // 默认展开第一个
+        if (filteredTestCaseList.value.length > 0) {
+          activeBatchConfigItems.value = [filteredTestCaseList.value[0].id]
         }
-        // 初始化参数数组（如果未设置）
-        if (!form.testCaseCustomParams[testCase.id]) {
-          form.testCaseCustomParams[testCase.id] = []
-        }
-      })
-      
-      batchConfigDialogVisible.value = true
-      // 默认展开第一个
-      if (filteredTestCaseList.value.length > 0) {
-        activeBatchConfigItems.value = [filteredTestCaseList.value[0].id]
       }
     }
+    
+    // 上一步
+    const handlePrevStep = () => {
+      if (currentStep.value > 0) {
+        currentStep.value--
+      }
+    }
+    
+    // 判断是否可以进入下一步
+    const canProceedToNextStep = computed(() => {
+      if (currentStep.value === 0) {
+        return form.name && form.intent && form.testCaseSetId
+      }
+      return true
+    })
     
     // 为批量配置的用例添加参数
     const addBatchTestCaseParam = (testCaseId) => {
@@ -1063,6 +1118,7 @@ export default {
       selectedTestCaseSet.value = null
       testCaseList.value = []
       showTestCaseList.value = false
+      currentStep.value = 0 // 重置步骤
       clearFilterOptions()
       if (formRef.value) {
         formRef.value.resetFields()
@@ -1112,6 +1168,9 @@ export default {
       getTestCaseParamCount,
       getTestCaseExecutionCount,
       handleNextStep,
+      handlePrevStep,
+      canProceedToNextStep,
+      currentStep,
       addBatchTestCaseParam,
       removeBatchTestCaseParam,
       saveBatchConfig,
@@ -1143,6 +1202,18 @@ export default {
 <style scoped>
 .collect-strategy-page {
   padding: 20px;
+}
+
+/* 步骤导航样式 */
+.step-navigation {
+  margin-bottom: 24px;
+  padding: 16px;
+  background-color: #f5f7fa;
+  border-radius: 8px;
+}
+
+.step-content {
+  min-height: 400px;
 }
 
 .table-operations {
