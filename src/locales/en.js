@@ -310,6 +310,7 @@ export default {
     testCases: 'Test Cases',
     file: 'File',
     viewFile: 'View File',
+    viewTestCaseSetDetail: 'Test Case Set Detail',
     fileAccess: 'File Access',
     businessCategory: 'Business Category',
     app: 'App',

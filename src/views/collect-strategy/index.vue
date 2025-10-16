@@ -29,36 +29,36 @@
           </template>
         </el-table-column>
         <el-table-column prop="collectCount" :label="$t('collectStrategy.collectCount')" width="100" />
-        <el-table-column :label="$t('collectStrategy.testCaseSet')" min-width="300">
+        <el-table-column :label="$t('collectStrategy.testCaseSet')" min-width="200">
           <template #default="scope">
-            <div v-if="scope.row.testCaseSetName">
-              <div class="test-case-set-info">
-                <div class="set-name">
-                  <strong>{{ scope.row.testCaseSetName }} ({{ scope.row.testCaseSetVersion }})</strong>
-                </div>
-                <div class="set-description" v-if="scope.row.testCaseSetDescription">
-                  <span class="label">{{ $t('collectStrategy.testCaseSetDescription') }}：</span>
-                  <span>{{ scope.row.testCaseSetDescription }}</span>
-                </div>
-                <div class="test-case-info" v-if="scope.row.testCaseList && scope.row.testCaseList.length > 0">
-                  <span class="label">{{ $t('collectStrategy.testCases') }}：</span>
-                  <span v-for="(testCase, index) in scope.row.testCaseList" :key="testCase.id">
-                    {{ testCase.name }}({{ testCase.number }})
-                    <span v-if="index < scope.row.testCaseList.length - 1">, </span>
-                  </span>
-                </div>
-                <div class="file-info" v-if="scope.row.testCaseSetGohttpserverUrl">
-                  <span class="label">{{ $t('collectStrategy.file') }}：</span>
-                  <el-link 
-                    type="primary" 
-                    :href="scope.row.testCaseSetGohttpserverUrl" 
-                    target="_blank"
-                    :underline="false"
-                  >
-                    <el-icon><Link /></el-icon>
-                    {{ $t('collectStrategy.viewFile') }}
-                  </el-link>
-                </div>
+            <div v-if="scope.row.testCaseSetName" class="test-case-set-info">
+              <div class="set-name">
+                <strong>{{ scope.row.testCaseSetName }} ({{ scope.row.testCaseSetVersion }})</strong>
+              </div>
+              <div class="set-description" v-if="scope.row.testCaseSetDescription">
+                <span class="label">{{ $t('collectStrategy.testCaseSetDescription') }}：</span>
+                <span>{{ scope.row.testCaseSetDescription }}</span>
+              </div>
+              <div class="set-actions">
+                <el-button 
+                  type="primary" 
+                  size="small" 
+                  @click="viewTestCaseSetDetail(scope.row.testCaseSetId)"
+                >
+                  <el-icon><View /></el-icon>
+                  {{ $t('collectStrategy.viewTestCaseSetDetail') }}
+                </el-button>
+                <el-link 
+                  v-if="scope.row.testCaseSetGohttpserverUrl"
+                  type="primary" 
+                  :href="scope.row.testCaseSetGohttpserverUrl" 
+                  target="_blank"
+                  :underline="false"
+                  style="margin-left: 8px;"
+                >
+                  <el-icon><Link /></el-icon>
+                  {{ $t('collectStrategy.viewFile') }}
+                </el-link>
               </div>
             </div>
             <span v-else style="color: #909399;">{{ $t('collectStrategy.notConfigured') }}</span>
@@ -660,7 +660,7 @@
 <script>
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Link, Plus, Delete, Setting, ArrowRight, Clock } from '@element-plus/icons-vue'
+import { Link, Plus, Delete, Setting, ArrowRight, Clock, View } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import request from '@/utils/request'
 
@@ -1161,6 +1161,14 @@ export default {
       pagination.current = val
       loadData()
     }
+    
+    // 查看用例集详情
+    const viewTestCaseSetDetail = (testCaseSetId) => {
+      if (testCaseSetId) {
+        // 跳转到用例集详情页面
+        window.open(`/test-case-set/detail/${testCaseSetId}`, '_blank')
+      }
+    }
 
     onMounted(() => {
       loadData()
@@ -1223,6 +1231,7 @@ export default {
       resetForm,
       handleSizeChange,
       handleCurrentChange,
+      viewTestCaseSetDetail,
     }
   },
 }
@@ -1265,15 +1274,21 @@ export default {
 }
 
 .test-case-set-info .set-name {
-  margin-bottom: 4px;
+  margin-bottom: 8px;
   color: #303133;
+  font-size: 14px;
 }
 
-.test-case-set-info .set-description,
-.test-case-set-info .test-case-info,
-.test-case-set-info .file-info {
-  margin-bottom: 2px;
+.test-case-set-info .set-description {
+  margin-bottom: 8px;
   color: #606266;
+}
+
+.test-case-set-info .set-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
 }
 
 .test-case-set-info .label {
