@@ -1262,6 +1262,8 @@ export default {
   border-radius: 4px;
   padding: 12px;
   background-color: #fafafa;
+  width: 100%;
+  max-width: 100%;
 }
 
 .test-case-summary {
@@ -1281,6 +1283,7 @@ export default {
   border: 1px solid #e4e7ed;
   border-radius: 4px;
   overflow: hidden;
+  width: 100%;
 }
 
 /* 自定义参数样式 */
