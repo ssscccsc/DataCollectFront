@@ -124,7 +124,7 @@
       v-model="dialogVisible"
       :title="dialogTitle"
       width="90%"
-      top="5vh"
+      top="8vh"
       :close-on-click-modal="false"
       @close="resetForm"
     >
@@ -141,6 +141,7 @@
         :model="form"
         :rules="rules"
         label-width="120px"
+        class="strategy-form"
       >
         <!-- 第一步：基本信息配置 -->
         <div v-if="currentStep === 0" class="step-content">
@@ -292,7 +293,7 @@
               </div>
               
               <div v-if="showTestCaseList" class="test-case-table">
-                <el-table :data="filteredTestCaseList" size="small" max-height="400">
+                <el-table :data="filteredTestCaseList" size="small" max-height="300">
                   <el-table-column prop="name" :label="$t('collectStrategy.testCaseName')" min-width="150" />
                   <el-table-column prop="number" :label="$t('collectStrategy.testCaseNumber')" width="100" />
                   <el-table-column prop="businessCategory" :label="$t('collectStrategy.businessCategory')" width="120">
@@ -1276,16 +1277,25 @@ export default {
 
 /* 步骤导航样式 */
 .step-navigation {
-  margin-bottom: 24px;
-  padding: 16px;
+  margin-bottom: 16px;
+  padding: 12px;
   background-color: #f5f7fa;
   border-radius: 8px;
 }
 
 .step-content {
-  min-height: 500px;
-  max-height: 70vh;
+  min-height: 300px;
+  max-height: 60vh;
   overflow-y: auto;
+}
+
+/* 表单紧凑样式 */
+.strategy-form .el-form-item {
+  margin-bottom: 16px;
+}
+
+.strategy-form .el-form-item:last-child {
+  margin-bottom: 0;
 }
 
 .table-operations {
