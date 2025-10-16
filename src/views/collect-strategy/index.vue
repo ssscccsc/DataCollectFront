@@ -248,6 +248,7 @@
               :placeholder="$t('collectStrategy.businessCategoryPlaceholder')" 
               clearable 
               style="width: 100%"
+              @change="handleBusinessCategoryChange"
             >
               <el-option
                 v-for="category in businessCategoryOptions"
@@ -828,6 +829,32 @@ export default {
       businessCategoryOptions.value = Array.from(categories).sort()
       appOptions.value = Array.from(apps).sort()
     }
+    
+    // 根据业务大类筛选APP选项
+    const updateAppOptionsByCategory = (selectedCategory) => {
+      if (!selectedCategory) {
+        // 如果没有选择业务大类，显示所有APP
+        extractFilterOptions()
+        return
+      }
+      
+      const apps = new Set()
+      testCaseList.value.forEach(testCase => {
+        if (testCase.businessCategory === selectedCategory && testCase.app) {
+          apps.add(testCase.app)
+        }
+      })
+      
+      appOptions.value = Array.from(apps).sort()
+    }
+    
+    // 业务大类变化处理
+    const handleBusinessCategoryChange = (category) => {
+      // 清空APP选择
+      form.app = ''
+      // 更新APP选项
+      updateAppOptionsByCategory(category)
+    }
 
     // 清除筛选选项
     const clearFilterOptions = () => {
@@ -1184,6 +1211,8 @@ export default {
       loadIntentOptions,
       handleTestCaseSetChange,
       extractFilterOptions,
+      updateAppOptionsByCategory,
+      handleBusinessCategoryChange,
       clearFilterOptions,
       addCustomParam,
       removeCustomParam,
