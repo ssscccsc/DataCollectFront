@@ -402,10 +402,9 @@
             <el-icon><ArrowLeft /></el-icon>
             {{ $t('collectStrategy.prevStep') }}
           </el-button>
-          <el-button v-if="currentStep === 1" type="primary" @click="handleSubmit">
+          <el-button v-if="currentStep === 1 || form.id" type="primary" @click="handleSubmit">
             {{ $t('common.confirm') }}
           </el-button>
-          <el-button v-if="form.id" type="primary" @click="handleSubmit">{{ $t('common.confirm') }}</el-button>
         </span>
       </template>
     </el-dialog>
