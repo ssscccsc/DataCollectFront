@@ -123,7 +123,9 @@
     <el-dialog
       v-model="dialogVisible"
       :title="dialogTitle"
-      width="800px"
+      width="90%"
+      top="5vh"
+      :close-on-click-modal="false"
       @close="resetForm"
     >
       <!-- 步骤导航 -->
@@ -290,7 +292,7 @@
               </div>
               
               <div v-if="showTestCaseList" class="test-case-table">
-                <el-table :data="filteredTestCaseList" size="small" max-height="300">
+                <el-table :data="filteredTestCaseList" size="small" max-height="400">
                   <el-table-column prop="name" :label="$t('collectStrategy.testCaseName')" min-width="150" />
                   <el-table-column prop="number" :label="$t('collectStrategy.testCaseNumber')" width="100" />
                   <el-table-column prop="businessCategory" :label="$t('collectStrategy.businessCategory')" width="120">
@@ -1281,7 +1283,9 @@ export default {
 }
 
 .step-content {
-  min-height: 400px;
+  min-height: 500px;
+  max-height: 70vh;
+  overflow-y: auto;
 }
 
 .table-operations {
