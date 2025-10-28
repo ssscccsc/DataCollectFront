@@ -326,7 +326,7 @@
                 </el-descriptions-item>
                 <el-descriptions-item :label="$t('collectTask.appFilter')">
                   <el-tag v-if="selectedStrategy.app" size="small" type="success">
-                    {{ selectedStrategy.app }}
+                    {{ selectedStrategyAppLabel }}
                   </el-tag>
                   <span v-else style="color: #909399;">{{ $t('collectTask.noFilter') }}</span>
                 </el-descriptions-item>
@@ -941,6 +941,15 @@ export default {
     
     // 选中的策略
     const selectedStrategy = ref(null)
+    const selectedStrategyAppLabel = computed(() => {
+      if (!selectedStrategy.value || !selectedStrategy.value.app) {
+        return ''
+      }
+      // 在策略包含 testCaseList 时，尝试从用例中反查中文 app 名称
+      const list = selectedStrategy.value.testCaseList || []
+      const hit = list.find(tc => (tc.appEn || tc.app) === selectedStrategy.value.app)
+      return hit ? (hit.app || hit.appEn || selectedStrategy.value.app) : selectedStrategy.value.app
+    })
     
     // 可用逻辑环境列表
     const availableEnvironments = ref([])
