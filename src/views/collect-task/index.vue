@@ -1496,9 +1496,12 @@ export default {
           return false
         }
         
-        // App筛选
-        if (selectedStrategy.value.app && testCase.app !== selectedStrategy.value.app) {
-          return false
+        // App筛选（使用 appEn 回退到 app）
+        if (selectedStrategy.value.app) {
+          const tcKey = testCase.appEn || testCase.app
+          if (tcKey !== selectedStrategy.value.app) {
+            return false
+          }
         }
         
         return true

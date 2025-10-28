@@ -264,16 +264,16 @@
           
           <el-form-item :label="$t('collectStrategy.appFilter')" v-if="selectedTestCaseSet">
             <el-select 
-              v-model="form.app" 
+              v-model="form.appEn" 
               :placeholder="$t('collectStrategy.appPlaceholder')" 
               clearable 
               style="width: 100%"
             >
               <el-option
                 v-for="app in appOptions"
-                :key="app"
-                :label="app"
-                :value="app"
+                :key="app.appEn"
+                :label="app.app"
+                :value="app.appEn"
               />
             </el-select>
           </el-form-item>
@@ -717,7 +717,7 @@ export default {
       collectCount: 1,
       testCaseSetId: null,
       businessCategory: '',
-      app: '',
+      appEn: '',
       intent: '',
       customParams: [],
       testCaseCustomParams: {}, // 用例级别的自定义参数 { testCaseId: [{ key: '', value: '' }] }
@@ -818,19 +818,22 @@ export default {
     // 提取筛选选项（用于策略配置）
     const extractFilterOptions = () => {
       const categories = new Set()
-      const apps = new Set()
+      const apps = new Map()
       
       testCaseList.value.forEach(testCase => {
         if (testCase.businessCategory) {
           categories.add(testCase.businessCategory)
         }
-        if (testCase.app) {
-          apps.add(testCase.app)
+        if (testCase.app || testCase.appEn) {
+          const key = testCase.appEn || testCase.app
+          if (!apps.has(key)) {
+            apps.set(key, { app: testCase.app || key, appEn: testCase.appEn || key, })
+          }
         }
       })
       
       businessCategoryOptions.value = Array.from(categories).sort()
-      appOptions.value = Array.from(apps).sort()
+      appOptions.value = Array.from(apps.values()).sort((a, b) => (a.app || '').localeCompare(b.app || ''))
     }
     
     // 根据业务大类筛选APP选项
@@ -841,20 +844,23 @@ export default {
         return
       }
       
-      const apps = new Set()
+      const apps = new Map()
       testCaseList.value.forEach(testCase => {
-        if (testCase.businessCategory === selectedCategory && testCase.app) {
-          apps.add(testCase.app)
+        if (testCase.businessCategory === selectedCategory && (testCase.app || testCase.appEn)) {
+          const key = testCase.appEn || testCase.app
+          if (!apps.has(key)) {
+            apps.set(key, { app: testCase.app || key, appEn: testCase.appEn || key, })
+          }
         }
       })
       
-      appOptions.value = Array.from(apps).sort()
+      appOptions.value = Array.from(apps.values()).sort((a, b) => (a.app || '').localeCompare(b.app || ''))
     }
     
     // 业务大类变化处理
     const handleBusinessCategoryChange = (category) => {
       // 清空APP选择
-      form.app = ''
+      form.appEn = ''
       // 更新APP选项
       updateAppOptionsByCategory(category)
     }
@@ -1024,12 +1030,15 @@ export default {
         if (form.businessCategory && testCase.businessCategory !== form.businessCategory) {
           return false
         }
-        
-        // App筛选
-        if (form.app && testCase.app !== form.app) {
-          return false
+
+        // App筛选（按 appEn 匹配，回退到 app 值）
+        if (form.appEn) {
+          const tcKey = testCase.appEn || testCase.app
+          if (tcKey !== form.appEn) {
+            return false
+          }
         }
-        
+
         return true
       })
     })
@@ -1078,7 +1087,7 @@ export default {
         collectCount: row.collectCount,
         testCaseSetId: row.testCaseSetId,
         businessCategory: row.businessCategory || '',
-        app: row.app || '',
+        appEn: row.app || '',
         intent: row.intent || '',
         customParams: row.customParamList || [],
         testCaseCustomParams: testCaseCustomParams,
@@ -1128,7 +1137,7 @@ export default {
           collectCount: form.collectCount,
           testCaseSetId: form.testCaseSetId,
           businessCategory: form.businessCategory || null,
-          app: form.app || null,
+          app: form.appEn || null,
           intent: form.intent || null,
           customParams: form.customParams.length > 0 ? JSON.stringify(form.customParams) : null,
           testCaseCustomParams: Object.keys(form.testCaseCustomParams).length > 0 ? JSON.stringify(form.testCaseCustomParams) : null,
@@ -1167,7 +1176,7 @@ export default {
         collectCount: 1,
         testCaseSetId: null,
         businessCategory: '',
-        app: '',
+        appEn: '',
         intent: '',
         customParams: [],
         testCaseCustomParams: {},
