@@ -1371,6 +1371,8 @@ export default {
         const strategy = strategyOptions.value.find(s => s.id === strategyId)
         if (strategy) {
           selectedStrategy.value = strategy
+          // 加载完整的策略详情
+          await loadStrategyDetail(strategyId)
           // 初始化自定义参数
           initializeCustomParams()
           await loadAvailableEnvironments()
@@ -1381,6 +1383,23 @@ export default {
         // 清空自定义参数
         editableCustomParams.value = []
         originalCustomParams.value = []
+      }
+    }
+    
+    // 加载策略详情
+    const loadStrategyDetail = async (strategyId) => {
+      try {
+        const res = await request({
+          url: `/collect-strategy/${strategyId}`,
+          method: 'get',
+        })
+        if (res.data) {
+          // 更新选中的策略信息
+          selectedStrategy.value = res.data
+          console.log('loadStrategyDetail - loaded strategy:', res.data)
+        }
+      } catch (error) {
+        console.error('加载策略详情失败:', error)
       }
     }
     
