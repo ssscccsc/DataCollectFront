@@ -336,6 +336,8 @@ export default {
     businessCategoryPlaceholder: '选择业务大类（可选）',
     appFilter: 'App筛选',
     appPlaceholder: '选择App（可选）',
+    appEnLabel: 'App英文名',
+    appEnPlaceholder: '对应的App英文名称',
     includedTestCases: '包含用例',
     totalTestCases: '共 {count} 个测试用例',
     expand: '展开',

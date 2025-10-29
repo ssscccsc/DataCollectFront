@@ -336,6 +336,8 @@ export default {
     businessCategoryPlaceholder: 'Select business category (optional)',
     appFilter: 'App Filter',
     appPlaceholder: 'Select App (optional)',
+    appEnLabel: 'App English Name',
+    appEnPlaceholder: 'Corresponding App English Name',
     includedTestCases: 'Included Test Cases',
     totalTestCases: 'Total {count} test cases',
     expand: 'Expand',

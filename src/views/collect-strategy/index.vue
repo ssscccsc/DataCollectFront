@@ -264,18 +264,32 @@
           
           <el-form-item :label="$t('collectStrategy.appFilter')" v-if="selectedTestCaseSet">
             <el-select 
-              v-model="form.appEn" 
+              v-model="form.app" 
               :placeholder="$t('collectStrategy.appPlaceholder')" 
               clearable 
               style="width: 100%"
+              @change="handleAppChange"
             >
               <el-option
                 v-for="app in appOptions"
-                :key="app.appEn"
+                :key="app.app"
                 :label="app.app"
-                :value="app.appEn"
+                :value="app.app"
               />
             </el-select>
+          </el-form-item>
+          
+          <el-form-item :label="$t('collectStrategy.appEnLabel')" v-if="selectedTestCaseSet && form.app">
+            <el-input 
+              v-model="selectedAppEn" 
+              :placeholder="$t('collectStrategy.appEnPlaceholder')" 
+              readonly
+              style="width: 100%"
+            >
+              <template #prepend>
+                <el-icon><InfoFilled /></el-icon>
+              </template>
+            </el-input>
           </el-form-item>
           
           <!-- 用例列表显示 -->
@@ -663,7 +677,7 @@
 <script>
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Link, Plus, Delete, Setting, ArrowRight, Clock, View } from '@element-plus/icons-vue'
+import { Link, Plus, Delete, Setting, ArrowRight, Clock, View, InfoFilled } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import request from '@/utils/request'
 
@@ -683,6 +697,7 @@ export default {
     const businessCategoryOptions = ref([])
     const appOptions = ref([])
     const intentOptions = ref([])
+    const selectedAppEn = ref('')
     
     // 步骤控制
     const currentStep = ref(0)
@@ -717,7 +732,7 @@ export default {
       collectCount: 1,
       testCaseSetId: null,
       businessCategory: '',
-      appEn: '',
+      app: '',
       intent: '',
       customParams: [],
       testCaseCustomParams: {}, // 用例级别的自定义参数 { testCaseId: [{ key: '', value: '' }] }
@@ -818,22 +833,19 @@ export default {
     // 提取筛选选项（用于策略配置）
     const extractFilterOptions = () => {
       const categories = new Set()
-      const apps = new Map()
+      const apps = new Set()
       
       testCaseList.value.forEach(testCase => {
         if (testCase.businessCategory) {
           categories.add(testCase.businessCategory)
         }
-        if (testCase.app || testCase.appEn) {
-          const key = testCase.appEn || testCase.app
-          if (!apps.has(key)) {
-            apps.set(key, { app: testCase.app || key, appEn: testCase.appEn || key, })
-          }
+        if (testCase.app) {
+          apps.add(testCase.app)
         }
       })
       
       businessCategoryOptions.value = Array.from(categories).sort()
-      appOptions.value = Array.from(apps.values()).sort((a, b) => (a.app || '').localeCompare(b.app || ''))
+      appOptions.value = Array.from(apps).sort().map(app => ({ app: app, }))
     }
     
     // 根据业务大类筛选APP选项
@@ -844,31 +856,41 @@ export default {
         return
       }
       
-      const apps = new Map()
+      const apps = new Set()
       testCaseList.value.forEach(testCase => {
-        if (testCase.businessCategory === selectedCategory && (testCase.app || testCase.appEn)) {
-          const key = testCase.appEn || testCase.app
-          if (!apps.has(key)) {
-            apps.set(key, { app: testCase.app || key, appEn: testCase.appEn || key, })
-          }
+        if (testCase.businessCategory === selectedCategory && testCase.app) {
+          apps.add(testCase.app)
         }
       })
       
-      appOptions.value = Array.from(apps.values()).sort((a, b) => (a.app || '').localeCompare(b.app || ''))
+      appOptions.value = Array.from(apps).sort().map(app => ({ app: app, }))
     }
     
     // 业务大类变化处理
     const handleBusinessCategoryChange = (category) => {
       // 清空APP选择
-      form.appEn = ''
+      form.app = ''
+      selectedAppEn.value = ''
       // 更新APP选项
       updateAppOptionsByCategory(category)
+    }
+    
+    // APP选择变化处理
+    const handleAppChange = (selectedApp) => {
+      if (selectedApp) {
+        // 查找对应的appEn
+        const testCase = testCaseList.value.find(tc => tc.app === selectedApp)
+        selectedAppEn.value = testCase ? testCase.appEn || '' : ''
+      } else {
+        selectedAppEn.value = ''
+      }
     }
 
     // 清除筛选选项
     const clearFilterOptions = () => {
       businessCategoryOptions.value = []
       appOptions.value = []
+      selectedAppEn.value = ''
     }
 
     // 添加自定义参数
@@ -1031,10 +1053,9 @@ export default {
           return false
         }
 
-        // App筛选（按 appEn 匹配，回退到 app 值）
-        if (form.appEn) {
-          const tcKey = testCase.appEn || testCase.app
-          if (tcKey !== form.appEn) {
+        // App筛选（按 app 值匹配）
+        if (form.app) {
+          if (testCase.app !== form.app) {
             return false
           }
         }
@@ -1087,7 +1108,7 @@ export default {
         collectCount: row.collectCount,
         testCaseSetId: row.testCaseSetId,
         businessCategory: row.businessCategory || '',
-        appEn: row.app || '',
+        app: row.app || '',
         intent: row.intent || '',
         customParams: row.customParamList || [],
         testCaseCustomParams: testCaseCustomParams,
@@ -1103,6 +1124,12 @@ export default {
       // 如果选择了用例集，加载用例列表
       if (row.testCaseSetId) {
         handleTestCaseSetChange(row.testCaseSetId)
+        // 编辑时设置对应的appEn
+        if (row.app) {
+          setTimeout(() => {
+            handleAppChange(row.app)
+          }, 100)
+        }
       }
     }
 
@@ -1137,7 +1164,7 @@ export default {
           collectCount: form.collectCount,
           testCaseSetId: form.testCaseSetId,
           businessCategory: form.businessCategory || null,
-          app: form.appEn || null,
+          app: form.app || null,
           intent: form.intent || null,
           customParams: form.customParams.length > 0 ? JSON.stringify(form.customParams) : null,
           testCaseCustomParams: Object.keys(form.testCaseCustomParams).length > 0 ? JSON.stringify(form.testCaseCustomParams) : null,
@@ -1176,7 +1203,7 @@ export default {
         collectCount: 1,
         testCaseSetId: null,
         businessCategory: '',
-        appEn: '',
+        app: '',
         intent: '',
         customParams: [],
         testCaseCustomParams: {},
@@ -1187,6 +1214,7 @@ export default {
       selectedTestCaseSet.value = null
       testCaseList.value = []
       showTestCaseList.value = false
+      selectedAppEn.value = ''
       currentStep.value = 0 // 重置步骤
       clearFilterOptions()
       if (formRef.value) {
@@ -1234,6 +1262,7 @@ export default {
       businessCategoryOptions,
       appOptions,
       intentOptions,
+      selectedAppEn,
       customParamRules,
       filteredTestCaseList,
       batchConfigDialogVisible,
@@ -1263,6 +1292,7 @@ export default {
       extractFilterOptions,
       updateAppOptionsByCategory,
       handleBusinessCategoryChange,
+      handleAppChange,
       clearFilterOptions,
       addCustomParam,
       removeCustomParam,
