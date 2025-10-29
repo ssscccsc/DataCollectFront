@@ -956,8 +956,6 @@ export default {
         return ''
       }
       // 直接返回策略中的app字段值（这是筛选条件，通常是中文app名称）
-      console.log('selectedStrategyAppLabel - selectedStrategy.value:', selectedStrategy.value)
-      console.log('selectedStrategyAppLabel - app value:', selectedStrategy.value.app)
       return selectedStrategy.value.app
     })
     
@@ -967,10 +965,7 @@ export default {
       }
       // 在策略包含 testCaseList 时，尝试从用例中反查 appEn 名称
       const list = selectedStrategy.value.testCaseList || []
-      console.log('selectedStrategyAppEn - testCaseList:', list)
-      console.log('selectedStrategyAppEn - looking for app:', selectedStrategy.value.app)
       const hit = list.find(tc => tc.app === selectedStrategy.value.app)
-      console.log('selectedStrategyAppEn - found hit:', hit)
       return hit ? (hit.appEn || '') : ''
     })
     
@@ -1368,9 +1363,12 @@ export default {
     // 策略选择事件处理
     const handleStrategyChange = async (strategyId) => {
       if (strategyId) {
+        // 先设置基本信息
         const strategy = strategyOptions.value.find(s => s.id === strategyId)
         if (strategy) {
           selectedStrategy.value = strategy
+          // 加载完整的策略详情
+          await loadStrategyDetail(strategyId)
           // 初始化自定义参数
           initializeCustomParams()
           await loadAvailableEnvironments()
@@ -1381,6 +1379,22 @@ export default {
         // 清空自定义参数
         editableCustomParams.value = []
         originalCustomParams.value = []
+      }
+    }
+    
+    // 加载策略详情
+    const loadStrategyDetail = async (strategyId) => {
+      try {
+        const res = await request({
+          url: `/collect-strategy/${strategyId}`,
+          method: 'get',
+        })
+        if (res.data) {
+          // 更新选中的策略信息
+          selectedStrategy.value = res.data
+        }
+      } catch (error) {
+        console.error('加载策略详情失败:', error)
       }
     }
     
