@@ -955,10 +955,10 @@ export default {
       if (!selectedStrategy.value || !selectedStrategy.value.app) {
         return ''
       }
-      // 在策略包含 testCaseList 时，尝试从用例中反查中文 app 名称
-      const list = selectedStrategy.value.testCaseList || []
-      const hit = list.find(tc => tc.app === selectedStrategy.value.app)
-      return hit ? hit.app : selectedStrategy.value.app
+      // 直接返回策略中的app字段值（这是筛选条件，通常是中文app名称）
+      console.log('selectedStrategyAppLabel - selectedStrategy.value:', selectedStrategy.value)
+      console.log('selectedStrategyAppLabel - app value:', selectedStrategy.value.app)
+      return selectedStrategy.value.app
     })
     
     const selectedStrategyAppEn = computed(() => {
@@ -967,7 +967,10 @@ export default {
       }
       // 在策略包含 testCaseList 时，尝试从用例中反查 appEn 名称
       const list = selectedStrategy.value.testCaseList || []
+      console.log('selectedStrategyAppEn - testCaseList:', list)
+      console.log('selectedStrategyAppEn - looking for app:', selectedStrategy.value.app)
       const hit = list.find(tc => tc.app === selectedStrategy.value.app)
+      console.log('selectedStrategyAppEn - found hit:', hit)
       return hit ? (hit.appEn || '') : ''
     })
     
