@@ -420,7 +420,7 @@
               </el-descriptions>
               
               <!-- 筛选后的用例列表 -->
-              <div v-if="selectedStrategy.testCaseList && selectedStrategy.testCaseList.length > 0" class="filtered-test-cases">
+              <div v-if="selectedStrategy && selectedStrategy.testCaseList && selectedStrategy.testCaseList.length > 0" class="filtered-test-cases">
                 <h4>{{ $t('collectTask.filteredTestCases') }}</h4>
                 <div class="test-cases-summary">
                   <span class="summary-text">{{ $t('collectTask.totalTestCases', { count: getFilteredTestCaseCount() }) }}</span>
@@ -428,11 +428,12 @@
                     type="text" 
                     size="small" 
                     @click="showFilteredTestCases = !showFilteredTestCases"
+                    v-if="getFilteredTestCaseCount() > 0"
                   >
                     {{ showFilteredTestCases ? $t('collectTask.collapse') : $t('collectTask.expand') }}
                   </el-button>
                 </div>
-                <div v-if="showFilteredTestCases" class="test-cases-table">
+                <div v-if="showFilteredTestCases && getFilteredTestCaseCount() > 0" class="test-cases-table">
                   <el-table :data="getFilteredTestCases()" size="small" max-height="300">
                     <el-table-column prop="name" :label="$t('collectTask.testCaseName')" min-width="150" />
                     <el-table-column prop="number" :label="$t('collectTask.testCaseNumber')" width="100" />
@@ -464,6 +465,9 @@
                       </template>
                     </el-table-column>
                   </el-table>
+                </div>
+                <div v-else-if="showFilteredTestCases && getFilteredTestCaseCount() === 0" class="no-filtered-cases">
+                  <el-empty :description="'没有符合条件的测试用例'" />
                 </div>
               </div>
             </div>
@@ -1348,6 +1352,9 @@ export default {
         const strategy = strategyOptions.value.find(s => s.id === strategyId)
         if (strategy) {
           selectedStrategy.value = strategy
+          console.log('选择的策略:', strategy)
+          console.log('策略的用例列表:', strategy.testCaseList)
+          console.log('策略的筛选条件 - businessCategory:', strategy.businessCategory, 'app:', strategy.app)
           // 初始化自定义参数
           initializeCustomParams()
           await loadAvailableEnvironments()
@@ -1496,12 +1503,14 @@ export default {
     // 获取筛选后的用例列表
     const getFilteredTestCases = () => {
       if (!selectedStrategy.value || !selectedStrategy.value.testCaseList) {
+        console.log('没有策略或用例列表为空')
         return []
       }
 
-      return selectedStrategy.value.testCaseList.filter(testCase => {
+      const filtered = selectedStrategy.value.testCaseList.filter(testCase => {
         // 业务大类筛选
         if (selectedStrategy.value.businessCategory && testCase.businessCategory !== selectedStrategy.value.businessCategory) {
+          console.log('业务大类不匹配:', testCase.businessCategory, 'vs', selectedStrategy.value.businessCategory)
           return false
         }
         
@@ -1509,12 +1518,16 @@ export default {
         if (selectedStrategy.value.app) {
           const tcKey = testCase.appEn || testCase.app
           if (tcKey !== selectedStrategy.value.app) {
+            console.log('App不匹配:', tcKey, 'vs', selectedStrategy.value.app)
             return false
           }
         }
         
         return true
       })
+      
+      console.log('筛选后的用例数量:', filtered.length)
+      return filtered
     }
 
 
