@@ -263,33 +263,33 @@
           </el-form-item>
           
           <el-form-item :label="$t('collectStrategy.appFilter')" v-if="selectedTestCaseSet">
-            <el-select 
-              v-model="form.app" 
-              :placeholder="$t('collectStrategy.appPlaceholder')" 
-              clearable 
-              style="width: 100%"
-              @change="handleAppChange"
-            >
-              <el-option
-                v-for="app in appOptions"
-                :key="app.app"
-                :label="app.app"
-                :value="app.app"
-              />
-            </el-select>
-          </el-form-item>
-          
-          <el-form-item :label="$t('collectStrategy.appEnLabel')" v-if="selectedTestCaseSet && form.app">
-            <el-input 
-              v-model="selectedAppEn" 
-              :placeholder="$t('collectStrategy.appEnPlaceholder')" 
-              readonly
-              style="width: 100%"
-            >
-              <template #prepend>
-                <el-icon><InfoFilled /></el-icon>
-              </template>
-            </el-input>
+            <div class="app-filter-row">
+              <el-select 
+                v-model="form.app" 
+                :placeholder="$t('collectStrategy.appPlaceholder')" 
+                clearable 
+                style="flex: 1; margin-right: 12px;"
+                @change="handleAppChange"
+              >
+                <el-option
+                  v-for="app in appOptions"
+                  :key="app.app"
+                  :label="app.app"
+                  :value="app.app"
+                />
+              </el-select>
+              <el-input 
+                v-if="form.app"
+                v-model="selectedAppEn" 
+                :placeholder="$t('collectStrategy.appEnPlaceholder')" 
+                readonly
+                style="flex: 1;"
+              >
+                <template #prepend>
+                  <el-icon><InfoFilled /></el-icon>
+                </template>
+              </el-input>
+            </div>
           </el-form-item>
           
           <!-- 用例列表显示 -->
@@ -1116,21 +1116,21 @@ export default {
         description: row.description,
         status: row.status,
       })
-      dialogVisible.value = true
       
       // 编辑策略时从第一步开始
       currentStep.value = 0
       
       // 如果选择了用例集，加载用例列表
       if (row.testCaseSetId) {
-        handleTestCaseSetChange(row.testCaseSetId)
-        // 编辑时设置对应的appEn
-        if (row.app) {
-          setTimeout(() => {
+        handleTestCaseSetChange(row.testCaseSetId).then(() => {
+          // 用例列表加载完成后，设置对应的appEn
+          if (row.app) {
             handleAppChange(row.app)
-          }, 100)
-        }
+          }
+        })
       }
+      
+      dialogVisible.value = true
     }
 
     const handleDelete = async (row) => {
@@ -1643,6 +1643,22 @@ export default {
   font-weight: bold;
   font-size: 12px;
   flex-shrink: 0;
+}
+
+/* App筛选行布局样式 */
+.app-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.app-filter-row .el-select {
+  flex: 1;
+}
+
+.app-filter-row .el-input {
+  flex: 1;
 }
 
 
