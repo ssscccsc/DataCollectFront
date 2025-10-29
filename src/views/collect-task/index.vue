@@ -331,8 +331,8 @@
                   <span v-else style="color: #909399;">{{ $t('collectTask.noFilter') }}</span>
                 </el-descriptions-item>
                 <el-descriptions-item :label="$t('testCaseSet.appEn')">
-                  <el-tag v-if="selectedStrategy.app" size="small" type="warning">
-                    {{ selectedStrategy.app }}
+                  <el-tag v-if="selectedStrategyAppEn" size="small" type="warning">
+                    {{ selectedStrategyAppEn }}
                   </el-tag>
                   <span v-else style="color: #909399;">{{ $t('collectTask.noFilter') }}</span>
                 </el-descriptions-item>
@@ -957,8 +957,18 @@ export default {
       }
       // 在策略包含 testCaseList 时，尝试从用例中反查中文 app 名称
       const list = selectedStrategy.value.testCaseList || []
-      const hit = list.find(tc => (tc.appEn || tc.app) === selectedStrategy.value.app)
-      return hit ? (hit.app || hit.appEn || selectedStrategy.value.app) : selectedStrategy.value.app
+      const hit = list.find(tc => tc.app === selectedStrategy.value.app)
+      return hit ? hit.app : selectedStrategy.value.app
+    })
+    
+    const selectedStrategyAppEn = computed(() => {
+      if (!selectedStrategy.value || !selectedStrategy.value.app) {
+        return ''
+      }
+      // 在策略包含 testCaseList 时，尝试从用例中反查 appEn 名称
+      const list = selectedStrategy.value.testCaseList || []
+      const hit = list.find(tc => tc.app === selectedStrategy.value.app)
+      return hit ? (hit.appEn || '') : ''
     })
     
     // 可用逻辑环境列表
@@ -1515,10 +1525,9 @@ export default {
           return false
         }
         
-        // App筛选（使用 appEn 回退到 app）
+        // App筛选（直接使用 app 字段匹配）
         if (selectedStrategy.value.app) {
-          const tcKey = testCase.appEn || testCase.app
-          if (tcKey !== selectedStrategy.value.app) {
+          if (testCase.app !== selectedStrategy.value.app) {
             return false
           }
         }
@@ -2158,6 +2167,7 @@ export default {
       provinceOptions,
       cityOptions,
       selectedStrategy,
+      selectedStrategyAppEn,
       availableEnvironments,
       environmentsLoading,
       selectedEnvironmentIds,
