@@ -330,7 +330,13 @@
                   </el-tag>
                   <span v-else style="color: #909399;">{{ $t('collectTask.noFilter') }}</span>
                 </el-descriptions-item>
-                <el-descriptions-item :label="$t('collectTask.testCaseCount')" :span="2">
+                <el-descriptions-item :label="$t('testCaseSet.appEn')">
+                  <el-tag v-if="selectedStrategy.app" size="small" type="warning">
+                    {{ selectedStrategy.app }}
+                  </el-tag>
+                  <span v-else style="color: #909399;">{{ $t('collectTask.noFilter') }}</span>
+                </el-descriptions-item>
+                <el-descriptions-item :label="$t('collectTask.testCaseCount')" :span="1">
                   <span>{{ getFilteredTestCaseCount() }}个</span>
                   <span v-if="selectedStrategy.businessCategory || selectedStrategy.app" style="color: #909399; margin-left: 8px;">
                     ({{ $t('collectTask.filtered') }})
@@ -1352,9 +1358,6 @@ export default {
         const strategy = strategyOptions.value.find(s => s.id === strategyId)
         if (strategy) {
           selectedStrategy.value = strategy
-          console.log('选择的策略:', strategy)
-          console.log('策略的用例列表:', strategy.testCaseList)
-          console.log('策略的筛选条件 - businessCategory:', strategy.businessCategory, 'app:', strategy.app)
           // 初始化自定义参数
           initializeCustomParams()
           await loadAvailableEnvironments()
@@ -1503,14 +1506,12 @@ export default {
     // 获取筛选后的用例列表
     const getFilteredTestCases = () => {
       if (!selectedStrategy.value || !selectedStrategy.value.testCaseList) {
-        console.log('没有策略或用例列表为空')
         return []
       }
 
-      const filtered = selectedStrategy.value.testCaseList.filter(testCase => {
+      return selectedStrategy.value.testCaseList.filter(testCase => {
         // 业务大类筛选
         if (selectedStrategy.value.businessCategory && testCase.businessCategory !== selectedStrategy.value.businessCategory) {
-          console.log('业务大类不匹配:', testCase.businessCategory, 'vs', selectedStrategy.value.businessCategory)
           return false
         }
         
@@ -1518,16 +1519,12 @@ export default {
         if (selectedStrategy.value.app) {
           const tcKey = testCase.appEn || testCase.app
           if (tcKey !== selectedStrategy.value.app) {
-            console.log('App不匹配:', tcKey, 'vs', selectedStrategy.value.app)
             return false
           }
         }
         
         return true
       })
-      
-      console.log('筛选后的用例数量:', filtered.length)
-      return filtered
     }
 
 
