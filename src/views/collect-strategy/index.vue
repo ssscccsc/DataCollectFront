@@ -515,7 +515,7 @@
               <div class="config-section">
                 <div class="config-section-title">
                   <el-icon><Setting /></el-icon>
-                  <span>{{ $t('collectStrategy.customParamsLabel') }}</span>
+                  <span>{{ $t('collectStrategy.testCaseParamsLabel') }}</span>
                   <el-button 
                     type="primary" 
                     size="small" 
@@ -616,7 +616,7 @@
           </el-form>
         </div>
 
-        <el-divider>{{ $t('collectStrategy.customParamsLabel') }}</el-divider>
+        <el-divider>{{ $t('collectStrategy.testCaseCustomParams') }}</el-divider>
 
         <div class="custom-params-section">
           <div class="params-header">

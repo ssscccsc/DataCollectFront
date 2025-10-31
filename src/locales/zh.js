@@ -352,6 +352,7 @@ export default {
     enabled: '启用',
     // 用例自定义参数
     testCaseCustomParams: '用例自定义参数',
+    testCaseParamsLabel: '用例参数',
     configParams: '配置参数',
     configTestCaseParams: '配置用例自定义参数',
     testCaseParamList: '参数列表',

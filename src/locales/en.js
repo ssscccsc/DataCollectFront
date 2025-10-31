@@ -352,6 +352,7 @@ export default {
     enabled: 'Enabled',
     // Test Case Custom Parameters
     testCaseCustomParams: 'Test Case Custom Parameters',
+    testCaseParamsLabel: 'Test Case Parameters',
     configParams: 'Configure Parameters',
     configTestCaseParams: 'Configure Test Case Custom Parameters',
     testCaseParamList: 'Parameter List',
