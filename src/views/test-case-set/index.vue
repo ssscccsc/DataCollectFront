@@ -146,7 +146,7 @@
     <el-dialog
       v-model="customParamsDialogVisible"
       :title="$t('testCaseSet.customParamsManagement')"
-      width="90%"
+      width="60%"
       top="5vh"
       :close-on-click-modal="false"
     >
@@ -187,7 +187,13 @@
           </el-button>
         </div>
 
-        <el-table :data="filteredCustomParamsData" v-loading="customParamsLoading" style="width: 100%" border>
+        <div class="table-container">
+          <el-table 
+            :data="filteredCustomParamsData" 
+            v-loading="customParamsLoading" 
+            style="width: 100%" 
+            border
+          >
           <el-table-column prop="businessCategory" :label="$t('testCaseSet.businessCategory')" width="150" />
           <el-table-column prop="app" :label="$t('testCaseSet.app')" width="150" />
           <el-table-column prop="paramName" :label="$t('testCaseSet.paramName')" width="180" />
@@ -231,6 +237,7 @@
             </template>
           </el-table-column>
         </el-table>
+        </div>
       </div>
     </el-dialog>
 
@@ -829,6 +836,13 @@ export default {
 .filter-section {
   display: flex;
   align-items: center;
+}
+
+.table-container {
+  max-width: 70%;
+  max-height: 600px;
+  overflow-x: auto;
+  overflow-y: auto;
 }
 
 .param-values-display {
