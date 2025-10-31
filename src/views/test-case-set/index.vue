@@ -15,6 +15,10 @@
           <el-icon><Refresh /></el-icon>
           {{ $t('testCaseSet.refresh') }}
         </el-button>
+        <el-button type="warning" @click="handleCustomParamsManagement">
+          <el-icon><Setting /></el-icon>
+          {{ $t('testCaseSet.customParamsManagement') }}
+        </el-button>
       </div>
 
       <el-table :data="tableData" v-loading="loading" style="width: 100%">
@@ -138,6 +142,128 @@
       </template>
     </el-dialog>
 
+    <!-- 用例自定义参数管理对话框 -->
+    <el-dialog
+      v-model="customParamsDialogVisible"
+      :title="$t('testCaseSet.customParamsManagement')"
+      width="90%"
+      top="5vh"
+      :close-on-click-modal="false"
+    >
+      <div class="custom-params-management">
+        <div class="management-header">
+          <el-button type="primary" @click="handleAddCustomParam" :icon="Plus">
+            {{ $t('testCaseSet.addCustomParam') }}
+          </el-button>
+        </div>
+
+        <el-table :data="customParamsData" v-loading="customParamsLoading" style="width: 100%" border>
+          <el-table-column prop="businessCategory" :label="$t('testCaseSet.businessCategory')" width="150" />
+          <el-table-column prop="app" :label="$t('testCaseSet.app')" width="150" />
+          <el-table-column prop="paramName" :label="$t('testCaseSet.paramName')" width="180" />
+          <el-table-column :label="$t('testCaseSet.paramValues')" min-width="300">
+            <template #default="scope">
+              <div class="param-values-display">
+                <el-tag
+                  v-for="(value, index) in scope.row.paramValues"
+                  :key="index"
+                  size="small"
+                  style="margin-right: 8px; margin-bottom: 4px;"
+                >
+                  {{ value }}
+                </el-tag>
+                <span v-if="!scope.row.paramValues || scope.row.paramValues.length === 0" style="color: #909399;">
+                  {{ $t('testCaseSet.noParamValues') }}
+                </span>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column :label="$t('testCaseSet.operations')" width="120" fixed="right">
+            <template #default="scope">
+              <el-button
+                type="primary"
+                size="small"
+                text
+                @click="handleEditCustomParam(scope.row)"
+                :icon="Edit"
+              >
+                {{ $t('testCaseSet.edit') }}
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+    </el-dialog>
+
+    <!-- 新增/编辑自定义参数对话框 -->
+    <el-dialog
+      v-model="editCustomParamDialogVisible"
+      :title="editingCustomParam ? $t('testCaseSet.editCustomParam') : $t('testCaseSet.addCustomParam')"
+      width="600px"
+      @close="resetEditForm"
+    >
+      <el-form
+        ref="editCustomParamFormRef"
+        :model="editCustomParamForm"
+        :rules="editCustomParamRules"
+        label-width="120px"
+      >
+        <el-form-item :label="$t('testCaseSet.businessCategory')" prop="businessCategory">
+          <el-input
+            v-model="editCustomParamForm.businessCategory"
+            :placeholder="$t('testCaseSet.businessCategoryPlaceholder')"
+          />
+        </el-form-item>
+        <el-form-item :label="$t('testCaseSet.app')" prop="app">
+          <el-input
+            v-model="editCustomParamForm.app"
+            :placeholder="$t('testCaseSet.appPlaceholder')"
+          />
+        </el-form-item>
+        <el-form-item :label="$t('testCaseSet.paramName')" prop="paramName">
+          <el-input
+            v-model="editCustomParamForm.paramName"
+            :placeholder="$t('testCaseSet.paramNamePlaceholder')"
+          />
+        </el-form-item>
+        <el-form-item :label="$t('testCaseSet.paramValues')" prop="paramValues">
+          <div class="param-values-editor">
+            <div
+              v-for="(value, index) in editCustomParamForm.paramValues"
+              :key="index"
+              class="param-value-item"
+            >
+              <el-input
+                v-model="editCustomParamForm.paramValues[index]"
+                :placeholder="$t('testCaseSet.paramValuePlaceholder')"
+                style="flex: 1; margin-right: 8px;"
+              />
+              <el-button
+                type="danger"
+                size="small"
+                @click="removeParamValue(index)"
+                :icon="Delete"
+              />
+            </div>
+            <el-button
+              type="primary"
+              size="small"
+              @click="addParamValue"
+              :icon="Plus"
+              style="width: 100%;"
+            >
+              {{ $t('testCaseSet.addParamValue') }}
+            </el-button>
+          </div>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="editCustomParamDialogVisible = false">{{ $t('common.cancel') }}</el-button>
+          <el-button type="primary" @click="saveCustomParam">{{ $t('common.save') }}</el-button>
+        </span>
+      </template>
+    </el-dialog>
 
   </div>
 </template>
@@ -146,7 +272,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Link, CopyDocument } from '@element-plus/icons-vue'
+import { Link, CopyDocument, Setting, Plus, Edit, Delete } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import request from '@/utils/request'
 
@@ -160,6 +286,21 @@ export default {
     const uploadDialogVisible = ref(false)
     const uploadFormRef = ref()
     const uploadRef = ref()
+    
+    // 用例自定义参数管理相关
+    const customParamsDialogVisible = ref(false)
+    const customParamsLoading = ref(false)
+    const customParamsData = ref([])
+    const editCustomParamDialogVisible = ref(false)
+    const editCustomParamFormRef = ref()
+    const editingCustomParam = ref(null)
+    const editCustomParamForm = reactive({
+      id: null,
+      businessCategory: '',
+      app: '',
+      paramName: '',
+      paramValues: [''],
+    })
 
     const pagination = reactive({
       current: 1,
@@ -177,6 +318,30 @@ export default {
     const uploadRules = {
       file: [
         { required: true, message: t('testCaseSet.fileRequired'), trigger: 'change' },
+      ],
+    }
+
+    const editCustomParamRules = {
+      businessCategory: [
+        { required: true, message: t('testCaseSet.businessCategoryRequired'), trigger: 'blur' },
+      ],
+      app: [
+        { required: true, message: t('testCaseSet.appRequired'), trigger: 'blur' },
+      ],
+      paramName: [
+        { required: true, message: t('testCaseSet.paramNameRequired'), trigger: 'blur' },
+      ],
+      paramValues: [
+        { 
+          validator: (rule, value, callback) => {
+            if (!value || value.length === 0 || value.every(v => !v || !v.trim())) {
+              callback(new Error(t('testCaseSet.paramValuesRequired')))
+            } else {
+              callback()
+            }
+          }, 
+          trigger: 'change' 
+        },
       ],
     }
 
@@ -342,6 +507,119 @@ export default {
       router.push(`/test-case-set/detail/${row.id}`)
     }
 
+    // 用例自定义参数管理相关方法
+    const handleCustomParamsManagement = () => {
+      customParamsDialogVisible.value = true
+      loadCustomParams()
+    }
+
+    const loadCustomParams = async () => {
+      customParamsLoading.value = true
+      try {
+        const res = await request({
+          url: '/test-case-custom-param/list',
+          method: 'get',
+        })
+        customParamsData.value = res.data || []
+      } catch (error) {
+        console.error('加载用例自定义参数失败:', error)
+        ElMessage.error(t('testCaseSet.loadCustomParamsFailed'))
+      } finally {
+        customParamsLoading.value = false
+      }
+    }
+
+    const handleAddCustomParam = () => {
+      editingCustomParam.value = null
+      resetEditForm()
+      editCustomParamDialogVisible.value = true
+    }
+
+    const handleEditCustomParam = (row) => {
+      editingCustomParam.value = row
+      editCustomParamForm.id = row.id
+      editCustomParamForm.businessCategory = row.businessCategory || ''
+      editCustomParamForm.app = row.app || ''
+      editCustomParamForm.paramName = row.paramName || ''
+      editCustomParamForm.paramValues = row.paramValues && row.paramValues.length > 0 
+        ? [...row.paramValues] 
+        : ['']
+      editCustomParamDialogVisible.value = true
+    }
+
+    const addParamValue = () => {
+      editCustomParamForm.paramValues.push('')
+    }
+
+    const removeParamValue = (index) => {
+      if (editCustomParamForm.paramValues.length > 1) {
+        editCustomParamForm.paramValues.splice(index, 1)
+      } else {
+        ElMessage.warning(t('testCaseSet.atLeastOneParamValue'))
+      }
+    }
+
+    const saveCustomParam = async () => {
+      try {
+        await editCustomParamFormRef.value.validate()
+        
+        // 过滤掉空的参数值
+        const filteredValues = editCustomParamForm.paramValues
+          .map(v => v.trim())
+          .filter(v => v.length > 0)
+
+        if (filteredValues.length === 0) {
+          ElMessage.warning(t('testCaseSet.paramValuesRequired'))
+          return
+        }
+
+        const submitData = {
+          businessCategory: editCustomParamForm.businessCategory.trim(),
+          app: editCustomParamForm.app.trim(),
+          paramName: editCustomParamForm.paramName.trim(),
+          paramValues: filteredValues,
+        }
+
+        if (editingCustomParam.value) {
+          // 编辑
+          await request({
+            url: `/test-case-custom-param/${editCustomParamForm.id}`,
+            method: 'put',
+            data: submitData,
+          })
+          ElMessage.success(t('testCaseSet.updateCustomParamSuccess'))
+        } else {
+          // 新增
+          await request({
+            url: '/test-case-custom-param',
+            method: 'post',
+            data: submitData,
+          })
+          ElMessage.success(t('testCaseSet.addCustomParamSuccess'))
+        }
+
+        editCustomParamDialogVisible.value = false
+        loadCustomParams()
+      } catch (error) {
+        if (error !== 'validate') {
+          console.error('保存用例自定义参数失败:', error)
+          ElMessage.error(t('testCaseSet.saveCustomParamFailed'))
+        }
+      }
+    }
+
+    const resetEditForm = () => {
+      editingCustomParam.value = null
+      editCustomParamForm.id = null
+      editCustomParamForm.businessCategory = ''
+      editCustomParamForm.app = ''
+      editCustomParamForm.paramName = ''
+      editCustomParamForm.paramValues = ['']
+      if (editCustomParamFormRef.value) {
+        editCustomParamFormRef.value.clearValidate()
+      }
+    }
+
     onMounted(() => {
       loadData()
     })
@@ -368,6 +646,23 @@ export default {
       handleSizeChange,
       handleCurrentChange,
       handleViewDetail,
+      // 用例自定义参数管理相关
+      customParamsDialogVisible,
+      customParamsLoading,
+      customParamsData,
+      editCustomParamDialogVisible,
+      editCustomParamFormRef,
+      editingCustomParam,
+      editCustomParamForm,
+      editCustomParamRules,
+      handleCustomParamsManagement,
+      loadCustomParams,
+      handleAddCustomParam,
+      handleEditCustomParam,
+      addParamValue,
+      removeParamValue,
+      saveCustomParam,
+      resetEditForm,
     }
   },
 }
@@ -403,5 +698,30 @@ export default {
 
 .el-table .el-icon {
   margin-right: 4px;
+}
+
+/* 用例自定义参数管理样式 */
+.custom-params-management {
+  padding: 20px;
+}
+
+.management-header {
+  margin-bottom: 16px;
+}
+
+.param-values-display {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.param-values-editor {
+  width: 100%;
+}
+
+.param-value-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
 }
 </style>
