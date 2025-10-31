@@ -471,6 +471,11 @@ export default {
     addCustomParamSuccess: 'Test case custom parameter added successfully',
     updateCustomParamSuccess: 'Test case custom parameter updated successfully',
     saveCustomParamFailed: 'Failed to save test case custom parameter',
+    filterBusinessCategory: 'Filter Business Category',
+    filterApp: 'Filter APP',
+    deleteCustomParamConfirm: 'Are you sure to delete custom parameter "{paramName}"?',
+    deleteCustomParamSuccess: 'Test case custom parameter deleted successfully',
+    deleteCustomParamFailed: 'Failed to delete test case custom parameter',
   },
   
   // Logic Environment Management

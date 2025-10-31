@@ -471,6 +471,11 @@ export default {
     addCustomParamSuccess: '新增用例自定义参数成功',
     updateCustomParamSuccess: '更新用例自定义参数成功',
     saveCustomParamFailed: '保存用例自定义参数失败',
+    filterBusinessCategory: '筛选业务大类',
+    filterApp: '筛选APP',
+    deleteCustomParamConfirm: '确定要删除自定义参数"{paramName}"吗？',
+    deleteCustomParamSuccess: '删除用例自定义参数成功',
+    deleteCustomParamFailed: '删除用例自定义参数失败',
   },
   
   // 逻辑环境管理

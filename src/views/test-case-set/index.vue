@@ -152,12 +152,42 @@
     >
       <div class="custom-params-management">
         <div class="management-header">
+          <div class="filter-section">
+            <el-select
+              v-model="customParamsFilter.businessCategory"
+              :placeholder="$t('testCaseSet.filterBusinessCategory')"
+              clearable
+              style="width: 200px; margin-right: 12px;"
+              @change="handleFilterChange"
+            >
+              <el-option
+                v-for="category in businessCategoryFilterOptions"
+                :key="category"
+                :label="category"
+                :value="category"
+              />
+            </el-select>
+            <el-select
+              v-model="customParamsFilter.app"
+              :placeholder="$t('testCaseSet.filterApp')"
+              clearable
+              style="width: 200px; margin-right: 12px;"
+              @change="handleFilterChange"
+            >
+              <el-option
+                v-for="app in appFilterOptions"
+                :key="app"
+                :label="app"
+                :value="app"
+              />
+            </el-select>
+          </div>
           <el-button type="primary" @click="handleAddCustomParam" :icon="Plus">
             {{ $t('testCaseSet.addCustomParam') }}
           </el-button>
         </div>
 
-        <el-table :data="customParamsData" v-loading="customParamsLoading" style="width: 100%" border>
+        <el-table :data="filteredCustomParamsData" v-loading="customParamsLoading" style="width: 100%" border>
           <el-table-column prop="businessCategory" :label="$t('testCaseSet.businessCategory')" width="150" />
           <el-table-column prop="app" :label="$t('testCaseSet.app')" width="150" />
           <el-table-column prop="paramName" :label="$t('testCaseSet.paramName')" width="180" />
@@ -178,7 +208,7 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column :label="$t('testCaseSet.operations')" width="120" fixed="right">
+          <el-table-column :label="$t('testCaseSet.operations')" width="150" fixed="right">
             <template #default="scope">
               <el-button
                 type="primary"
@@ -188,6 +218,15 @@
                 :icon="Edit"
               >
                 {{ $t('testCaseSet.edit') }}
+              </el-button>
+              <el-button
+                type="danger"
+                size="small"
+                text
+                @click="handleDeleteCustomParam(scope.row)"
+                :icon="Delete"
+              >
+                {{ $t('testCaseSet.delete') }}
               </el-button>
             </template>
           </el-table-column>
@@ -269,7 +308,7 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Link, CopyDocument, Setting, Plus, Edit, Delete } from '@element-plus/icons-vue'
@@ -300,6 +339,11 @@ export default {
       app: '',
       paramName: '',
       paramValues: [''],
+    })
+    // 筛选条件
+    const customParamsFilter = reactive({
+      businessCategory: '',
+      app: '',
     })
 
     const pagination = reactive({
@@ -509,6 +553,9 @@ export default {
 
     // 用例自定义参数管理相关方法
     const handleCustomParamsManagement = () => {
+      // 重置筛选条件
+      customParamsFilter.businessCategory = ''
+      customParamsFilter.app = ''
       customParamsDialogVisible.value = true
       loadCustomParams()
     }
@@ -620,6 +667,67 @@ export default {
       }
     }
 
+    // 业务大类筛选选项（去重）
+    const businessCategoryFilterOptions = computed(() => {
+      const categories = customParamsData.value.map(item => item.businessCategory).filter(Boolean)
+      return [...new Set(categories)].sort()
+    })
+
+    // APP筛选选项（去重）
+    const appFilterOptions = computed(() => {
+      const apps = customParamsData.value.map(item => item.app).filter(Boolean)
+      return [...new Set(apps)].sort()
+    })
+
+    // 筛选后的数据
+    const filteredCustomParamsData = computed(() => {
+      let filtered = customParamsData.value
+
+      if (customParamsFilter.businessCategory) {
+        filtered = filtered.filter(item => item.businessCategory === customParamsFilter.businessCategory)
+      }
+
+      if (customParamsFilter.app) {
+        filtered = filtered.filter(item => item.app === customParamsFilter.app)
+      }
+
+      return filtered
+    })
+
+    // 筛选条件变化处理
+    const handleFilterChange = () => {
+      // 筛选由computed属性自动处理，这里可以添加其他逻辑
+    }
+
+    // 删除用例自定义参数
+    const handleDeleteCustomParam = async (row) => {
+      try {
+        const confirmMessage = t('testCaseSet.deleteCustomParamConfirm').replace('{paramName}', row.paramName || '')
+        await ElMessageBox.confirm(
+          confirmMessage,
+          t('common.warning'),
+          {
+            confirmButtonText: t('common.confirm'),
+            cancelButtonText: t('common.cancel'),
+            type: 'warning',
+          }
+        )
+
+        await request({
+          url: `/test-case-custom-param/${row.id}`,
+          method: 'delete',
+        })
+
+        ElMessage.success(t('testCaseSet.deleteCustomParamSuccess'))
+        loadCustomParams()
+      } catch (error) {
+        if (error !== 'cancel') {
+          console.error('删除用例自定义参数失败:', error)
+          ElMessage.error(t('testCaseSet.deleteCustomParamFailed'))
+        }
+      }
+    }
+
     onMounted(() => {
       loadData()
     })
@@ -655,10 +763,16 @@ export default {
       editingCustomParam,
       editCustomParamForm,
       editCustomParamRules,
+      customParamsFilter,
+      businessCategoryFilterOptions,
+      appFilterOptions,
+      filteredCustomParamsData,
       handleCustomParamsManagement,
       loadCustomParams,
       handleAddCustomParam,
       handleEditCustomParam,
+      handleDeleteCustomParam,
+      handleFilterChange,
       addParamValue,
       removeParamValue,
       saveCustomParam,
@@ -707,6 +821,14 @@ export default {
 
 .management-header {
   margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.filter-section {
+  display: flex;
+  align-items: center;
 }
 
 .param-values-display {
