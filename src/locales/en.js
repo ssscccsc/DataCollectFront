@@ -351,7 +351,7 @@ export default {
     statusLabel: 'Status',
     enabled: 'Enabled',
     // Test Case Custom Parameters
-    testCaseCustomParams: 'Test Case Parameters',
+    testCaseCustomParams: 'Test Case Custom Parameters',
     configParams: 'Configure Parameters',
     configTestCaseParams: 'Configure Test Case Custom Parameters',
     testCaseParamList: 'Parameter List',
@@ -375,7 +375,7 @@ export default {
     // Batch Configuration
     batchConfigTitle: 'Batch Configure Test Case Parameters and Execution Count',
     batchConfigTip: 'Batch Configuration Instructions',
-    batchConfigDescription: 'Total {count} test cases, click to expand and configure execution count and custom parameters for each test case',
+    batchConfigDescription: 'Total {count} test cases, click to expand and configure execution count and test case custom parameters for each test case',
     batchConfigSuccess: 'Batch configuration saved successfully',
     // Form Validation
     strategyNameRequired: 'Please enter strategy name',

@@ -350,10 +350,10 @@ export default {
     descriptionPlaceholder: '请输入描述',
     statusLabel: '状态',
     enabled: '启用',
-    // 用例公共参数
-    testCaseCustomParams: '用例参数',
+    // 用例自定义参数
+    testCaseCustomParams: '用例自定义参数',
     configParams: '配置参数',
-    configTestCaseParams: '配置用例公共参数',
+    configTestCaseParams: '配置用例自定义参数',
     testCaseParamList: '参数列表',
     noTestCaseParams: '暂无参数，点击"添加参数"按钮添加',
     configuredParams: '已配置 {count} 个参数',
@@ -375,7 +375,7 @@ export default {
     // 批量配置
     batchConfigTitle: '批量配置用例参数和执行次数',
     batchConfigTip: '批量配置说明',
-    batchConfigDescription: '共 {count} 个用例，点击展开可为每个用例单独配置执行次数和公共参数',
+    batchConfigDescription: '共 {count} 个用例，点击展开可为每个用例单独配置执行次数和用例自定义参数',
     batchConfigSuccess: '批量配置保存成功',
     // 表单验证
     strategyNameRequired: '请输入策略名称',
