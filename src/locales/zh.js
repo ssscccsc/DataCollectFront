@@ -98,6 +98,7 @@ export default {
     appName: 'APP名称',
     appDetails: 'APP详细信息',
     noAppData: '暂无APP数据',
+    noExecutor: '该地域下暂无执行机',
   },
   
   // 采集任务管理

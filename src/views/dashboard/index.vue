@@ -152,6 +152,7 @@
         <div class="app-list-section" v-if="regionStats.appList && regionStats.appList.length > 0">
           <div class="section-title">{{ $t('dashboard.appDetails') }}</div>
           <el-table :data="regionStats.appList" stripe style="width: 100%">
+            <el-table-column type="index" label="#" width="60" align="center" />
             <el-table-column prop="appName" :label="$t('dashboard.appName')" min-width="200">
               <template #default="scope">
                 <span>{{ scope.row.appName || '-' }}</span>
@@ -163,6 +164,10 @@
               </template>
             </el-table-column>
           </el-table>
+        </div>
+        
+        <div class="empty-tip" v-else-if="regionStats.executorCount === 0">
+          <el-empty :description="$t('dashboard.noExecutor')" :image-size="80" />
         </div>
         
         <div class="empty-tip" v-else>
@@ -563,14 +568,18 @@ export default {
           },
         })
         if (res.data) {
+          console.log('地域统计数据:', res.data)
           regionStats.value = {
             appCount: res.data.appCount || 0,
             collectCount: res.data.collectCount || 0,
             executorCount: res.data.executorCount || 0,
             appList: res.data.appList || [],
           }
+          console.log('处理后的统计数据:', regionStats.value)
           regionStatsDialogTitle.value = `${regionName} - ${level === 4 ? t('dashboard.city') : t('dashboard.country')}`
           regionStatsDialogVisible.value = true
+        } else {
+          console.warn('地域统计数据为空')
         }
       } catch (error) {
         console.error('获取地域统计信息失败:', error)

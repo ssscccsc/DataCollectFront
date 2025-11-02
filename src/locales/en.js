@@ -98,6 +98,7 @@ export default {
     appName: 'App Name',
     appDetails: 'App Details',
     noAppData: 'No App Data',
+    noExecutor: 'No executor in this region',
   },
   
   // Collection Task Management
