@@ -64,6 +64,17 @@
     </el-row>
 
     <el-row :gutter="20" style="margin-top: 20px;">
+      <el-col :span="24">
+        <el-card>
+          <template #header>
+            <span>{{ $t('dashboard.worldMap') }}</span>
+          </template>
+          <div id="world-map" style="width: 100%; height: 500px;"></div>
+        </el-card>
+      </el-col>
+    </el-row>
+
+    <el-row :gutter="20" style="margin-top: 20px;">
       <el-col :span="12">
         <el-card>
           <template #header>
@@ -113,12 +124,35 @@
         </el-card>
       </el-col>
     </el-row>
+
+    <!-- 地域统计信息对话框 -->
+    <el-dialog
+      v-model="regionStatsDialogVisible"
+      :title="regionStatsDialogTitle"
+      width="500px"
+    >
+      <div class="region-stats-content">
+        <div class="stat-item">
+          <span class="stat-label">{{ $t('dashboard.appCount') }}：</span>
+          <span class="stat-value">{{ regionStats.appCount || 0 }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">{{ $t('dashboard.collectCount') }}：</span>
+          <span class="stat-value">{{ regionStats.collectCount || 0 }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">{{ $t('dashboard.executorCount') }}：</span>
+          <span class="stat-value">{{ regionStats.executorCount || 0 }}</span>
+        </div>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
+import * as echarts from 'echarts'
 import request from '@/utils/request'
 
 export default {
@@ -135,6 +169,70 @@ export default {
     
     const recentTasks = ref([])
     const uptime = ref('0天 0小时 0分钟')
+    
+    // 地图相关
+    let worldMapChart = null
+    const regionStatsDialogVisible = ref(false)
+    const regionStatsDialogTitle = ref('')
+    const regionStats = ref({
+      appCount: 0,
+      collectCount: 0,
+      executorCount: 0,
+    })
+    
+    // 城市名称到经纬度的映射（简化版，包含常见城市）
+    const cityCoordinates = {
+      '北京': [116.4074, 39.9042],
+      '上海': [121.4737, 31.2304],
+      '广州': [113.2644, 23.1291],
+      '深圳': [114.0579, 22.5431],
+      '杭州': [120.1551, 30.2741],
+      '南京': [118.7969, 32.0603],
+      '武汉': [114.3162, 30.5810],
+      '成都': [104.0668, 30.5728],
+      '西安': [108.9398, 34.3416],
+      '重庆': [106.5516, 29.5630],
+      '天津': [117.2008, 39.0842],
+      '苏州': [120.5853, 31.2989],
+      '青岛': [120.3826, 36.0671],
+      '大连': [121.6147, 38.9140],
+      '厦门': [118.1689, 24.4798],
+      '长沙': [112.9388, 28.2282],
+      '郑州': [113.6254, 34.7466],
+      '沈阳': [123.4315, 41.8057],
+      '哈尔滨': [126.5358, 45.8021],
+      '昆明': [102.7146, 25.0492],
+      '太原': [112.5489, 37.8570],
+      '石家庄': [114.5149, 38.0428],
+      '济南': [117.1210, 36.6512],
+      '南昌': [115.8921, 28.6765],
+      '合肥': [117.2838, 31.8612],
+      '福州': [119.2965, 26.0745],
+      '南宁': [108.3669, 22.8170],
+      '海口': [110.3308, 20.0221],
+      '贵阳': [106.6302, 26.6477],
+      '乌鲁木齐': [87.6168, 43.8256],
+      '银川': [106.2309, 38.4872],
+      '西宁': [101.7782, 36.6171],
+      '拉萨': [91.1145, 29.6441],
+    }
+    
+    // 国家名称到经纬度的映射（使用国家中心点）
+    const countryCoordinates = {
+      '中国': [104.0668, 35.8676],
+      '美国': [-95.7129, 37.0902],
+      '日本': [138.2529, 36.2048],
+      '韩国': [127.7669, 35.9078],
+      '英国': [-3.4360, 55.3781],
+      '法国': [2.2137, 46.2276],
+      '德国': [10.4515, 51.1657],
+      '意大利': [12.5674, 41.8719],
+      '俄罗斯': [105.3188, 61.5240],
+      '印度': [78.9629, 20.5937],
+      '加拿大': [-106.3468, 56.1304],
+      '澳大利亚': [133.7751, -25.2744],
+      '巴西': [-51.9253, -14.2350],
+    }
 
     const getStatusType = (status) => {
       const statusMap = {
@@ -177,7 +275,7 @@ export default {
       } catch (error) {
         console.error('加载统计数据失败:', error)
         // 如果加载失败，保持默认值0
-        stats.value = {
+      stats.value = {
           regionCount: 0,
           executorCount: 0,
           ueCount: 0,
@@ -223,9 +321,216 @@ export default {
       }
     }
 
-    onMounted(() => {
-      loadStats()
-      loadRecentTasks()
+    // 获取城市和国家坐标
+    const getCoordinates = (regionName, level) => {
+      if (level === 4) {
+        // 城市级别
+        return cityCoordinates[regionName] || null
+      } else if (level === 2) {
+        // 国家级别
+        return countryCoordinates[regionName] || null
+      }
+      return null
+    }
+
+    // 加载地域数据并在地图上标记
+    const loadRegionData = async () => {
+      try {
+        // 获取所有城市（level=4）
+        const cityRes = await request({
+          url: '/region/level/4',
+          method: 'get',
+        })
+        const cities = cityRes.data || []
+        
+        // 获取所有国家（level=2）
+        const countryRes = await request({
+          url: '/region/level/2',
+          method: 'get',
+        })
+        const countries = countryRes.data || []
+        
+        // 准备地图数据点
+        const data = []
+        
+        // 添加城市标记
+        cities.forEach(city => {
+          if (city.deleted === 0 && city.status === 1) {
+            const coords = getCoordinates(city.name, 4)
+            if (coords) {
+              data.push({
+                name: city.name,
+                value: coords,
+                regionId: city.id,
+                level: 4,
+              })
+            }
+          }
+        })
+        
+        // 添加国家标记
+        countries.forEach(country => {
+          if (country.deleted === 0 && country.status === 1) {
+            const coords = getCoordinates(country.name, 2)
+            if (coords) {
+              data.push({
+                name: country.name,
+                value: coords,
+                regionId: country.id,
+                level: 2,
+              })
+            }
+          }
+        })
+        
+        // 更新地图
+        if (worldMapChart) {
+          const option = {
+            tooltip: {
+              trigger: 'item',
+              formatter: (params) => {
+                if (params.data) {
+                  return `${params.data.name}`
+                }
+                return params.name
+              },
+            },
+            geo: {
+              map: 'world',
+              roam: true,
+              label: {
+                emphasis: {
+                  show: false,
+                },
+              },
+              itemStyle: {
+                normal: {
+                  areaColor: '#e7e7e7',
+                  borderColor: '#d0d0d0',
+                },
+                emphasis: {
+                  areaColor: '#d0d0d0',
+                },
+              },
+            },
+            series: [
+              {
+                name: '地域',
+                type: 'scatter',
+                coordinateSystem: 'geo',
+                data: data,
+                symbolSize: 10,
+                label: {
+                  show: false,
+                },
+                itemStyle: {
+                  color: '#409EFF',
+                },
+                emphasis: {
+                  itemStyle: {
+                    color: '#66b1ff',
+                    borderColor: '#409EFF',
+                    borderWidth: 2,
+                  },
+                },
+              },
+            ],
+          }
+          
+          worldMapChart.setOption(option, true)
+          
+          // 存储数据以便在事件中访问
+          worldMapChart._regionData = data
+          
+          // 使用echarts的点击事件，检测双击
+          let lastClickTime = 0
+          let lastClickData = null
+          
+          worldMapChart.on('click', (params) => {
+            const now = Date.now()
+            if (params.data && params.data.regionId) {
+              // 检查是否是双击（300ms内连续点击相同数据点）
+              if (now - lastClickTime < 300 && 
+                  lastClickData && 
+                  lastClickData.regionId === params.data.regionId) {
+                // 这是双击
+                handleRegionDoubleClick(
+                  params.data.regionId,
+                  params.data.name,
+                  params.data.level
+                )
+                lastClickTime = 0
+                lastClickData = null
+              } else {
+                // 这是第一次点击
+                lastClickTime = now
+                lastClickData = params.data
+              }
+            }
+          })
+        }
+      } catch (error) {
+        console.error('加载地域数据失败:', error)
+      }
+    }
+
+    // 处理地域双击事件
+    const handleRegionDoubleClick = async (regionId, regionName, level) => {
+      try {
+        const res = await request({
+          url: '/dashboard/region-stats',
+          method: 'get',
+          params: {
+            regionId: regionId,
+          },
+        })
+        if (res.data) {
+          regionStats.value = {
+            appCount: res.data.appCount || 0,
+            collectCount: res.data.collectCount || 0,
+            executorCount: res.data.executorCount || 0,
+          }
+          regionStatsDialogTitle.value = `${regionName} - ${level === 4 ? t('dashboard.city') : t('dashboard.country')}`
+          regionStatsDialogVisible.value = true
+        }
+      } catch (error) {
+        console.error('获取地域统计信息失败:', error)
+      }
+    }
+
+    // 初始化地图
+    const initWorldMap = async () => {
+      await nextTick()
+      const mapDom = document.getElementById('world-map')
+      if (mapDom) {
+        worldMapChart = echarts.init(mapDom)
+        
+        // 注册世界地图（需要地图JSON数据，这里使用简化版本）
+        // 注意：实际使用时需要加载世界地图的JSON数据
+        // 可以从 https://github.com/echarts-maps/echarts-countries-js 获取
+        
+        // 使用默认的世界地图
+        echarts.registerMap('world', {
+          type: 'FeatureCollection',
+          features: [],
+        })
+        
+        // 加载地域数据
+        await loadRegionData()
+        
+        // 响应式调整
+        window.addEventListener('resize', () => {
+          if (worldMapChart) {
+            worldMapChart.resize()
+          }
+        })
+      }
+    }
+
+    onMounted(async () => {
+      await loadStats()
+      await loadRecentTasks()
+      await initWorldMap()
     })
 
     return {
@@ -234,6 +539,9 @@ export default {
       uptime,
       getStatusType,
       getStatusText,
+      regionStatsDialogVisible,
+      regionStatsDialogTitle,
+      regionStats,
     }
   },
 }
@@ -300,5 +608,37 @@ export default {
 
 .value {
   color: #303133;
+}
+
+#world-map {
+  min-height: 500px;
+}
+
+.region-stats-content {
+  padding: 20px 0;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.stat-item:last-child {
+  border-bottom: none;
+}
+
+.stat-label {
+  font-size: 16px;
+  font-weight: 500;
+  color: #606266;
+}
+
+.stat-value {
+  font-size: 18px;
+  font-weight: bold;
+  color: #409EFF;
 }
 </style>

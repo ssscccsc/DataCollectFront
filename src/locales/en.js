@@ -89,6 +89,11 @@ export default {
     statusFailed: 'Failed',
     statusPending: 'Pending',
     statusUnknown: 'Unknown',
+    worldMap: 'World Map',
+    city: 'City',
+    country: 'Country',
+    appCount: 'App Count',
+    collectCount: 'Collect Count',
   },
   
   // Collection Task Management

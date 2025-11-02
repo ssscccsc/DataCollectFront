@@ -89,6 +89,11 @@ export default {
     statusFailed: '已失败',
     statusPending: '待执行',
     statusUnknown: '未知',
+    worldMap: '世界地图',
+    city: '城市',
+    country: '国家',
+    appCount: '采集的APP数量',
+    collectCount: '采集次数',
   },
   
   // 采集任务管理
