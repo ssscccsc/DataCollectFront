@@ -398,18 +398,25 @@ export default {
             geo: {
               map: 'world',
               roam: true,
+              zoom: 1.2,
+              center: [105, 36],
               label: {
+                show: false,
                 emphasis: {
-                  show: false,
+                  show: true,
                 },
               },
               itemStyle: {
-                normal: {
-                  areaColor: '#e7e7e7',
-                  borderColor: '#d0d0d0',
-                },
-                emphasis: {
+                areaColor: '#e7e7e7',
+                borderColor: '#d0d0d0',
+                borderWidth: 0.5,
+              },
+              emphasis: {
+                itemStyle: {
                   areaColor: '#d0d0d0',
+                },
+                label: {
+                  show: true,
                 },
               },
             },
@@ -498,6 +505,25 @@ export default {
       }
     }
 
+    // 加载世界地图数据
+    const loadWorldMapData = async () => {
+      try {
+        // 从CDN加载世界地图JSON数据
+        const response = await fetch('https://geo.datav.aliyun.com/areas_v3/bound/world.json')
+        const worldMapData = await response.json()
+        echarts.registerMap('world', worldMapData)
+        return true
+      } catch (error) {
+        console.error('加载世界地图数据失败，使用备用方案:', error)
+        // 如果CDN加载失败，使用一个基本的世界地图结构
+        echarts.registerMap('world', {
+          type: 'FeatureCollection',
+          features: [],
+        })
+        return false
+      }
+    }
+
     // 初始化地图
     const initWorldMap = async () => {
       await nextTick()
@@ -505,15 +531,8 @@ export default {
       if (mapDom) {
         worldMapChart = echarts.init(mapDom)
         
-        // 注册世界地图（需要地图JSON数据，这里使用简化版本）
-        // 注意：实际使用时需要加载世界地图的JSON数据
-        // 可以从 https://github.com/echarts-maps/echarts-countries-js 获取
-        
-        // 使用默认的世界地图
-        echarts.registerMap('world', {
-          type: 'FeatureCollection',
-          features: [],
-        })
+        // 加载世界地图数据
+        await loadWorldMapData()
         
         // 加载地域数据
         await loadRegionData()
