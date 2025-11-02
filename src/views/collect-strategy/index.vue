@@ -538,18 +538,38 @@
                     class="param-item-inline"
                   >
                     <div class="param-index-small">{{ paramIndex + 1 }}</div>
-                    <el-input 
+                    <el-select 
                       v-model="param.key" 
                       :placeholder="$t('collectStrategy.paramKey')" 
                       size="small"
+                      filterable
+                      clearable
                       style="flex: 1;"
-                    />
-                    <el-input 
+                      @change="handleBatchParamKeyChange(testCase.id, paramIndex)"
+                    >
+                      <el-option
+                        v-for="paramOption in getBatchParamKeyOptions(testCase)"
+                        :key="paramOption.paramName"
+                        :label="paramOption.paramName"
+                        :value="paramOption.paramName"
+                      />
+                    </el-select>
+                    <el-select 
                       v-model="param.value" 
                       :placeholder="$t('collectStrategy.paramValue')" 
                       size="small"
+                      multiple
+                      filterable
+                      clearable
                       style="flex: 1;"
-                    />
+                    >
+                      <el-option
+                        v-for="valueOption in getBatchParamValueOptions(testCase.id, paramIndex)"
+                        :key="valueOption"
+                        :label="valueOption"
+                        :value="valueOption"
+                      />
+                    </el-select>
                     <el-button 
                       type="danger" 
                       size="small" 
@@ -955,6 +975,9 @@ export default {
           }
         })
         
+        // 加载用例自定义参数列表
+        await loadTestCaseCustomParams()
+        
         batchConfigDialogVisible.value = true
         // 默认展开第一个
         if (filteredTestCaseList.value.length > 0) {
@@ -978,6 +1001,67 @@ export default {
       return true
     })
     
+    // 根据用例的业务大类和appEn筛选批量配置的参数键选项
+    // 匹配规则：用例的业务大类 === 用例自定义参数的业务大类 且 用例的appEn === 用例自定义参数的app
+    const getBatchParamKeyOptions = (testCase) => {
+      if (!testCase) {
+        return []
+      }
+      
+      const testCaseBusinessCategory = testCase.businessCategory
+      const testCaseAppEn = testCase.appEn
+      
+      if (!testCaseBusinessCategory || !testCaseAppEn) {
+        return []
+      }
+      
+      return testCaseCustomParamList.value.filter(item => {
+        // 匹配业务大类：用例的业务大类 === 用例自定义参数的业务大类
+        if (item.businessCategory && item.businessCategory !== testCaseBusinessCategory) {
+          return false
+        }
+        // 匹配APP：用例的appEn === 用例自定义参数的app
+        if (item.app && item.app !== testCaseAppEn) {
+          return false
+        }
+        return true
+      })
+    }
+
+    // 根据选中的参数键获取批量配置的参数值选项
+    const getBatchParamValueOptions = (testCaseId, paramIndex) => {
+      const testCase = filteredTestCaseList.value.find(tc => tc.id === testCaseId)
+      if (!testCase) {
+        return []
+      }
+      
+      const paramKeyOptions = getBatchParamKeyOptions(testCase)
+      const param = form.testCaseCustomParams[testCaseId]?.[paramIndex]
+      const selectedKey = param?.key
+      
+      if (!selectedKey) {
+        return []
+      }
+      
+      const paramOption = paramKeyOptions.find(
+        item => item.paramName === selectedKey
+      )
+      
+      if (paramOption && paramOption.paramValues && Array.isArray(paramOption.paramValues)) {
+        return paramOption.paramValues
+      }
+      
+      return []
+    }
+
+    // 处理批量配置参数键变化
+    const handleBatchParamKeyChange = (testCaseId, paramIndex) => {
+      // 当参数键变化时，清空参数值
+      if (form.testCaseCustomParams[testCaseId] && form.testCaseCustomParams[testCaseId][paramIndex]) {
+        form.testCaseCustomParams[testCaseId][paramIndex].value = []
+      }
+    }
+
     // 为批量配置的用例添加参数
     const addBatchTestCaseParam = (testCaseId) => {
       if (!form.testCaseCustomParams[testCaseId]) {
@@ -1204,6 +1288,18 @@ export default {
         testCaseExecutionCounts = {}
       }
       
+      // 转换testCaseCustomParams，确保value是数组格式
+      const convertedTestCaseCustomParams = {}
+      Object.keys(testCaseCustomParams).forEach(testCaseId => {
+        const params = testCaseCustomParams[testCaseId]
+        if (Array.isArray(params)) {
+          convertedTestCaseCustomParams[testCaseId] = params.map(param => ({
+            key: param.key || '',
+            value: Array.isArray(param.value) ? param.value : (param.value ? [param.value] : []),
+          }))
+        }
+      })
+
       // 只复制必要的字段，避免传递额外字段
       Object.assign(form, {
         id: row.id,
@@ -1214,7 +1310,7 @@ export default {
         app: row.app || '',
         intent: row.intent || '',
         customParams: row.customParamList || [],
-        testCaseCustomParams: testCaseCustomParams,
+        testCaseCustomParams: convertedTestCaseCustomParams,
         testCaseExecutionCounts: testCaseExecutionCounts,
         description: row.description,
         status: row.status,
@@ -1383,6 +1479,9 @@ export default {
       addBatchTestCaseParam,
       removeBatchTestCaseParam,
       saveBatchConfig,
+      getBatchParamKeyOptions,
+      getBatchParamValueOptions,
+      handleBatchParamKeyChange,
       handleConfigTestCaseParams,
       addTestCaseParam,
       removeTestCaseParam,
