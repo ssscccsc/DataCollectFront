@@ -1173,11 +1173,24 @@ export default {
       await loadTestCaseCustomParams()
       // 深拷贝当前用例的参数
       const existingParams = form.testCaseCustomParams[testCase.id] || []
-      // 转换value为数组格式（如果是字符串则转换为数组）
-      currentTestCaseParams.value = existingParams.map(param => ({
-        key: param.key || '',
-        value: Array.isArray(param.value) ? param.value : (param.value ? [param.value] : []),
-      }))
+      // 转换value为数组格式（如果是字符串则转换为数组，支持逗号分隔）
+      currentTestCaseParams.value = existingParams.map(param => {
+        let valueArray = []
+        if (Array.isArray(param.value)) {
+          valueArray = param.value
+        } else if (param.value) {
+          const valueStr = String(param.value).trim()
+          if (valueStr.includes(',')) {
+            valueArray = valueStr.split(',').map(v => v.trim()).filter(v => v)
+          } else if (valueStr) {
+            valueArray = [valueStr]
+          }
+        }
+        return {
+          key: param.key || '',
+          value: valueArray,
+        }
+      })
       // 获取当前用例的执行次数
       currentTestCaseExecutionCount.value = form.testCaseExecutionCounts[testCase.id] || 1
       testCaseParamsDialogVisible.value = true
@@ -1293,10 +1306,25 @@ export default {
       Object.keys(testCaseCustomParams).forEach(testCaseId => {
         const params = testCaseCustomParams[testCaseId]
         if (Array.isArray(params)) {
-          convertedTestCaseCustomParams[testCaseId] = params.map(param => ({
-            key: param.key || '',
-            value: Array.isArray(param.value) ? param.value : (param.value ? [param.value] : []),
-          }))
+          convertedTestCaseCustomParams[testCaseId] = params.map(param => {
+            let valueArray = []
+            if (Array.isArray(param.value)) {
+              // 如果已经是数组，直接使用
+              valueArray = param.value
+            } else if (param.value) {
+              // 如果是字符串，尝试按逗号分隔，如果没有逗号则作为单个值
+              const valueStr = String(param.value).trim()
+              if (valueStr.includes(',')) {
+                valueArray = valueStr.split(',').map(v => v.trim()).filter(v => v)
+              } else if (valueStr) {
+                valueArray = [valueStr]
+              }
+            }
+            return {
+              key: param.key || '',
+              value: valueArray,
+            }
+          })
         }
       })
 
@@ -1357,6 +1385,27 @@ export default {
       try {
         await formRef.value.validate()
         
+        // 转换testCaseCustomParams，将数组格式的value转换为字符串（逗号分隔）
+        const convertedTestCaseCustomParams = {}
+        Object.keys(form.testCaseCustomParams).forEach(testCaseId => {
+          const params = form.testCaseCustomParams[testCaseId]
+          if (Array.isArray(params) && params.length > 0) {
+            convertedTestCaseCustomParams[testCaseId] = params.map(param => {
+              // 如果value是数组，转换为逗号分隔的字符串
+              let valueStr = ''
+              if (Array.isArray(param.value)) {
+                valueStr = param.value.filter(v => v && v.trim()).join(',')
+              } else if (param.value) {
+                valueStr = String(param.value)
+              }
+              return {
+                key: param.key || '',
+                value: valueStr
+              }
+            }).filter(param => param.key && param.value) // 过滤掉空的参数
+          }
+        })
+        
         // 发送所有字段到后端
         const submitData = {
           name: form.name,
@@ -1366,7 +1415,7 @@ export default {
           app: form.app || null,
           intent: form.intent || null,
           customParams: form.customParams.length > 0 ? JSON.stringify(form.customParams) : null,
-          testCaseCustomParams: Object.keys(form.testCaseCustomParams).length > 0 ? JSON.stringify(form.testCaseCustomParams) : null,
+          testCaseCustomParams: Object.keys(convertedTestCaseCustomParams).length > 0 ? JSON.stringify(convertedTestCaseCustomParams) : null,
           testCaseExecutionCounts: Object.keys(form.testCaseExecutionCounts).length > 0 ? JSON.stringify(form.testCaseExecutionCounts) : null,
           description: form.description,
           status: form.status,
