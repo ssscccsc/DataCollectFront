@@ -119,6 +119,7 @@
 <script>
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import request from '@/utils/request'
 
 export default {
   name: 'Dashboard',
@@ -153,13 +154,29 @@ export default {
       return statusMap[status] || t('dashboard.statusBlocked')
     }
 
-    const loadStats = () => {
-      // 这里应该调用API获取统计数据
-      stats.value = {
-        regionCount: 5,
-        executorCount: 4,
-        ueCount: 4,
-        taskCount: 3,
+    const loadStats = async () => {
+      try {
+        const res = await request({
+          url: '/dashboard/stats',
+          method: 'get',
+        })
+        if (res.data) {
+          stats.value = {
+            regionCount: res.data.regionCount || 0,
+            executorCount: res.data.executorCount || 0,
+            ueCount: res.data.ueCount || 0,
+            taskCount: res.data.taskCount || 0,
+          }
+        }
+      } catch (error) {
+        console.error('加载统计数据失败:', error)
+        // 如果加载失败，保持默认值0
+        stats.value = {
+          regionCount: 0,
+          executorCount: 0,
+          ueCount: 0,
+          taskCount: 0,
+        }
       }
     }
 
