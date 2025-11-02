@@ -94,6 +94,10 @@ export default {
     country: 'Country',
     appCount: 'App Count',
     collectCount: 'Collect Count',
+    totalCollectCount: 'Total Collect Count',
+    appName: 'App Name',
+    appDetails: 'App Details',
+    noAppData: 'No App Data',
   },
   
   // Collection Task Management

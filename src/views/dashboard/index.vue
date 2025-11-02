@@ -129,20 +129,44 @@
     <el-dialog
       v-model="regionStatsDialogVisible"
       :title="regionStatsDialogTitle"
-      width="500px"
+      width="600px"
     >
       <div class="region-stats-content">
-        <div class="stat-item">
-          <span class="stat-label">{{ $t('dashboard.appCount') }}：</span>
-          <span class="stat-value">{{ regionStats.appCount || 0 }}</span>
+        <!-- 汇总统计 -->
+        <div class="summary-stats">
+          <div class="stat-item">
+            <span class="stat-label">{{ $t('dashboard.appCount') }}：</span>
+            <span class="stat-value">{{ regionStats.appCount || 0 }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">{{ $t('dashboard.totalCollectCount') }}：</span>
+            <span class="stat-value">{{ regionStats.collectCount || 0 }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">{{ $t('dashboard.executorCount') }}：</span>
+            <span class="stat-value">{{ regionStats.executorCount || 0 }}</span>
+          </div>
         </div>
-        <div class="stat-item">
-          <span class="stat-label">{{ $t('dashboard.collectCount') }}：</span>
-          <span class="stat-value">{{ regionStats.collectCount || 0 }}</span>
+        
+        <!-- APP详细信息列表 -->
+        <div class="app-list-section" v-if="regionStats.appList && regionStats.appList.length > 0">
+          <div class="section-title">{{ $t('dashboard.appDetails') }}</div>
+          <el-table :data="regionStats.appList" stripe style="width: 100%">
+            <el-table-column prop="appName" :label="$t('dashboard.appName')" min-width="200">
+              <template #default="scope">
+                <span>{{ scope.row.appName || '-' }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column prop="collectCount" :label="$t('dashboard.collectCount')" width="150" align="right">
+              <template #default="scope">
+                <span class="collect-count-value">{{ scope.row.collectCount || 0 }}</span>
+              </template>
+            </el-table-column>
+          </el-table>
         </div>
-        <div class="stat-item">
-          <span class="stat-label">{{ $t('dashboard.executorCount') }}：</span>
-          <span class="stat-value">{{ regionStats.executorCount || 0 }}</span>
+        
+        <div class="empty-tip" v-else>
+          <el-empty :description="$t('dashboard.noAppData')" :image-size="80" />
         </div>
       </div>
     </el-dialog>
@@ -178,6 +202,7 @@ export default {
       appCount: 0,
       collectCount: 0,
       executorCount: 0,
+      appList: [],
     })
     
     // 城市名称到经纬度的映射（简化版，包含常见城市）
@@ -542,6 +567,7 @@ export default {
             appCount: res.data.appCount || 0,
             collectCount: res.data.collectCount || 0,
             executorCount: res.data.executorCount || 0,
+            appList: res.data.appList || [],
           }
           regionStatsDialogTitle.value = `${regionName} - ${level === 4 ? t('dashboard.city') : t('dashboard.country')}`
           regionStatsDialogVisible.value = true
@@ -723,5 +749,32 @@ export default {
   font-size: 18px;
   font-weight: bold;
   color: #409EFF;
+}
+
+.summary-stats {
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e4e7ed;
+}
+
+.app-list-section {
+  margin-top: 20px;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+  margin-bottom: 15px;
+}
+
+.collect-count-value {
+  font-weight: 600;
+  color: #409EFF;
+}
+
+.empty-tip {
+  margin-top: 20px;
+  text-align: center;
 }
 </style>

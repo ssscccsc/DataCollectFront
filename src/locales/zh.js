@@ -94,6 +94,10 @@ export default {
     country: '国家',
     appCount: '采集的APP数量',
     collectCount: '采集次数',
+    totalCollectCount: '总采集次数',
+    appName: 'APP名称',
+    appDetails: 'APP详细信息',
+    noAppData: '暂无APP数据',
   },
   
   // 采集任务管理
