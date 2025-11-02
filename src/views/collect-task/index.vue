@@ -559,13 +559,40 @@
                   <div class="environment-header">
                     <h5 class="environment-name">{{ env.name }}</h5>
                     <div class="environment-status">
-                      <el-tag :type="env.status === 1 ? 'success' : 'danger'" size="small">
-                        {{ env.status === 1 ? $t('collectTask.available') : $t('collectTask.unavailable') }}
+                      <!-- Ping状态显示 -->
+                      <el-tag 
+                        v-if="env.pingStatus === 'checking'" 
+                        type="info" 
+                        size="small"
+                        style="margin-right: 8px;"
+                      >
+                        {{ $t('collectTask.pingChecking') }}
+                      </el-tag>
+                      <el-tag 
+                        v-else-if="env.pingStatus === 'success'" 
+                        type="success" 
+                        size="small"
+                        style="margin-right: 8px;"
+                      >
+                        {{ $t('collectTask.pingSuccess') }}
+                      </el-tag>
+                      <el-tag 
+                        v-else-if="env.pingStatus === 'failed'" 
+                        type="danger" 
+                        size="small"
+                        style="margin-right: 8px;"
+                      >
+                        {{ $t('collectTask.pingFailed') }}
+                      </el-tag>
+                      <!-- 环境状态显示 -->
+                      <el-tag :type="env.status === 1 && env.pingReachable !== false ? 'success' : 'danger'" size="small">
+                        {{ (env.status === 1 && env.pingReachable !== false) ? $t('collectTask.available') : $t('collectTask.unavailable') }}
                       </el-tag>
                       <el-checkbox 
                         v-model="selectedEnvironmentIds" 
                         :value="env.id"
                         @change="handleEnvironmentSelection"
+                        :disabled="env.status !== 1 || env.pingReachable === false"
                         style="margin-left: 8px;"
                       />
                     </div>
@@ -1349,13 +1376,68 @@ export default {
           method: 'get',
           params,
         })
-        availableEnvironments.value = res.data
+        
+        // 初始化环境列表，添加ping状态字段
+        const environments = res.data.map(env => ({
+          ...env,
+          pingStatus: 'checking', // checking, success, failed
+          pingReachable: null, // 是否可达
+        }))
+        availableEnvironments.value = environments
+        
+        // 对每个环境进行ping检测
+        await pingAllEnvironments(environments)
       } catch (error) {
         console.error('加载可用逻辑环境失败:', error)
         availableEnvironments.value = []
       } finally {
         environmentsLoading.value = false
       }
+    }
+    
+    // Ping所有环境的执行机IP和端口
+    const pingAllEnvironments = async (environments) => {
+      const pingPromises = environments.map(async (env) => {
+        if (!env.executorIpAddress) {
+          env.pingStatus = 'failed'
+          env.pingReachable = false
+          return
+        }
+        
+        try {
+          env.pingStatus = 'checking'
+          // 默认端口8081，可以根据需要从环境信息中获取端口
+          const port = env.executorPort || 8081
+          const res = await request({
+            url: '/collect-task/ping-executor',
+            method: 'get',
+            params: { 
+              ip: env.executorIpAddress,
+              port: port,
+            },
+          })
+          
+          if (res.data && res.data.reachable !== undefined) {
+            env.pingReachable = res.data.reachable
+            env.pingStatus = res.data.reachable ? 'success' : 'failed'
+            // 如果ping不通，更新环境的status为0（不可用）
+            if (!res.data.reachable) {
+              env.status = 0
+            }
+          } else {
+            env.pingStatus = 'failed'
+            env.pingReachable = false
+            env.status = 0
+          }
+        } catch (error) {
+          console.error(`Ping执行机失败 - IP: ${env.executorIpAddress}, Port: ${env.executorPort || 8081}, error:`, error)
+          env.pingStatus = 'failed'
+          env.pingReachable = false
+          env.status = 0
+        }
+      })
+      
+      await Promise.all(pingPromises)
     }
 
     const handleAdd = () => {
@@ -1513,6 +1595,13 @@ export default {
     
     // 切换逻辑环境选择
     const toggleEnvironmentSelection = (environmentId) => {
+      // 找到对应的环境
+      const env = availableEnvironments.value.find(e => e.id === environmentId)
+      // 如果环境不可用或ping不通，不允许选择
+      if (env && (env.status !== 1 || env.pingReachable === false)) {
+        return
+      }
+      
       const index = selectedEnvironmentIds.value.indexOf(environmentId)
       if (index > -1) {
         selectedEnvironmentIds.value.splice(index, 1)

@@ -215,6 +215,10 @@ export default {
     unavailable: '不可用',
     noFilter: '无筛选',
     logicNetwork: '逻辑组网',
+    // Ping状态
+    pingChecking: '检测中',
+    pingSuccess: 'Ping成功',
+    pingFailed: 'Ping失败',
     // 远程登录
     remoteLogin: '远程登录执行机',
     executorInfo: '执行机信息',
