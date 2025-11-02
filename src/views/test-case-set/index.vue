@@ -146,7 +146,7 @@
     <el-dialog
       v-model="customParamsDialogVisible"
       :title="$t('testCaseSet.customParamsManagement')"
-      width="60%"
+      width="90%"
       top="5vh"
       :close-on-click-modal="false"
     >
@@ -214,26 +214,28 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column :label="$t('testCaseSet.operations')" width="150" fixed="right">
+          <el-table-column :label="$t('testCaseSet.operations')" width="180" fixed="right">
             <template #default="scope">
-              <el-button
-                type="primary"
-                size="small"
-                text
-                @click="handleEditCustomParam(scope.row)"
-                :icon="Edit"
-              >
-                {{ $t('testCaseSet.edit') }}
-              </el-button>
-              <el-button
-                type="danger"
-                size="small"
-                text
-                @click="handleDeleteCustomParam(scope.row)"
-                :icon="Delete"
-              >
-                {{ $t('testCaseSet.delete') }}
-              </el-button>
+              <div class="operation-buttons">
+                <el-button
+                  type="primary"
+                  size="small"
+                  text
+                  @click="handleEditCustomParam(scope.row)"
+                  :icon="Edit"
+                >
+                  {{ $t('testCaseSet.edit') }}
+                </el-button>
+                <el-button
+                  type="danger"
+                  size="small"
+                  text
+                  @click="handleDeleteCustomParam(scope.row)"
+                  :icon="Delete"
+                >
+                  {{ $t('testCaseSet.delete') }}
+                </el-button>
+              </div>
             </template>
           </el-table-column>
         </el-table>
@@ -839,10 +841,16 @@ export default {
 }
 
 .table-container {
-  max-width: 70%;
+  width: 100%;
   max-height: 600px;
   overflow-x: auto;
   overflow-y: auto;
+}
+
+.operation-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .param-values-display {
