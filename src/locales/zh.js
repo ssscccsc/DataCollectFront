@@ -476,6 +476,8 @@ export default {
     deleteCustomParamConfirm: '确定要删除自定义参数"{paramName}"吗？',
     deleteCustomParamSuccess: '删除用例自定义参数成功',
     deleteCustomParamFailed: '删除用例自定义参数失败',
+    edit: '编辑',
+    delete: '删除',
   },
   
   // 逻辑环境管理

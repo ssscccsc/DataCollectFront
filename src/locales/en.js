@@ -476,6 +476,8 @@ export default {
     deleteCustomParamConfirm: 'Are you sure to delete custom parameter "{paramName}"?',
     deleteCustomParamSuccess: 'Test case custom parameter deleted successfully',
     deleteCustomParamFailed: 'Failed to delete test case custom parameter',
+    edit: 'Edit',
+    delete: 'Delete',
   },
   
   // Logic Environment Management
