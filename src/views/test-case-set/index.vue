@@ -678,13 +678,19 @@ export default {
 
     // 业务大类筛选选项（去重）
     const businessCategoryFilterOptions = computed(() => {
-      const categories = customParamsData.value.map(item => item.businessCategory).filter(Boolean)
+      if (!customParamsData.value || !Array.isArray(customParamsData.value)) {
+        return []
+      }
+      const categories = customParamsData.value.map(item => item?.businessCategory).filter(Boolean)
       return [...new Set(categories)].sort()
     })
 
     // APP筛选选项（去重）
     const appFilterOptions = computed(() => {
-      const apps = customParamsData.value.map(item => item.app).filter(Boolean)
+      if (!customParamsData.value || !Array.isArray(customParamsData.value)) {
+        return []
+      }
+      const apps = customParamsData.value.map(item => item?.app).filter(Boolean)
       return [...new Set(apps)].sort()
     })
 
