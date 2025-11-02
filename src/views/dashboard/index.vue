@@ -385,6 +385,9 @@ export default {
         
         // 更新地图
         if (worldMapChart) {
+          // 检查是否有地图数据（features数组不为空）
+          const hasMapData = worldMapChart._mapDataLoaded || false
+          
           const option = {
             tooltip: {
               trigger: 'item',
@@ -392,10 +395,11 @@ export default {
                 if (params.data) {
                   return `${params.data.name}`
                 }
-                return params.name
+                return params.name || ''
               },
             },
-            geo: {
+            backgroundColor: '#fafafa',
+            geo: hasMapData ? {
               map: 'world',
               roam: true,
               zoom: 1.2,
@@ -419,16 +423,24 @@ export default {
                   show: true,
                 },
               },
+            } : {
+              show: false,
             },
             series: [
               {
                 name: '地域',
                 type: 'scatter',
-                coordinateSystem: 'geo',
+                coordinateSystem: hasMapData ? 'geo' : null,
                 data: data,
-                symbolSize: 10,
+                symbolSize: 12,
                 label: {
-                  show: false,
+                  show: true,
+                  position: 'right',
+                  formatter: (params) => {
+                    return params.data.name
+                  },
+                  fontSize: 12,
+                  color: '#333',
                 },
                 itemStyle: {
                   color: '#409EFF',
@@ -438,10 +450,44 @@ export default {
                     color: '#66b1ff',
                     borderColor: '#409EFF',
                     borderWidth: 2,
+                    shadowBlur: 10,
+                    shadowColor: 'rgba(64, 158, 255, 0.5)',
+                  },
+                  label: {
+                    show: true,
+                    fontSize: 14,
+                    fontWeight: 'bold',
                   },
                 },
               },
             ],
+          }
+          
+          // 如果没有地图数据，使用地理坐标系作为备用方案
+          if (!hasMapData) {
+            option.xAxis = {
+              type: 'value',
+              show: false,
+            }
+            option.yAxis = {
+              type: 'value',
+              show: false,
+            }
+            // 转换地理坐标为屏幕坐标
+            option.series[0].data = data.map(item => {
+              // 简单的坐标转换：将经纬度转换为适合显示的坐标
+              const lng = item.value[0]
+              const lat = item.value[1]
+              // 墨卡托投影简化版本
+              const x = (lng + 180) / 360
+              const y = (90 - lat) / 180
+              return {
+                ...item,
+                value: [x, y],
+                originalCoords: item.value,
+              }
+            })
+            option.series[0].coordinateSystem = null
           }
           
           worldMapChart.setOption(option, true)
@@ -508,18 +554,33 @@ export default {
     // 加载世界地图数据
     const loadWorldMapData = async () => {
       try {
-        // 从CDN加载世界地图JSON数据
-        const response = await fetch('https://geo.datav.aliyun.com/areas_v3/bound/world.json')
+        // 从本地public目录加载世界地图JSON数据
+        const response = await fetch('/world.json')
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
         const worldMapData = await response.json()
-        echarts.registerMap('world', worldMapData)
-        return true
+        
+        // 检查数据是否有效（features数组不为空）
+        if (worldMapData && worldMapData.features && worldMapData.features.length > 0) {
+          echarts.registerMap('world', worldMapData)
+          worldMapChart._mapDataLoaded = true
+          console.log('世界地图数据加载成功，包含', worldMapData.features.length, '个国家/地区')
+          return true
+        } else {
+          throw new Error('地图数据为空')
+        }
       } catch (error) {
-        console.error('加载世界地图数据失败，使用备用方案:', error)
-        // 如果CDN加载失败，使用一个基本的世界地图结构
+        console.warn('加载世界地图数据失败，将使用散点图模式显示:', error)
+        console.warn('提示：请将世界地图JSON文件保存到 public/world.json，参考 public/世界地图数据下载说明.md')
+        // 如果本地加载失败，使用一个基本的世界地图结构
         echarts.registerMap('world', {
           type: 'FeatureCollection',
           features: [],
         })
+        if (worldMapChart) {
+          worldMapChart._mapDataLoaded = false
+        }
         return false
       }
     }
@@ -530,6 +591,9 @@ export default {
       const mapDom = document.getElementById('world-map')
       if (mapDom) {
         worldMapChart = echarts.init(mapDom)
+        
+        // 初始化地图数据加载标志
+        worldMapChart._mapDataLoaded = false
         
         // 加载世界地图数据
         await loadWorldMapData()
