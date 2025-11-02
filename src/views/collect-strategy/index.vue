@@ -1030,25 +1030,26 @@ export default {
     }
 
     // 根据业务大类和app筛选参数键选项
+    // 匹配规则：用例的业务大类 === 用例自定义参数的业务大类 且 用例的appEn === 用例自定义参数的app
     const filteredParamKeyOptions = computed(() => {
       if (!currentTestCase.value) {
         return []
       }
       
       const testCaseBusinessCategory = currentTestCase.value.businessCategory
-      const testCaseApp = currentTestCase.value.app
+      const testCaseAppEn = currentTestCase.value.appEn
       
-      if (!testCaseBusinessCategory || !testCaseApp) {
+      if (!testCaseBusinessCategory || !testCaseAppEn) {
         return []
       }
       
       return testCaseCustomParamList.value.filter(item => {
-        // 匹配业务大类
+        // 匹配业务大类：用例的业务大类 === 用例自定义参数的业务大类
         if (item.businessCategory && item.businessCategory !== testCaseBusinessCategory) {
           return false
         }
-        // 匹配APP
-        if (item.app && item.app !== testCaseApp) {
+        // 匹配APP：用例的appEn === 用例自定义参数的app
+        if (item.app && item.app !== testCaseAppEn) {
           return false
         }
         return true
