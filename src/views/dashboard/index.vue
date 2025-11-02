@@ -138,20 +138,26 @@ export default {
 
     const getStatusType = (status) => {
       const statusMap = {
-        0: 'info',
-        1: 'success',
-        2: 'warning',
+        'RUNNING': 'success',
+        'COMPLETED': 'success',
+        'STOPPED': 'info',
+        'PAUSED': 'warning',
+        'FAILED': 'danger',
+        'PENDING': 'info',
       }
       return statusMap[status] || 'info'
     }
 
     const getStatusText = (status) => {
       const statusMap = {
-        0: t('dashboard.statusStopped'),
-        1: t('dashboard.statusRunning'),
-        2: t('dashboard.statusPaused'),
+        'RUNNING': t('dashboard.statusRunning'),
+        'COMPLETED': t('dashboard.statusCompleted'),
+        'STOPPED': t('dashboard.statusStopped'),
+        'PAUSED': t('dashboard.statusPaused'),
+        'FAILED': t('dashboard.statusFailed'),
+        'PENDING': t('dashboard.statusPending'),
       }
-      return statusMap[status] || t('dashboard.statusBlocked')
+      return statusMap[status] || t('dashboard.statusUnknown')
     }
 
     const loadStats = async () => {
@@ -180,25 +186,41 @@ export default {
       }
     }
 
-    const loadRecentTasks = () => {
-      // 这里应该调用API获取最近任务
-      recentTasks.value = [
-        {
-          name: '北京Android性能监控任务',
-          status: 1,
-          createTime: '2024-01-15 10:30:00',
-        },
-        {
-          name: '北京iOS日志采集任务',
-          status: 0,
-          createTime: '2024-01-15 09:15:00',
-        },
-        {
-          name: '上海Android网络监控任务',
-          status: 2,
-          createTime: '2024-01-15 08:45:00',
-        },
-      ]
+    const formatDateTime = (dateTime) => {
+      if (!dateTime) {
+        return ''
+      }
+      const date = new Date(dateTime)
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      const hours = String(date.getHours()).padStart(2, '0')
+      const minutes = String(date.getMinutes()).padStart(2, '0')
+      const seconds = String(date.getSeconds()).padStart(2, '0')
+      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+    }
+
+    const loadRecentTasks = async () => {
+      try {
+        const res = await request({
+          url: '/collect-task/page',
+          method: 'get',
+          params: {
+            current: 1,
+            size: 10,
+          },
+        })
+        if (res.data && res.data.records) {
+          recentTasks.value = res.data.records.map(task => ({
+            name: task.name,
+            status: task.status,
+            createTime: formatDateTime(task.createTime),
+          }))
+        }
+      } catch (error) {
+        console.error('加载最近任务失败:', error)
+        recentTasks.value = []
+      }
     }
 
     onMounted(() => {

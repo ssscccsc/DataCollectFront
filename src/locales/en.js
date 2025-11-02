@@ -85,6 +85,10 @@ export default {
     statusRunning: 'Running',
     statusPaused: 'Paused',
     statusBlocked: 'Blocked',
+    statusCompleted: 'Completed',
+    statusFailed: 'Failed',
+    statusPending: 'Pending',
+    statusUnknown: 'Unknown',
   },
   
   // Collection Task Management

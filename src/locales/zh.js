@@ -81,10 +81,14 @@ export default {
     dbStatus: '数据库状态',
     apiStatus: 'API状态',
     normal: '正常',
-    statusStopped: '停止',
+    statusStopped: '已停止',
     statusRunning: '运行中',
-    statusPaused: '暂停',
+    statusPaused: '已暂停',
     statusBlocked: '阻塞',
+    statusCompleted: '已完成',
+    statusFailed: '已失败',
+    statusPending: '待执行',
+    statusUnknown: '未知',
   },
   
   // 采集任务管理
