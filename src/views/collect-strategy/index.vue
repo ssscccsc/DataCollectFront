@@ -956,7 +956,7 @@ export default {
     }
     
     // 步骤控制方法
-    const handleNextStep = () => {
+    const handleNextStep = async () => {
       if (currentStep.value === 0) {
         // 从第一步到第二步
         currentStep.value = 1
