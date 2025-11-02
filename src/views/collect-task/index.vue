@@ -2279,6 +2279,7 @@ export default {
       cityOptions,
       selectedStrategy,
       selectedStrategyAppEn,
+      selectedStrategyAppLabel,
       availableEnvironments,
       environmentsLoading,
       selectedEnvironmentIds,
