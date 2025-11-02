@@ -642,16 +642,36 @@
               class="param-item-row"
             >
               <div class="param-index">{{ index + 1 }}</div>
-              <el-input 
+              <el-select 
                 v-model="param.key" 
                 :placeholder="$t('collectStrategy.paramKey')" 
                 class="param-input"
-              />
-              <el-input 
+                filterable
+                clearable
+                @change="handleParamKeyChange(index)"
+              >
+                <el-option
+                  v-for="paramOption in filteredParamKeyOptions"
+                  :key="paramOption.paramName"
+                  :label="paramOption.paramName"
+                  :value="paramOption.paramName"
+                />
+              </el-select>
+              <el-select 
                 v-model="param.value" 
                 :placeholder="$t('collectStrategy.paramValue')" 
                 class="param-input"
-              />
+                multiple
+                filterable
+                clearable
+              >
+                <el-option
+                  v-for="valueOption in getParamValueOptions(index)"
+                  :key="valueOption"
+                  :label="valueOption"
+                  :value="valueOption"
+                />
+              </el-select>
               <el-button 
                 type="danger" 
                 size="small" 
@@ -711,6 +731,7 @@ export default {
     const currentTestCase = ref(null)
     const currentTestCaseParams = ref([])
     const currentTestCaseExecutionCount = ref(1)
+    const testCaseCustomParamList = ref([]) // 用例自定义参数列表
     const customParamRules = reactive({
       key: [
         { required: true, message: t('collectStrategy.paramKeyRequired'), trigger: 'blur' },
@@ -962,7 +983,7 @@ export default {
       if (!form.testCaseCustomParams[testCaseId]) {
         form.testCaseCustomParams[testCaseId] = []
       }
-      form.testCaseCustomParams[testCaseId].push({ key: '', value: '', })
+      form.testCaseCustomParams[testCaseId].push({ key: '', value: [] })
     }
     
     // 删除批量配置的用例参数
@@ -974,11 +995,15 @@ export default {
     
     // 保存批量配置
     const saveBatchConfig = () => {
-      // 清理空的参数
+      // 清理空的参数（value是数组，需要检查数组长度）
       Object.keys(form.testCaseCustomParams).forEach(testCaseId => {
         const params = form.testCaseCustomParams[testCaseId]
         if (params && Array.isArray(params)) {
-          form.testCaseCustomParams[testCaseId] = params.filter(param => param.key && param.value)
+          form.testCaseCustomParams[testCaseId] = params.filter(param => {
+            return param.key && 
+                   param.value && 
+                   (Array.isArray(param.value) ? param.value.length > 0 : param.value)
+          })
           // 如果过滤后为空，删除该key
           if (form.testCaseCustomParams[testCaseId].length === 0) {
             delete form.testCaseCustomParams[testCaseId]
@@ -990,12 +1015,84 @@ export default {
       batchConfigDialogVisible.value = false
     }
     
+    // 加载用例自定义参数列表
+    const loadTestCaseCustomParams = async () => {
+      try {
+        const res = await request({
+          url: '/test-case-custom-param/list',
+          method: 'get',
+        })
+        testCaseCustomParamList.value = res.data || []
+      } catch (error) {
+        console.error('加载用例自定义参数失败:', error)
+        ElMessage.error(t('testCaseSet.loadCustomParamsFailed'))
+      }
+    }
+
+    // 根据业务大类和app筛选参数键选项
+    const filteredParamKeyOptions = computed(() => {
+      if (!currentTestCase.value) {
+        return []
+      }
+      
+      const testCaseBusinessCategory = currentTestCase.value.businessCategory
+      const testCaseApp = currentTestCase.value.app
+      
+      if (!testCaseBusinessCategory || !testCaseApp) {
+        return []
+      }
+      
+      return testCaseCustomParamList.value.filter(item => {
+        // 匹配业务大类
+        if (item.businessCategory && item.businessCategory !== testCaseBusinessCategory) {
+          return false
+        }
+        // 匹配APP
+        if (item.app && item.app !== testCaseApp) {
+          return false
+        }
+        return true
+      })
+    })
+
+    // 根据选中的参数键获取参数值选项
+    const getParamValueOptions = (index) => {
+      const selectedKey = currentTestCaseParams.value[index]?.key
+      if (!selectedKey) {
+        return []
+      }
+      
+      const paramOption = filteredParamKeyOptions.value.find(
+        item => item.paramName === selectedKey
+      )
+      
+      if (paramOption && paramOption.paramValues && Array.isArray(paramOption.paramValues)) {
+        return paramOption.paramValues
+      }
+      
+      return []
+    }
+
+    // 处理参数键变化
+    const handleParamKeyChange = (index) => {
+      // 当参数键变化时，清空参数值
+      if (currentTestCaseParams.value[index]) {
+        currentTestCaseParams.value[index].value = []
+      }
+    }
+
     // 打开用例自定义参数配置对话框
-    const handleConfigTestCaseParams = (testCase) => {
+    const handleConfigTestCaseParams = async (testCase) => {
       currentTestCase.value = testCase
+      // 加载用例自定义参数列表
+      await loadTestCaseCustomParams()
       // 深拷贝当前用例的参数
       const existingParams = form.testCaseCustomParams[testCase.id] || []
-      currentTestCaseParams.value = JSON.parse(JSON.stringify(existingParams))
+      // 转换value为数组格式（如果是字符串则转换为数组）
+      currentTestCaseParams.value = existingParams.map(param => ({
+        key: param.key || '',
+        value: Array.isArray(param.value) ? param.value : (param.value ? [param.value] : []),
+      }))
       // 获取当前用例的执行次数
       currentTestCaseExecutionCount.value = form.testCaseExecutionCounts[testCase.id] || 1
       testCaseParamsDialogVisible.value = true
@@ -1003,7 +1100,7 @@ export default {
     
     // 添加用例参数
     const addTestCaseParam = () => {
-      currentTestCaseParams.value.push({ key: '', value: '', })
+      currentTestCaseParams.value.push({ key: '', value: [] })
     }
     
     // 删除用例参数
@@ -1013,8 +1110,13 @@ export default {
     
     // 保存用例自定义参数
     const saveTestCaseParams = () => {
-      // 过滤掉空的参数
-      const validParams = currentTestCaseParams.value.filter(param => param.key && param.value)
+      // 过滤掉空的参数（value是数组，需要检查数组长度）
+      const validParams = currentTestCaseParams.value.filter(param => {
+        return param.key && 
+               param.value && 
+               Array.isArray(param.value) && 
+               param.value.length > 0
+      })
       
       if (validParams.length > 0) {
         form.testCaseCustomParams[currentTestCase.value.id] = validParams
@@ -1285,6 +1387,9 @@ export default {
       removeTestCaseParam,
       saveTestCaseParams,
       resetTestCaseParamsDialog,
+      filteredParamKeyOptions,
+      getParamValueOptions,
+      handleParamKeyChange,
       loadData,
       loadTestCaseSetOptions,
       loadIntentOptions,
