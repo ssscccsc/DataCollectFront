@@ -229,10 +229,10 @@ export default {
     unavailable: 'Unavailable',
     noFilter: 'No Filter',
     logicNetwork: 'Logic Network',
-    // Ping Status
-    pingChecking: 'Checking',
-    pingSuccess: 'Ping Success',
-    pingFailed: 'Ping Failed',
+    // Online Status
+    checkingOnline: 'Checking',
+    online: 'Online',
+    offline: 'Offline',
     // Remote Login
     remoteLogin: 'Remote Login Executor',
     executorInfo: 'Executor Information',

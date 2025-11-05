@@ -229,10 +229,10 @@ export default {
     unavailable: '不可用',
     noFilter: '无筛选',
     logicNetwork: '逻辑组网',
-    // Ping状态
-    pingChecking: '检测中',
-    pingSuccess: 'Ping成功',
-    pingFailed: 'Ping失败',
+    // 在线状态
+    checkingOnline: '检查中',
+    online: '在线',
+    offline: '离线',
     // 远程登录
     remoteLogin: '远程登录执行机',
     executorInfo: '执行机信息',

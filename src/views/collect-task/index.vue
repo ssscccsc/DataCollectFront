@@ -559,40 +559,40 @@
                   <div class="environment-header">
                     <h5 class="environment-name">{{ env.name }}</h5>
                     <div class="environment-status">
-                      <!-- Ping状态显示 -->
+                      <!-- 在线状态显示 -->
                       <el-tag 
-                        v-if="env.pingStatus === 'checking'" 
+                        v-if="env.onlineStatus === 'checking'" 
                         type="info" 
                         size="small"
                         style="margin-right: 8px;"
                       >
-                        {{ $t('collectTask.pingChecking') }}
+                        {{ $t('collectTask.checkingOnline') }}
                       </el-tag>
                       <el-tag 
-                        v-else-if="env.pingStatus === 'success'" 
+                        v-else-if="env.onlineStatus === true" 
                         type="success" 
                         size="small"
                         style="margin-right: 8px;"
                       >
-                        {{ $t('collectTask.pingSuccess') }}
+                        {{ $t('collectTask.online') }}
                       </el-tag>
                       <el-tag 
-                        v-else-if="env.pingStatus === 'failed'" 
+                        v-else-if="env.onlineStatus === false" 
                         type="danger" 
                         size="small"
                         style="margin-right: 8px;"
                       >
-                        {{ $t('collectTask.pingFailed') }}
+                        {{ $t('collectTask.offline') }}
                       </el-tag>
                       <!-- 环境状态显示 -->
-                      <el-tag :type="env.status === 1 && env.pingReachable !== false ? 'success' : 'danger'" size="small">
-                        {{ (env.status === 1 && env.pingReachable !== false) ? $t('collectTask.available') : $t('collectTask.unavailable') }}
+                      <el-tag :type="env.status === 1 && env.onlineStatus === true ? 'success' : 'danger'" size="small">
+                        {{ (env.status === 1 && env.onlineStatus === true) ? $t('collectTask.available') : $t('collectTask.unavailable') }}
                       </el-tag>
                       <el-checkbox 
                         v-model="selectedEnvironmentIds" 
                         :value="env.id"
                         @change="handleEnvironmentSelection"
-                        :disabled="env.status !== 1 || env.pingReachable === false"
+                        :disabled="env.status !== 1 || env.onlineStatus !== true"
                         style="margin-left: 8px;"
                       />
                     </div>
@@ -1377,16 +1377,15 @@ export default {
           params,
         })
         
-        // 初始化环境列表，添加ping状态字段
+        // 初始化环境列表，添加在线状态字段
         const environments = res.data.map(env => ({
           ...env,
-          pingStatus: 'checking', // checking, success, failed
-          pingReachable: null, // 是否可达
+          onlineStatus: 'checking', // checking, true, false
         }))
         availableEnvironments.value = environments
         
-        // 对每个环境进行ping检测
-        await pingAllEnvironments(environments)
+        // 批量检查执行机在线状态（通过WebSocket）
+        await checkExecutorsOnlineStatus(environments)
       } catch (error) {
         console.error('加载可用逻辑环境失败:', error)
         availableEnvironments.value = []
@@ -1395,49 +1394,61 @@ export default {
       }
     }
     
-    // Ping所有环境的执行机IP和端口
-    const pingAllEnvironments = async (environments) => {
-      const pingPromises = environments.map(async (env) => {
-        if (!env.executorIpAddress) {
-          env.pingStatus = 'failed'
-          env.pingReachable = false
-          return
-        }
+    // 批量检查执行机在线状态（通过WebSocket）
+    const checkExecutorsOnlineStatus = async (environments) => {
+      // 提取所有执行机IP地址
+      const executorIps = environments
+        .map(env => env.executorIpAddress)
+        .filter(ip => ip != null && ip.trim() !== '')
+      
+      if (executorIps.length === 0) {
+        // 如果没有执行机IP，将所有环境标记为离线
+        environments.forEach(env => {
+          env.onlineStatus = false
+        })
+        return
+      }
+      
+      try {
+        // 批量检查执行机在线状态
+        const res = await request({
+          url: '/collect-task/check-executors-online',
+          method: 'post',
+          data: executorIps,
+        })
         
-        try {
-          env.pingStatus = 'checking'
-          // 默认端口8081，可以根据需要从环境信息中获取端口
-          const port = env.executorPort || 8081
-          const res = await request({
-            url: '/collect-task/ping-executor',
-            method: 'get',
-            params: { 
-              ip: env.executorIpAddress,
-              port: port,
-            },
-          })
+        if (res.data && typeof res.data === 'object') {
+          const onlineStatusMap = res.data
           
-          if (res.data && res.data.reachable !== undefined) {
-            env.pingReachable = res.data.reachable
-            env.pingStatus = res.data.reachable ? 'success' : 'failed'
-            // 如果ping不通，更新环境的status为0（不可用）
-            if (!res.data.reachable) {
+          // 更新每个环境的在线状态
+          environments.forEach(env => {
+            if (env.executorIpAddress && onlineStatusMap.hasOwnProperty(env.executorIpAddress)) {
+              env.onlineStatus = onlineStatusMap[env.executorIpAddress]
+              // 如果执行机不在线，更新环境的status为0（不可用）
+              if (!env.onlineStatus) {
+                env.status = 0
+              }
+            } else {
+              // 如果没有IP或不在返回结果中，标记为离线
+              env.onlineStatus = false
               env.status = 0
             }
-          } else {
-            env.pingStatus = 'failed'
-            env.pingReachable = false
+          })
+        } else {
+          // 如果返回数据格式不正确，将所有环境标记为离线
+          environments.forEach(env => {
+            env.onlineStatus = false
             env.status = 0
-          }
-        } catch (error) {
-          console.error(`Ping执行机失败 - IP: ${env.executorIpAddress}, Port: ${env.executorPort || 8081}, error:`, error)
-          env.pingStatus = 'failed'
-          env.pingReachable = false
-          env.status = 0
+          })
         }
-      })
-      
-      await Promise.all(pingPromises)
+      } catch (error) {
+        console.error('检查执行机在线状态失败:', error)
+        // 检查失败，将所有环境标记为离线
+        environments.forEach(env => {
+          env.onlineStatus = false
+          env.status = 0
+        })
+      }
     }
 
     const handleAdd = () => {
@@ -1597,8 +1608,8 @@ export default {
     const toggleEnvironmentSelection = (environmentId) => {
       // 找到对应的环境
       const env = availableEnvironments.value.find(e => e.id === environmentId)
-      // 如果环境不可用或ping不通，不允许选择
-      if (env && (env.status !== 1 || env.pingReachable === false)) {
+      // 如果环境不可用或执行机不在线，不允许选择
+      if (env && (env.status !== 1 || env.onlineStatus !== true)) {
         return
       }
       
