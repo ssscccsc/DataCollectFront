@@ -61,6 +61,10 @@
             <el-icon><Connection /></el-icon>
             <span>{{ $t('menu.networkType') }}</span>
           </el-menu-item>
+          <el-menu-item index="/user/index">
+            <el-icon><User /></el-icon>
+            <span>用户管理</span>
+          </el-menu-item>
         </el-sub-menu>
       </el-menu>
     </el-aside>
@@ -72,14 +76,13 @@
         </div>
         <div class="header-right">
           <LanguageSwitcher />
-          <el-dropdown>
+          <el-dropdown @command="handleCommand">
             <span class="user-info">
-              {{ $t('system.admin') }} <el-icon><ArrowDown /></el-icon>
+              {{ currentUsername }} <el-icon><ArrowDown /></el-icon>
             </span>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item>{{ $t('system.personalInfo') }}</el-dropdown-item>
-                <el-dropdown-item>{{ $t('system.logout') }}</el-dropdown-item>
+                <el-dropdown-item command="logout">退出登录</el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
@@ -96,8 +99,9 @@
 <script>
 import { Iphone } from '@element-plus/icons-vue'
 import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { ElMessage } from 'element-plus'
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 
 export default {
@@ -107,6 +111,7 @@ export default {
   },
   setup() {
     const route = useRoute()
+    const router = useRouter()
     const { t } = useI18n()
     
     const currentPageTitle = computed(() => {
@@ -120,12 +125,31 @@ export default {
         '/ue/index': t('pageTitle.ue'),
         '/region/index': t('pageTitle.region'),
         '/network-type/index': t('pageTitle.networkType'),
+        '/user/index': '用户管理',
       }
       return routeMap[route.path] || t('system.title')
     })
+    
+    const currentUsername = computed(() => {
+      return localStorage.getItem('username') || '用户'
+    })
+    
+    const handleCommand = (command) => {
+      if (command === 'logout') {
+        // 清除token和用户信息
+        localStorage.removeItem('token')
+        localStorage.removeItem('username')
+        localStorage.removeItem('role')
+        localStorage.removeItem('lastActivityTime')
+        ElMessage.success('退出登录成功')
+        router.push('/login')
+      }
+    }
 
     return {
       currentPageTitle,
+      currentUsername,
+      handleCommand,
     }
   },
 }

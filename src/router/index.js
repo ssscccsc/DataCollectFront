@@ -3,15 +3,22 @@ import Layout from '@/layout/index.vue'
 
 const routes = [
   {
+    path: '/login',
+    name: 'Login',
+    component: () => import('@/views/login/index.vue'),
+    meta: { requiresAuth: false },
+  },
+  {
     path: '/',
     component: Layout,
     redirect: '/dashboard',
+    meta: { requiresAuth: true },
     children: [
       {
         path: 'dashboard',
         name: 'Dashboard',
         component: () => import('@/views/dashboard/index.vue'),
-        meta: { title: 'menu.dashboard', icon: 'Odometer' },
+        meta: { title: 'menu.dashboard', icon: 'Odometer', requiresAuth: true },
       },
     ],
   },
@@ -118,11 +125,50 @@ const routes = [
       },
     ],
   },
+  {
+    path: '/user',
+    component: Layout,
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: 'index',
+        name: 'User',
+        component: () => import('@/views/user/index.vue'),
+        meta: { title: '用户管理', icon: 'User', requiresAuth: true },
+      },
+    ],
+  },
 ]
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
+})
+
+// 路由守卫
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem('token')
+  
+  if (to.meta.requiresAuth) {
+    if (!token) {
+      // 需要登录但未登录，跳转到登录页
+      next('/login')
+    } else {
+      // 已登录，确保活跃时间检查已启动
+      import('@/utils/request').then(({ startActivityCheck }) => {
+        startActivityCheck()
+      })
+      next()
+    }
+  } else {
+    // 不需要登录的页面（如登录页）
+    if (to.path === '/login' && token) {
+      // 已登录，跳转到首页
+      next('/')
+    } else {
+      next()
+    }
+  }
 })
 
 export default router
