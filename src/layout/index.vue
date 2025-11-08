@@ -17,6 +17,21 @@
           <span>{{ $t('menu.dashboard') }}</span>
         </el-menu-item>
         
+        <el-sub-menu index="app-monitor">
+          <template #title>
+            <el-icon><Monitor /></el-icon>
+            <span>{{ $t('menu.appMonitor') }}</span>
+          </template>
+          <el-menu-item index="/app-market-monitor/index">
+            <el-icon><ShoppingBag /></el-icon>
+            <span>{{ $t('menu.appMarketMonitor') }}</span>
+          </el-menu-item>
+          <el-menu-item index="/app-version-change/index">
+            <el-icon><DocumentCopy /></el-icon>
+            <span>{{ $t('menu.appVersionChange') }}</span>
+          </el-menu-item>
+        </el-sub-menu>
+        
         <el-sub-menu index="data-collect">
           <template #title>
             <el-icon><DataAnalysis /></el-icon>
@@ -117,6 +132,8 @@ export default {
     const currentPageTitle = computed(() => {
       const routeMap = {
         '/dashboard': t('pageTitle.dashboard'),
+        '/app-market-monitor/index': t('pageTitle.appMarketMonitor'),
+        '/app-version-change/index': t('pageTitle.appVersionChange'),
         '/collect-task/index': t('pageTitle.collectTask'),
         '/collect-strategy/index': t('pageTitle.collectStrategy'),
         '/test-case-set/index': t('pageTitle.testCaseSet'),

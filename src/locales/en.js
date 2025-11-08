@@ -18,11 +18,15 @@ export default {
     error: 'Operation Failed',
     warning: 'Warning',
     info: 'Info',
+    view: 'View',
   },
   
   // Navigation Menu
   menu: {
     dashboard: 'Dashboard',
+    appMonitor: 'App Monitor',
+    appMarketMonitor: 'App Market Monitor',
+    appVersionChange: 'APP Version Change',
     dataCollect: 'Data Collection',
     collectTask: 'Collection Task Management',
     collectStrategy: 'Collection Strategy Management',
@@ -38,6 +42,8 @@ export default {
   // Page Titles
   pageTitle: {
     dashboard: 'Dashboard',
+    appMarketMonitor: 'App Market Monitor',
+    appVersionChange: 'APP Version Change',
     collectTask: 'Collection Task Management',
     collectStrategy: 'Collection Strategy Management',
     testCaseSet: 'Test Case Set Management',
@@ -799,5 +805,38 @@ export default {
     updateSuccess: 'Update successful',
     createSuccess: 'Create successful',
     submitFailed: 'Submit failed',
+  },
+  
+  // App Market Monitor
+  appMarketMonitor: {
+    description: 'Monitor app information in app markets, including versions, status, etc.',
+    searchPlaceholder: 'Please enter app name or package name',
+    appName: 'App Name',
+    packageName: 'Package Name',
+    market: 'App Market',
+    currentVersion: 'Current Version',
+    updateTime: 'Update Time',
+    status: 'Status',
+    available: 'Available',
+    unavailable: 'Unavailable',
+    loadDataFailed: 'Load data failed',
+    viewDetailNotImplemented: 'View detail feature not implemented',
+  },
+  
+  // APP Version Change
+  appVersionChange: {
+    description: 'Monitor APP version changes, including version update history',
+    searchPlaceholder: 'Please enter app name or package name',
+    appName: 'App Name',
+    packageName: 'Package Name',
+    oldVersion: 'Old Version',
+    newVersion: 'New Version',
+    changeTime: 'Change Time',
+    changeType: 'Change Type',
+    majorUpdate: 'Major Update',
+    minorUpdate: 'Minor Update',
+    patchUpdate: 'Patch Update',
+    loadDataFailed: 'Load data failed',
+    viewDetailNotImplemented: 'View detail feature not implemented',
   },
 }

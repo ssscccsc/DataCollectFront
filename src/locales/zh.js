@@ -18,11 +18,15 @@ export default {
     error: '操作失败',
     warning: '警告',
     info: '提示',
+    view: '查看',
   },
   
   // 导航菜单
   menu: {
     dashboard: '仪表盘',
+    appMonitor: '应用监控',
+    appMarketMonitor: '应用市场监控',
+    appVersionChange: 'APP版本变更',
     dataCollect: '数据采集',
     collectTask: '采集任务管理',
     collectStrategy: '采集策略管理',
@@ -38,6 +42,8 @@ export default {
   // 页面标题
   pageTitle: {
     dashboard: '仪表盘',
+    appMarketMonitor: '应用市场监控',
+    appVersionChange: 'APP版本变更',
     collectTask: '采集任务管理',
     collectStrategy: '采集策略管理',
     testCaseSet: '用例集管理',
@@ -799,5 +805,38 @@ export default {
     updateSuccess: '更新成功',
     createSuccess: '创建成功',
     submitFailed: '提交失败',
+  },
+  
+  // 应用市场监控
+  appMarketMonitor: {
+    description: '监控应用市场中的应用信息，包括版本、状态等',
+    searchPlaceholder: '请输入应用名称或包名',
+    appName: '应用名称',
+    packageName: '包名',
+    market: '应用市场',
+    currentVersion: '当前版本',
+    updateTime: '更新时间',
+    status: '状态',
+    available: '可用',
+    unavailable: '不可用',
+    loadDataFailed: '加载数据失败',
+    viewDetailNotImplemented: '查看详情功能待实现',
+  },
+  
+  // APP版本变更
+  appVersionChange: {
+    description: '监控APP版本变更情况，包括版本更新历史',
+    searchPlaceholder: '请输入应用名称或包名',
+    appName: '应用名称',
+    packageName: '包名',
+    oldVersion: '旧版本',
+    newVersion: '新版本',
+    changeTime: '变更时间',
+    changeType: '变更类型',
+    majorUpdate: '重大更新',
+    minorUpdate: '次要更新',
+    patchUpdate: '补丁更新',
+    loadDataFailed: '加载数据失败',
+    viewDetailNotImplemented: '查看详情功能待实现',
   },
 }

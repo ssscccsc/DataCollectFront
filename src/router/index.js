@@ -23,6 +23,30 @@ const routes = [
     ],
   },
   {
+    path: '/app-market-monitor',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        name: 'AppMarketMonitor',
+        component: () => import('@/views/app-market-monitor/index.vue'),
+        meta: { title: 'menu.appMarketMonitor', icon: 'ShoppingBag' },
+      },
+    ],
+  },
+  {
+    path: '/app-version-change',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        name: 'AppVersionChange',
+        component: () => import('@/views/app-version-change/index.vue'),
+        meta: { title: 'menu.appVersionChange', icon: 'DocumentCopy' },
+      },
+    ],
+  },
+  {
     path: '/region',
     component: Layout,
     children: [
