@@ -13,9 +13,9 @@
             <span>{{ $t('appMarketMonitor.appStore') }}</span>
           </template>
         </el-tab-pane>
-        <el-tab-pane :label="$t('appMarketMonitor.googlePlay')" name="googleplay">
+        <el-tab-pane :label="$t('appMarketMonitor.googlePlay')" name="googleplay" disabled>
           <template #label>
-            <span>{{ $t('appMarketMonitor.googlePlay') }}</span>
+            <span class="disabled-tab">{{ $t('appMarketMonitor.googlePlay') }}</span>
           </template>
         </el-tab-pane>
         <el-tab-pane :label="$t('appMarketMonitor.huaweiMarket')" name="huawei">
@@ -341,6 +341,11 @@ export default {
   margin-top: 20px;
   display: flex;
   justify-content: flex-end;
+}
+
+.disabled-tab {
+  color: #c0c4cc;
+  cursor: not-allowed;
 }
 </style>
 
