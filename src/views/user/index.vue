@@ -2,7 +2,10 @@
   <div class="user-page">
     <div class="page-header">
       <h2 class="page-title">用户管理</h2>
-      <p class="page-description">管理系统用户，只有管理员可以新增用户</p>
+      <p class="page-description">
+        <span v-if="isAdmin">管理系统用户，只有管理员可以新增用户</span>
+        <span v-else>您只能查看和修改自己的信息</span>
+      </p>
     </div>
 
     <el-card>
@@ -19,7 +22,7 @@
           <el-icon><Refresh /></el-icon>
           刷新
         </el-button>
-        <div class="search-box">
+        <div v-if="isAdmin" class="search-box">
           <el-input
             v-model="searchForm.username"
             placeholder="搜索用户名"
@@ -37,6 +40,9 @@
             <el-option label="普通用户" value="user" />
           </el-select>
           <el-button type="primary" @click="loadData">搜索</el-button>
+        </div>
+        <div v-else class="user-info-hint">
+          <el-text type="info">您只能查看和修改自己的信息</el-text>
         </div>
       </div>
 
@@ -57,7 +63,13 @@
         <el-table-column prop="createTime" label="创建时间" />
         <el-table-column label="操作" width="250">
           <template #default="scope">
-            <el-button size="small" @click="handleEdit(scope.row)">编辑</el-button>
+            <el-button 
+              v-if="isAdmin" 
+              size="small" 
+              @click="handleEdit(scope.row)"
+            >
+              编辑
+            </el-button>
             <el-button 
               v-if="isAdmin" 
               size="small" 
@@ -77,7 +89,7 @@
         </el-table-column>
       </el-table>
 
-      <div class="pagination">
+      <div v-if="isAdmin" class="pagination">
         <el-pagination
           v-model:current-page="pagination.current"
           v-model:page-size="pagination.size"
@@ -152,7 +164,11 @@
         :rules="passwordRules"
         label-width="100px"
       >
-        <el-form-item v-if="!isAdmin" label="旧密码" prop="oldPassword">
+        <el-form-item 
+          v-if="needOldPassword" 
+          label="旧密码" 
+          prop="oldPassword"
+        >
           <el-input 
             v-model="passwordForm.oldPassword" 
             type="password"
@@ -202,13 +218,34 @@ export default {
     const passwordFormRef = ref(null)
     const tableData = ref([])
     const currentUserId = ref(null)
+    const currentPasswordUserId = ref(null)
     
     const isAdmin = computed(() => {
       return localStorage.getItem('role') === 'admin'
     })
     
+    const currentUsername = computed(() => {
+      return localStorage.getItem('username') || ''
+    })
+    
     const dialogTitle = computed(() => {
       return currentUserId.value === null ? '新增用户' : '编辑用户'
+    })
+    
+    // 判断是否需要输入旧密码
+    // 非管理员修改密码时需要，管理员修改自己的密码时需要，管理员修改其他用户密码时不需要
+    const needOldPassword = computed(() => {
+      if (!isAdmin.value) {
+        return true // 非管理员总是需要旧密码
+      }
+      // 管理员修改自己的密码时需要旧密码
+      if (currentPasswordUserId.value) {
+        const targetUser = tableData.value.find(u => u.id === currentPasswordUserId.value)
+        if (targetUser && targetUser.username === currentUsername.value) {
+          return true
+        }
+      }
+      return false // 管理员修改其他用户密码时不需要旧密码
     })
     
     const pagination = reactive({
@@ -249,25 +286,36 @@ export default {
       ],
     }
     
-    const passwordRules = {
-      newPassword: [
-        { required: true, message: '请输入新密码', trigger: 'blur' },
-        { min: 6, message: '密码长度不能少于6位', trigger: 'blur' },
-      ],
-      confirmPassword: [
-        { required: true, message: '请再次输入新密码', trigger: 'blur' },
-        {
-          validator: (rule, value, callback) => {
-            if (value !== passwordForm.newPassword) {
-              callback(new Error('两次输入的密码不一致'))
-            } else {
-              callback()
-            }
+    const passwordRules = computed(() => {
+      const rules = {
+        newPassword: [
+          { required: true, message: '请输入新密码', trigger: 'blur' },
+          { min: 6, message: '密码长度不能少于6位', trigger: 'blur' },
+        ],
+        confirmPassword: [
+          { required: true, message: '请再次输入新密码', trigger: 'blur' },
+          {
+            validator: (rule, value, callback) => {
+              if (value !== passwordForm.newPassword) {
+                callback(new Error('两次输入的密码不一致'))
+              } else {
+                callback()
+              }
+            },
+            trigger: 'blur',
           },
-          trigger: 'blur',
-        },
-      ],
-    }
+        ],
+      }
+      
+      // 如果需要旧密码，添加旧密码验证规则
+      if (needOldPassword.value) {
+        rules.oldPassword = [
+          { required: true, message: '请输入旧密码', trigger: 'blur' },
+        ]
+      }
+      
+      return rules
+    })
     
     const loadData = async () => {
       loading.value = true
@@ -303,6 +351,11 @@ export default {
     }
     
     const handleEdit = (row) => {
+      // 非管理员不能编辑
+      if (!isAdmin.value) {
+        ElMessage.warning('您只能修改自己的密码')
+        return
+      }
       currentUserId.value = row.id
       Object.assign(form, {
         id: row.id,
@@ -338,7 +391,13 @@ export default {
     }
     
     const handleChangePassword = (row) => {
-      currentUserId.value = row.id
+      // 非管理员只能修改自己的密码
+      if (!isAdmin.value && row.username !== currentUsername.value) {
+        ElMessage.warning('您只能修改自己的密码')
+        return
+      }
+      
+      currentPasswordUserId.value = row.id
       resetPasswordForm()
       passwordDialogVisible.value = true
     }
@@ -387,9 +446,16 @@ export default {
       await passwordFormRef.value.validate(async (valid) => {
         if (valid) {
           try {
-            const response = await request.post(`/user/${currentUserId.value}/password`, {
+            // 根据是否需要旧密码来决定请求数据
+            const requestData = {
               newPassword: passwordForm.newPassword,
-            })
+            }
+            
+            if (needOldPassword.value) {
+              requestData.oldPassword = passwordForm.oldPassword
+            }
+            
+            const response = await request.post(`/user/${currentPasswordUserId.value}/password`, requestData)
             
             if (response.code === 200) {
               ElMessage.success('修改密码成功')
@@ -422,6 +488,7 @@ export default {
         newPassword: '',
         confirmPassword: '',
       })
+      currentPasswordUserId.value = null
       if (passwordFormRef.value) {
         passwordFormRef.value.resetFields()
       }
@@ -457,6 +524,8 @@ export default {
       passwordForm,
       rules,
       passwordRules,
+      needOldPassword,
+      currentUsername,
       loadData,
       handleAdd,
       handleEdit,
@@ -512,4 +581,6 @@ export default {
   justify-content: flex-end;
 }
 </style>
+
+
 
