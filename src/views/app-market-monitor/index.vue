@@ -185,27 +185,82 @@ export default {
       return textMap[status] || status
     }
 
+    // 将Tab名称映射到market_brand
+    const getMarketBrand = (tabName) => {
+      const marketMap = {
+        appstore: 'apple',
+        googleplay: 'googleplay',
+        huawei: 'huawei',
+        xiaomi: 'xiaomi',
+      }
+      return marketMap[tabName] || tabName
+    }
+
+    // 将API返回的数据映射到表格数据
+    const mapApiDataToTableData = (apiData) => {
+      if (!apiData || !Array.isArray(apiData)) {
+        return []
+      }
+      
+      return apiData.map((item, index) => {
+        // 根据应用类别筛选
+        const appType = item.app_type || ''
+        const isApp = appType !== '游戏'
+        const isGame = appType === '游戏'
+        
+        // 如果选择了应用类别筛选，需要过滤
+        if (selectedCategory.value === 'app' && !isApp) {
+          return null
+        }
+        if (selectedCategory.value === 'game' && !isGame) {
+          return null
+        }
+        
+        return {
+          rank: index + 1,
+          appName: item.app_name || '-',
+          category: item.app_type || '-',
+          description: item.app_description || '-',
+          currentVersion: item.app_version || '-',
+          updateDate: item.date || '-',
+          rating: null, // API返回数据中没有评分
+          collectionStatus: 'notCollected', // 默认未采集
+          testVersion: '-', // 默认值
+        }
+      }).filter(item => item !== null) // 过滤掉被筛选掉的数据
+    }
+
     const loadData = async () => {
+      // 如果选中的是禁用的Tab，不加载数据
+      if (activeTab.value === 'googleplay') {
+        return
+      }
+      
       loading.value = true
       try {
-        // TODO: 替换为实际的API接口
-        // const response = await request.get('/app-market-monitor/page', {
-        //   params: {
-        //     current: pagination.current,
-        //     size: pagination.size,
-        //     market: activeTab.value,
-        //     date: selectedDate.value,
-        //     category: selectedCategory.value,
-        //   },
-        // })
-        // tableData.value = response.data.records || []
-        // pagination.total = response.data.total || 0
+        const marketBrand = getMarketBrand(activeTab.value)
+        const response = await request.post('/external/apps/get-daily-rank', {
+          date: selectedDate.value,
+          market_brand: marketBrand,
+        })
         
-        // 模拟数据
-        tableData.value = []
-        pagination.total = 0
+        if (response.code === 200 && response.data && response.data.data) {
+          // 映射API数据到表格数据
+          const allData = mapApiDataToTableData(response.data.data)
+          
+          // 前端分页处理
+          const start = (pagination.current - 1) * pagination.size
+          const end = start + pagination.size
+          tableData.value = allData.slice(start, end)
+          pagination.total = allData.length
+        } else {
+          tableData.value = []
+          pagination.total = 0
+        }
       } catch (error) {
         ElMessage.error(t('appMarketMonitor.loadDataFailed'))
+        tableData.value = []
+        pagination.total = 0
       } finally {
         loading.value = false
       }
