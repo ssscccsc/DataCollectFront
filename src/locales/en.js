@@ -821,6 +821,17 @@ export default {
     unavailable: 'Unavailable',
     loadDataFailed: 'Load data failed',
     viewDetailNotImplemented: 'View detail feature not implemented',
+    appStore: 'App Store',
+    googlePlay: 'Google Play',
+    huaweiMarket: 'Huawei AppGallery',
+    xiaomiMarket: 'Xiaomi App Store',
+    selectDate: 'Select Date',
+    datePlaceholder: 'Please select date',
+    today: 'Today',
+    yesterday: 'Yesterday',
+    appCategory: 'App Category',
+    app: 'App',
+    game: 'Game',
   },
   
   // APP Version Change

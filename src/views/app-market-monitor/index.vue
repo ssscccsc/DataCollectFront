@@ -6,6 +6,62 @@
     </div>
 
     <el-card>
+      <!-- Tab页 -->
+      <el-tabs v-model="activeTab" @tab-change="handleTabChange">
+        <el-tab-pane :label="$t('appMarketMonitor.appStore')" name="appstore">
+          <template #label>
+            <span>{{ $t('appMarketMonitor.appStore') }}</span>
+          </template>
+        </el-tab-pane>
+        <el-tab-pane :label="$t('appMarketMonitor.googlePlay')" name="googleplay">
+          <template #label>
+            <span>{{ $t('appMarketMonitor.googlePlay') }}</span>
+          </template>
+        </el-tab-pane>
+        <el-tab-pane :label="$t('appMarketMonitor.huaweiMarket')" name="huawei">
+          <template #label>
+            <span>{{ $t('appMarketMonitor.huaweiMarket') }}</span>
+          </template>
+        </el-tab-pane>
+        <el-tab-pane :label="$t('appMarketMonitor.xiaomiMarket')" name="xiaomi">
+          <template #label>
+            <span>{{ $t('appMarketMonitor.xiaomiMarket') }}</span>
+          </template>
+        </el-tab-pane>
+      </el-tabs>
+
+      <!-- 数据筛选 -->
+      <div class="filter-section">
+        <div class="filter-item">
+          <span class="filter-label">{{ $t('appMarketMonitor.selectDate') }}：</span>
+          <el-date-picker
+            v-model="selectedDate"
+            type="date"
+            :placeholder="$t('appMarketMonitor.datePlaceholder')"
+            format="YYYY-MM-DD"
+            value-format="YYYY-MM-DD"
+            style="width: 200px; margin-right: 10px;"
+            @change="handleDateChange"
+          />
+          <el-button @click="handleTodayClick" :type="isToday ? 'primary' : ''">
+            {{ $t('appMarketMonitor.today') }}
+          </el-button>
+          <el-button @click="handleYesterdayClick" :type="isYesterday ? 'primary' : ''" style="margin-left: 10px;">
+            {{ $t('appMarketMonitor.yesterday') }}
+          </el-button>
+        </div>
+        <div class="filter-item" style="margin-left: 30px;">
+          <span class="filter-label">{{ $t('appMarketMonitor.appCategory') }}：</span>
+          <el-button @click="handleCategoryChange('app')" :type="selectedCategory === 'app' ? 'primary' : ''">
+            {{ $t('appMarketMonitor.app') }}
+          </el-button>
+          <el-button @click="handleCategoryChange('game')" :type="selectedCategory === 'game' ? 'primary' : ''" style="margin-left: 10px;">
+            {{ $t('appMarketMonitor.game') }}
+          </el-button>
+        </div>
+      </div>
+
+      <!-- 搜索和操作 -->
       <div class="table-operations">
         <el-input
           v-model="searchKeyword"
@@ -32,7 +88,6 @@
       <el-table :data="tableData" v-loading="loading" style="width: 100%">
         <el-table-column prop="appName" :label="$t('appMarketMonitor.appName')" width="200" />
         <el-table-column prop="packageName" :label="$t('appMarketMonitor.packageName')" width="250" />
-        <el-table-column prop="market" :label="$t('appMarketMonitor.market')" width="150" />
         <el-table-column prop="currentVersion" :label="$t('appMarketMonitor.currentVersion')" width="150" />
         <el-table-column prop="updateTime" :label="$t('appMarketMonitor.updateTime')" width="180" />
         <el-table-column prop="status" :label="$t('appMarketMonitor.status')" width="100">
@@ -68,7 +123,7 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { Search, Refresh } from '@element-plus/icons-vue'
@@ -85,11 +140,47 @@ export default {
     const loading = ref(false)
     const tableData = ref([])
     const searchKeyword = ref('')
+    const activeTab = ref('appstore')
+    const selectedDate = ref('')
+    const selectedCategory = ref('app')
 
     const pagination = reactive({
       current: 1,
       size: 10,
       total: 0,
+    })
+
+    // 格式化日期为 YYYY-MM-DD
+    const formatDate = (date) => {
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      return `${year}-${month}-${day}`
+    }
+
+    // 获取今天的日期
+    const getToday = () => {
+      return formatDate(new Date())
+    }
+
+    // 获取昨天的日期
+    const getYesterday = () => {
+      const yesterday = new Date()
+      yesterday.setDate(yesterday.getDate() - 1)
+      return formatDate(yesterday)
+    }
+
+    // 初始化日期为今天
+    selectedDate.value = getToday()
+
+    // 判断是否选择了今天
+    const isToday = computed(() => {
+      return selectedDate.value === getToday()
+    })
+
+    // 判断是否选择了昨天
+    const isYesterday = computed(() => {
+      return selectedDate.value === getYesterday()
     })
 
     const loadData = async () => {
@@ -101,6 +192,9 @@ export default {
         //     current: pagination.current,
         //     size: pagination.size,
         //     keyword: searchKeyword.value,
+        //     market: activeTab.value,
+        //     date: selectedDate.value,
+        //     category: selectedCategory.value,
         //   },
         // })
         // tableData.value = response.data.records || []
@@ -117,6 +211,34 @@ export default {
     }
 
     const handleSearch = () => {
+      pagination.current = 1
+      loadData()
+    }
+
+    const handleTabChange = (tabName) => {
+      pagination.current = 1
+      loadData()
+    }
+
+    const handleDateChange = (date) => {
+      pagination.current = 1
+      loadData()
+    }
+
+    const handleTodayClick = () => {
+      selectedDate.value = getToday()
+      pagination.current = 1
+      loadData()
+    }
+
+    const handleYesterdayClick = () => {
+      selectedDate.value = getYesterday()
+      pagination.current = 1
+      loadData()
+    }
+
+    const handleCategoryChange = (category) => {
+      selectedCategory.value = category
       pagination.current = 1
       loadData()
     }
@@ -146,8 +268,18 @@ export default {
       tableData,
       searchKeyword,
       pagination,
+      activeTab,
+      selectedDate,
+      selectedCategory,
+      isToday,
+      isYesterday,
       loadData,
       handleSearch,
+      handleTabChange,
+      handleDateChange,
+      handleTodayClick,
+      handleYesterdayClick,
+      handleCategoryChange,
       handleSizeChange,
       handleCurrentChange,
       handleViewDetail,
@@ -178,8 +310,30 @@ export default {
   margin: 0;
 }
 
+.filter-section {
+  margin: 20px 0;
+  padding: 15px;
+  background-color: #f5f7fa;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.filter-item {
+  display: flex;
+  align-items: center;
+}
+
+.filter-label {
+  font-size: 14px;
+  color: #606266;
+  margin-right: 10px;
+  white-space: nowrap;
+}
+
 .table-operations {
-  margin-bottom: 20px;
+  margin: 20px 0;
   display: flex;
   align-items: center;
 }

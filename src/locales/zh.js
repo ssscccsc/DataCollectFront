@@ -821,6 +821,17 @@ export default {
     unavailable: '不可用',
     loadDataFailed: '加载数据失败',
     viewDetailNotImplemented: '查看详情功能待实现',
+    appStore: 'App Store',
+    googlePlay: 'Google Play',
+    huaweiMarket: '华为应用市场',
+    xiaomiMarket: '小米应用市场',
+    selectDate: '选择日期',
+    datePlaceholder: '请选择日期',
+    today: '今天',
+    yesterday: '昨天',
+    appCategory: '应用类别',
+    app: '应用',
+    game: '游戏',
   },
   
   // APP版本变更
