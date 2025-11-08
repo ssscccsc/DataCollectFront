@@ -69,27 +69,27 @@
         </el-button>
       </div>
 
-      <el-table :data="tableData" v-loading="loading" style="width: 100%">
-        <el-table-column prop="rank" :label="$t('appMarketMonitor.rank')" width="80" align="center" />
-        <el-table-column prop="appName" :label="$t('appMarketMonitor.appName')" width="200" />
-        <el-table-column prop="category" :label="$t('appMarketMonitor.category')" width="100" />
-        <el-table-column prop="description" :label="$t('appMarketMonitor.description')" width="300" show-overflow-tooltip />
-        <el-table-column prop="currentVersion" :label="$t('appMarketMonitor.currentVersion')" width="150" />
-        <el-table-column prop="updateDate" :label="$t('appMarketMonitor.updateDate')" width="120" />
-        <el-table-column prop="rating" :label="$t('appMarketMonitor.rating')" width="100" align="center">
+      <el-table :data="tableData" v-loading="loading" class="full-width-table">
+        <el-table-column prop="rank" :label="$t('appMarketMonitor.rank')" min-width="80" width="80" align="center" />
+        <el-table-column prop="appName" :label="$t('appMarketMonitor.appName')" min-width="150" />
+        <el-table-column prop="category" :label="$t('appMarketMonitor.category')" min-width="100" width="100" />
+        <el-table-column prop="description" :label="$t('appMarketMonitor.description')" min-width="200" show-overflow-tooltip />
+        <el-table-column prop="currentVersion" :label="$t('appMarketMonitor.currentVersion')" min-width="120" />
+        <el-table-column prop="updateDate" :label="$t('appMarketMonitor.updateDate')" min-width="120" width="120" />
+        <el-table-column prop="rating" :label="$t('appMarketMonitor.rating')" min-width="100" width="100" align="center">
           <template #default="scope">
             <span v-if="scope.row.rating">{{ scope.row.rating }}</span>
             <span v-else>-</span>
           </template>
         </el-table-column>
-        <el-table-column prop="collectionStatus" :label="$t('appMarketMonitor.collectionStatus')" width="120" align="center">
+        <el-table-column prop="collectionStatus" :label="$t('appMarketMonitor.collectionStatus')" min-width="120" width="120" align="center">
           <template #default="scope">
             <el-tag :type="getCollectionStatusType(scope.row.collectionStatus)">
               {{ getCollectionStatusText(scope.row.collectionStatus) }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="testVersion" :label="$t('appMarketMonitor.testVersion')" width="150" />
+        <el-table-column prop="testVersion" :label="$t('appMarketMonitor.testVersion')" min-width="120" />
       </el-table>
 
       <div class="pagination">
@@ -331,6 +331,10 @@ export default {
   margin: 20px 0;
   display: flex;
   align-items: center;
+}
+
+.full-width-table {
+  width: 100%;
 }
 
 .pagination {
