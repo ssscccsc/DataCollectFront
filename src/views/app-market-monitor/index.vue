@@ -61,24 +61,8 @@
         </div>
       </div>
 
-      <!-- 搜索和操作 -->
+      <!-- 操作按钮 -->
       <div class="table-operations">
-        <el-input
-          v-model="searchKeyword"
-          :placeholder="$t('appMarketMonitor.searchPlaceholder')"
-          style="width: 300px; margin-right: 10px;"
-          clearable
-          @clear="handleSearch"
-          @keyup.enter="handleSearch"
-        >
-          <template #prefix>
-            <el-icon><Search /></el-icon>
-          </template>
-        </el-input>
-        <el-button type="primary" @click="handleSearch">
-          <el-icon><Search /></el-icon>
-          {{ $t('common.search') }}
-        </el-button>
         <el-button @click="loadData">
           <el-icon><Refresh /></el-icon>
           {{ $t('common.refresh') }}
@@ -86,24 +70,26 @@
       </div>
 
       <el-table :data="tableData" v-loading="loading" style="width: 100%">
+        <el-table-column prop="rank" :label="$t('appMarketMonitor.rank')" width="80" align="center" />
         <el-table-column prop="appName" :label="$t('appMarketMonitor.appName')" width="200" />
-        <el-table-column prop="packageName" :label="$t('appMarketMonitor.packageName')" width="250" />
+        <el-table-column prop="category" :label="$t('appMarketMonitor.category')" width="100" />
+        <el-table-column prop="description" :label="$t('appMarketMonitor.description')" width="300" show-overflow-tooltip />
         <el-table-column prop="currentVersion" :label="$t('appMarketMonitor.currentVersion')" width="150" />
-        <el-table-column prop="updateTime" :label="$t('appMarketMonitor.updateTime')" width="180" />
-        <el-table-column prop="status" :label="$t('appMarketMonitor.status')" width="100">
+        <el-table-column prop="updateDate" :label="$t('appMarketMonitor.updateDate')" width="120" />
+        <el-table-column prop="rating" :label="$t('appMarketMonitor.rating')" width="100" align="center">
           <template #default="scope">
-            <el-tag :type="scope.row.status === 'available' ? 'success' : 'danger'">
-              {{ scope.row.status === 'available' ? $t('appMarketMonitor.available') : $t('appMarketMonitor.unavailable') }}
+            <span v-if="scope.row.rating">{{ scope.row.rating }}</span>
+            <span v-else>-</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="collectionStatus" :label="$t('appMarketMonitor.collectionStatus')" width="120" align="center">
+          <template #default="scope">
+            <el-tag :type="getCollectionStatusType(scope.row.collectionStatus)">
+              {{ getCollectionStatusText(scope.row.collectionStatus) }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column :label="$t('common.operations')" width="150" fixed="right">
-          <template #default="scope">
-            <el-button type="primary" size="small" @click="handleViewDetail(scope.row)">
-              {{ $t('common.view') }}
-            </el-button>
-          </template>
-        </el-table-column>
+        <el-table-column prop="testVersion" :label="$t('appMarketMonitor.testVersion')" width="150" />
       </el-table>
 
       <div class="pagination">
@@ -126,20 +112,18 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
-import { Search, Refresh } from '@element-plus/icons-vue'
+import { Refresh } from '@element-plus/icons-vue'
 import request from '@/utils/request'
 
 export default {
   name: 'AppMarketMonitor',
   components: {
-    Search,
     Refresh,
   },
   setup() {
     const { t } = useI18n()
     const loading = ref(false)
     const tableData = ref([])
-    const searchKeyword = ref('')
     const activeTab = ref('appstore')
     const selectedDate = ref('')
     const selectedCategory = ref('app')
@@ -183,6 +167,24 @@ export default {
       return selectedDate.value === getYesterday()
     })
 
+    const getCollectionStatusType = (status) => {
+      const typeMap = {
+        collected: 'success',
+        notCollected: 'info',
+        collecting: 'warning',
+      }
+      return typeMap[status] || 'info'
+    }
+
+    const getCollectionStatusText = (status) => {
+      const textMap = {
+        collected: t('appMarketMonitor.collected'),
+        notCollected: t('appMarketMonitor.notCollected'),
+        collecting: t('appMarketMonitor.collecting'),
+      }
+      return textMap[status] || status
+    }
+
     const loadData = async () => {
       loading.value = true
       try {
@@ -191,7 +193,6 @@ export default {
         //   params: {
         //     current: pagination.current,
         //     size: pagination.size,
-        //     keyword: searchKeyword.value,
         //     market: activeTab.value,
         //     date: selectedDate.value,
         //     category: selectedCategory.value,
@@ -208,11 +209,6 @@ export default {
       } finally {
         loading.value = false
       }
-    }
-
-    const handleSearch = () => {
-      pagination.current = 1
-      loadData()
     }
 
     const handleTabChange = (tabName) => {
@@ -266,7 +262,6 @@ export default {
     return {
       loading,
       tableData,
-      searchKeyword,
       pagination,
       activeTab,
       selectedDate,
@@ -274,7 +269,6 @@ export default {
       isToday,
       isYesterday,
       loadData,
-      handleSearch,
       handleTabChange,
       handleDateChange,
       handleTodayClick,
@@ -282,7 +276,8 @@ export default {
       handleCategoryChange,
       handleSizeChange,
       handleCurrentChange,
-      handleViewDetail,
+      getCollectionStatusType,
+      getCollectionStatusText,
     }
   },
 }
