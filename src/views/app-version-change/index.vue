@@ -30,7 +30,21 @@
       </div>
 
       <el-table :data="tableData" v-loading="loading" style="width: 100%">
-        <el-table-column prop="appName" :label="$t('appVersionChange.appName')" width="180" show-overflow-tooltip />
+        <el-table-column prop="appName" :label="$t('appVersionChange.appName')" min-width="200">
+          <template #default="scope">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <img 
+                v-if="scope.row.icon" 
+                :src="`data:image/png;base64,${scope.row.icon}`" 
+                alt="App Icon" 
+                style="width: 40px; height: 40px; object-fit: contain; border-radius: 6px; flex-shrink: 0;"
+              />
+              <span style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                {{ scope.row.appName || '-' }}
+              </span>
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column prop="category" :label="$t('appVersionChange.category')" width="120" />
         <el-table-column prop="description" :label="$t('appVersionChange.description')" width="200" show-overflow-tooltip />
         <el-table-column prop="version" :label="$t('appVersionChange.version')" width="120" />

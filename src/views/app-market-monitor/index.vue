@@ -71,18 +71,21 @@
 
       <el-table :data="tableData" v-loading="loading" class="full-width-table">
         <el-table-column prop="rank" :label="$t('appMarketMonitor.rank')" min-width="80" width="80" align="center" />
-        <el-table-column prop="icon" :label="$t('appMarketMonitor.icon')" width="80" align="center">
+        <el-table-column prop="appName" :label="$t('appMarketMonitor.appName')" min-width="200">
           <template #default="scope">
-            <img 
-              v-if="scope.row.icon" 
-              :src="`data:image/png;base64,${scope.row.icon}`" 
-              alt="App Icon" 
-              style="width: 50px; height: 50px; object-fit: contain; border-radius: 8px;"
-            />
-            <span v-else style="color: #909399;">-</span>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <img 
+                v-if="scope.row.icon" 
+                :src="`data:image/png;base64,${scope.row.icon}`" 
+                alt="App Icon" 
+                style="width: 40px; height: 40px; object-fit: contain; border-radius: 6px; flex-shrink: 0;"
+              />
+              <span style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                {{ scope.row.appName || '-' }}
+              </span>
+            </div>
           </template>
         </el-table-column>
-        <el-table-column prop="appName" :label="$t('appMarketMonitor.appName')" min-width="150" />
         <el-table-column prop="category" :label="$t('appMarketMonitor.category')" min-width="100" width="100" />
         <el-table-column prop="description" :label="$t('appMarketMonitor.description')" min-width="200" show-overflow-tooltip />
         <el-table-column prop="currentVersion" :label="$t('appMarketMonitor.currentVersion')" min-width="120" />
