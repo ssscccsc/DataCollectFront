@@ -19,6 +19,7 @@ export default {
     warning: '警告',
     info: '提示',
     view: '查看',
+    operations: '操作',
   },
   
   // 导航菜单

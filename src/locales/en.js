@@ -19,6 +19,7 @@ export default {
     warning: 'Warning',
     info: 'Info',
     view: 'View',
+    operations: 'Operations',
   },
   
   // Navigation Menu
