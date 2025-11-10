@@ -71,6 +71,17 @@
 
       <el-table :data="tableData" v-loading="loading" class="full-width-table">
         <el-table-column prop="rank" :label="$t('appMarketMonitor.rank')" min-width="80" width="80" align="center" />
+        <el-table-column prop="icon" :label="$t('appMarketMonitor.icon')" width="80" align="center">
+          <template #default="scope">
+            <img 
+              v-if="scope.row.icon" 
+              :src="`data:image/png;base64,${scope.row.icon}`" 
+              alt="App Icon" 
+              style="width: 50px; height: 50px; object-fit: contain; border-radius: 8px;"
+            />
+            <span v-else style="color: #909399;">-</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="appName" :label="$t('appMarketMonitor.appName')" min-width="150" />
         <el-table-column prop="category" :label="$t('appMarketMonitor.category')" min-width="100" width="100" />
         <el-table-column prop="description" :label="$t('appMarketMonitor.description')" min-width="200" show-overflow-tooltip />
@@ -202,32 +213,29 @@ export default {
         return []
       }
       
-      return apiData.map((item, index) => {
-        // 根据应用类别筛选
-        const appType = item.app_type || ''
-        const isApp = appType !== '游戏'
-        const isGame = appType === '游戏'
-        
-        // 如果选择了应用类别筛选，需要过滤
-        if (selectedCategory.value === 'app' && !isApp) {
-          return null
-        }
-        if (selectedCategory.value === 'game' && !isGame) {
-          return null
-        }
-        
+      return apiData.map((item) => {
         return {
-          rank: index + 1,
+          rank: item.rank || '-',
           appName: item.app_name || '-',
-          category: item.app_type || '-',
+          category: item.app_category || item.app_type || '-',
           description: item.app_description || '-',
           currentVersion: item.app_version || '-',
-          updateDate: item.date || '-',
-          rating: null, // API返回数据中没有评分
+          updateDate: item.version_update_date || item.date || '-',
+          rating: item.score || null,
           collectionStatus: 'notCollected', // 默认未采集
-          testVersion: '-', // 默认值
+          testVersion: item.dial_version || '-',
+          icon: item.icon || null, // base64编码的图标
         }
-      }).filter(item => item !== null) // 过滤掉被筛选掉的数据
+      })
+    }
+
+    // 将类别选择转换为API参数
+    const getCategoryParam = (category) => {
+      const categoryMap = {
+        app: 'application',
+        game: 'game',
+      }
+      return categoryMap[category] || category
     }
 
     const loadData = async () => {
@@ -239,9 +247,11 @@ export default {
       loading.value = true
       try {
         const marketBrand = getMarketBrand(activeTab.value)
+        const categoryParam = getCategoryParam(selectedCategory.value)
         const response = await request.post('/external/apps/get-daily-rank', {
           date: selectedDate.value,
           market_brand: marketBrand,
+          category: categoryParam,
         })
         
         if (response.code === 200 && response.data && response.data.data) {

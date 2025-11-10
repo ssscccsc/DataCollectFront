@@ -825,6 +825,7 @@ export default {
     app: '应用',
     game: '游戏',
     rank: '排名',
+    icon: '图标',
     category: '类别',
     description: '简介',
     updateDate: '更新日期',

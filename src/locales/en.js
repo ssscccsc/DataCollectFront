@@ -825,6 +825,7 @@ export default {
     app: 'App',
     game: 'Game',
     rank: 'Rank',
+    icon: 'Icon',
     category: 'Category',
     description: 'Description',
     updateDate: 'Update Date',
