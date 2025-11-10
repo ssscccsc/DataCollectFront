@@ -30,22 +30,30 @@
       </div>
 
       <el-table :data="tableData" v-loading="loading" style="width: 100%">
-        <el-table-column prop="appName" :label="$t('appVersionChange.appName')" width="200" />
-        <el-table-column prop="packageName" :label="$t('appVersionChange.packageName')" width="250" />
-        <el-table-column prop="oldVersion" :label="$t('appVersionChange.oldVersion')" width="150" />
-        <el-table-column prop="newVersion" :label="$t('appVersionChange.newVersion')" width="150" />
-        <el-table-column prop="changeTime" :label="$t('appVersionChange.changeTime')" width="180" />
-        <el-table-column prop="changeType" :label="$t('appVersionChange.changeType')" width="120">
+        <el-table-column prop="appName" :label="$t('appVersionChange.appName')" width="180" show-overflow-tooltip />
+        <el-table-column prop="category" :label="$t('appVersionChange.category')" width="120" />
+        <el-table-column prop="description" :label="$t('appVersionChange.description')" width="200" show-overflow-tooltip />
+        <el-table-column prop="version" :label="$t('appVersionChange.version')" width="120" />
+        <el-table-column prop="updateTime" :label="$t('appVersionChange.updateTime')" width="180">
           <template #default="scope">
-            <el-tag :type="getChangeTypeTag(scope.row.changeType)">
-              {{ getChangeTypeText(scope.row.changeType) }}
-            </el-tag>
+            {{ formatDateTime(scope.row.updateTime) }}
           </template>
         </el-table-column>
-        <el-table-column :label="$t('common.operations')" width="150" fixed="right">
+        <el-table-column prop="changeRecord" :label="$t('appVersionChange.changeRecord')" min-width="200" show-overflow-tooltip>
+          <template #default="scope">
+            <el-tag v-if="scope.row.changeRecord" type="info" size="small">
+              {{ scope.row.changeRecord }}
+            </el-tag>
+            <span v-else style="color: #909399;">-</span>
+          </template>
+        </el-table-column>
+        <el-table-column :label="$t('common.operations')" width="200" fixed="right">
           <template #default="scope">
             <el-button type="primary" size="small" @click="handleViewDetail(scope.row)">
               {{ $t('common.view') }}
+            </el-button>
+            <el-button type="info" size="small" @click="handleViewChangeHistory(scope.row)">
+              {{ $t('appVersionChange.changeHistory') }}
             </el-button>
           </template>
         </el-table-column>
@@ -150,9 +158,28 @@ export default {
       loadData()
     }
 
+    const formatDateTime = (dateTime) => {
+      if (!dateTime) {
+        return '-'
+      }
+      const date = new Date(dateTime)
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      const hours = String(date.getHours()).padStart(2, '0')
+      const minutes = String(date.getMinutes()).padStart(2, '0')
+      const seconds = String(date.getSeconds()).padStart(2, '0')
+      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+    }
+
     const handleViewDetail = (row) => {
       // TODO: 实现查看详情功能
       ElMessage.info(t('appVersionChange.viewDetailNotImplemented'))
+    }
+
+    const handleViewChangeHistory = (row) => {
+      // TODO: 实现查看变更历史功能
+      ElMessage.info(t('appVersionChange.viewChangeHistoryNotImplemented'))
     }
 
     onMounted(() => {
@@ -169,6 +196,8 @@ export default {
       handleSizeChange,
       handleCurrentChange,
       handleViewDetail,
+      handleViewChangeHistory,
+      formatDateTime,
       getChangeTypeTag,
       getChangeTypeText,
     }
@@ -210,4 +239,5 @@ export default {
   justify-content: flex-end;
 }
 </style>
+
 

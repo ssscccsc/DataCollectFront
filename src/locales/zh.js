@@ -839,8 +839,14 @@ export default {
   // APP版本变更
   appVersionChange: {
     description: '监控APP版本变更情况，包括版本更新历史',
-    searchPlaceholder: '请输入应用名称或包名',
+    searchPlaceholder: '请输入应用名称',
     appName: '应用名称',
+    category: '类别',
+    description: '简介',
+    version: '版本',
+    updateTime: '更新时间',
+    changeRecord: '变更记录',
+    changeHistory: '变更历史',
     packageName: '包名',
     oldVersion: '旧版本',
     newVersion: '新版本',
@@ -851,5 +857,6 @@ export default {
     patchUpdate: '补丁更新',
     loadDataFailed: '加载数据失败',
     viewDetailNotImplemented: '查看详情功能待实现',
+    viewChangeHistoryNotImplemented: '查看变更历史功能待实现',
   },
 }

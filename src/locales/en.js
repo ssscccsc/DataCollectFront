@@ -839,8 +839,14 @@ export default {
   // APP Version Change
   appVersionChange: {
     description: 'Monitor APP version changes, including version update history',
-    searchPlaceholder: 'Please enter app name or package name',
+    searchPlaceholder: 'Please enter app name',
     appName: 'App Name',
+    category: 'Category',
+    description: 'Description',
+    version: 'Version',
+    updateTime: 'Update Time',
+    changeRecord: 'Change Record',
+    changeHistory: 'Change History',
     packageName: 'Package Name',
     oldVersion: 'Old Version',
     newVersion: 'New Version',
@@ -851,5 +857,6 @@ export default {
     patchUpdate: 'Patch Update',
     loadDataFailed: 'Load data failed',
     viewDetailNotImplemented: 'View detail feature not implemented',
+    viewChangeHistoryNotImplemented: 'View change history feature not implemented',
   },
 }
