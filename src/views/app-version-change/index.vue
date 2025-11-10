@@ -30,7 +30,7 @@
       </div>
 
       <el-table :data="tableData" v-loading="loading" style="width: 100%">
-        <el-table-column prop="appName" :label="$t('appVersionChange.appName')" min-width="200">
+        <el-table-column prop="appName" :label="$t('appVersionChange.appName')" width="15%">
           <template #default="scope">
             <div style="display: flex; align-items: center; gap: 10px;">
               <img 
@@ -45,15 +45,15 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="category" :label="$t('appVersionChange.category')" width="120" />
-        <el-table-column prop="description" :label="$t('appVersionChange.description')" width="200" show-overflow-tooltip />
-        <el-table-column prop="version" :label="$t('appVersionChange.version')" width="120" />
-        <el-table-column prop="updateTime" :label="$t('appVersionChange.updateTime')" width="180">
+        <el-table-column prop="category" :label="$t('appVersionChange.category')" width="10%" />
+        <el-table-column prop="description" :label="$t('appVersionChange.description')" width="25%" show-overflow-tooltip />
+        <el-table-column prop="version" :label="$t('appVersionChange.version')" width="15%" />
+        <el-table-column prop="updateTime" :label="$t('appVersionChange.updateTime')" width="10%">
           <template #default="scope">
             {{ formatDateTime(scope.row.updateTime) }}
           </template>
         </el-table-column>
-        <el-table-column prop="changeRecord" :label="$t('appVersionChange.changeRecord')" min-width="200" show-overflow-tooltip>
+        <el-table-column prop="changeRecord" :label="$t('appVersionChange.changeRecord')" width="20%" show-overflow-tooltip>
           <template #default="scope">
             <el-tag v-if="scope.row.changeRecord" type="info" size="small">
               {{ scope.row.changeRecord }}
@@ -61,14 +61,16 @@
             <span v-else style="color: #909399;">-</span>
           </template>
         </el-table-column>
-        <el-table-column :label="$t('common.operations')" width="200" fixed="right">
+        <el-table-column :label="$t('common.operations')" width="10%" fixed="right">
           <template #default="scope">
-            <el-button type="primary" size="small" @click="handleViewDetail(scope.row)">
-              {{ $t('common.view') }}
-            </el-button>
-            <el-button type="info" size="small" @click="handleViewChangeHistory(scope.row)">
-              {{ $t('appVersionChange.changeHistory') }}
-            </el-button>
+            <div style="display: flex; flex-direction: column; gap: 5px;">
+              <el-button type="primary" size="small" @click="handleViewDetail(scope.row)" style="width: 100%;">
+                {{ $t('common.view') }}
+              </el-button>
+              <el-button type="info" size="small" @click="handleViewChangeHistory(scope.row)" style="width: 100%;">
+                {{ $t('appVersionChange.changeHistory') }}
+              </el-button>
+            </div>
           </template>
         </el-table-column>
       </el-table>
