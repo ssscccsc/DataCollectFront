@@ -1495,6 +1495,38 @@ export default {
     const checkRouteParams = () => {
       if (route.query.action === 'add') {
         handleAdd()
+        
+        // 如果从app版本变更页面跳转过来，填充app信息
+        if (route.query.fromAppVersion === 'true') {
+          const appName = route.query.appName || ''
+          const appVersion = route.query.appVersion || ''
+          const appCategory = route.query.appCategory || ''
+          const appDescription = route.query.appDescription || ''
+          
+          // 填充app字段（应用名称）
+          if (appName) {
+            form.app = appName
+          }
+          
+          // 如果有类别，填充businessCategory
+          if (appCategory) {
+            form.businessCategory = appCategory
+          }
+          
+          // 如果有描述，填充到策略描述中
+          if (appDescription) {
+            let desc = `应用：${appName}`
+            if (appVersion) {
+              desc += `，版本：${appVersion}`
+            }
+            if (appCategory) {
+              desc += `，类别：${appCategory}`
+            }
+            desc += `\n${appDescription}`
+            form.description = desc
+          }
+        }
+        
         // 清除路由参数，避免刷新时重复触发
         router.replace({ name: 'CollectStrategy', query: {} })
       }

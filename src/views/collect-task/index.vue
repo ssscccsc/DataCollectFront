@@ -306,14 +306,16 @@
                     :value="item.id"
                   />
                 </el-select>
-                <el-button @click="handleRefreshStrategy" :loading="strategyLoading" size="default">
-                  <el-icon><Refresh /></el-icon>
-                  {{ $t('common.refresh') }}
-                </el-button>
-                <el-button type="primary" @click="handleAddStrategy" size="default">
-                  <el-icon><Plus /></el-icon>
-                  {{ $t('common.add') }}
-                </el-button>
+                <div style="display: flex; align-items: center; gap: 10px; margin-left: auto;">
+                  <el-button @click="handleRefreshStrategy" :loading="strategyLoading" size="default">
+                    <el-icon><Refresh /></el-icon>
+                    {{ $t('common.refresh') }}
+                  </el-button>
+                  <el-button v-if="fromAppVersion" type="primary" @click="handleAddStrategy" size="default">
+                    <el-icon><Plus /></el-icon>
+                    {{ $t('common.add') }}
+                  </el-button>
+                </div>
               </div>
             </el-form-item>
             <div v-if="selectedStrategy" class="strategy-info">
@@ -973,6 +975,8 @@ export default {
     const dialogTitle = ref('')
     const submitLoading = ref(false)
     const strategyLoading = ref(false)
+    const fromAppVersion = ref(false) // 是否从app版本变更页面跳转过来
+    const appInfo = ref({}) // 保存app信息
     
     // Tab相关
     const activeTab = ref('list')
@@ -1333,11 +1337,22 @@ export default {
 
     // 新增采集策略（打开新标签页）
     const handleAddStrategy = () => {
+      const query = {
+        action: 'add',
+      }
+      
+      // 如果从app版本变更页面跳转过来，传递app信息
+      if (fromAppVersion.value && appInfo.value.appName) {
+        query.fromAppVersion = 'true'
+        query.appName = appInfo.value.appName || ''
+        query.appVersion = appInfo.value.appVersion || ''
+        query.appCategory = appInfo.value.appCategory || ''
+        query.appDescription = appInfo.value.appDescription || ''
+      }
+      
       const url = router.resolve({
         name: 'CollectStrategy',
-        query: {
-          action: 'add',
-        },
+        query,
       }).href
       window.open(url, '_blank')
     }
@@ -2298,28 +2313,31 @@ export default {
     // 检查路由参数，如果来自 app 版本变更页面，自动打开新建任务对话框
     const checkRouteParams = () => {
       if (route.query.fromAppVersion === 'true') {
-        const appName = route.query.appName || ''
-        const appVersion = route.query.appVersion || ''
-        const appCategory = route.query.appCategory || ''
-        const appDescription = route.query.appDescription || ''
+        fromAppVersion.value = true
+        appInfo.value = {
+          appName: route.query.appName || '',
+          appVersion: route.query.appVersion || '',
+          appCategory: route.query.appCategory || '',
+          appDescription: route.query.appDescription || '',
+        }
         
         // 打开新建任务对话框
         handleAdd()
         
         // 填充基本信息
-        if (appName) {
-          basicForm.name = `${appName}${appVersion ? `-${appVersion}` : ''}拨测任务`
+        if (appInfo.value.appName) {
+          basicForm.name = `${appInfo.value.appName}${appInfo.value.appVersion ? `-${appInfo.value.appVersion}` : ''}拨测任务`
         }
-        if (appDescription || appCategory) {
-          let desc = `应用：${appName}`
-          if (appVersion) {
-            desc += `，版本：${appVersion}`
+        if (appInfo.value.appDescription || appInfo.value.appCategory) {
+          let desc = `应用：${appInfo.value.appName}`
+          if (appInfo.value.appVersion) {
+            desc += `，版本：${appInfo.value.appVersion}`
           }
-          if (appCategory) {
-            desc += `，类别：${appCategory}`
+          if (appInfo.value.appCategory) {
+            desc += `，类别：${appInfo.value.appCategory}`
           }
-          if (appDescription) {
-            desc += `\n描述：${appDescription}`
+          if (appInfo.value.appDescription) {
+            desc += `\n描述：${appInfo.value.appDescription}`
           }
           basicForm.description = desc
         }
@@ -2403,6 +2421,7 @@ export default {
       handleRefreshStrategy,
       handleAddStrategy,
       strategyLoading,
+      fromAppVersion,
       handleRegionChange,
       handleCountryChange,
       handleProvinceChange,
