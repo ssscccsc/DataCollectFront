@@ -107,6 +107,7 @@ export default {
     const loading = ref(false)
     const tableData = ref([])
     const searchKeyword = ref('')
+    const allData = ref([]) // 保存所有已加载的数据
 
     const pagination = reactive({
       current: 1,
@@ -165,6 +166,25 @@ export default {
       })
     }
 
+    // 根据搜索关键词和分页信息更新表格数据
+    const updateTableData = () => {
+      let filteredData = allData.value
+      
+      // 如果有搜索关键词，只从 appName 中查找
+      if (searchKeyword.value && searchKeyword.value.trim()) {
+        const keyword = searchKeyword.value.trim().toLowerCase()
+        filteredData = allData.value.filter((item) => {
+          return item.appName && item.appName.toLowerCase().includes(keyword)
+        })
+      }
+      
+      // 前端分页处理
+      const start = (pagination.current - 1) * pagination.size
+      const end = start + pagination.size
+      tableData.value = filteredData.slice(start, end)
+      pagination.total = filteredData.length
+    }
+
     const loadData = async () => {
       loading.value = true
       try {
@@ -173,34 +193,20 @@ export default {
         })
         
         if (response.code === 200 && response.message === 'success' && response.data) {
-          // 映射API数据到表格数据
-          const allData = mapApiDataToTableData(response.data)
+          // 映射API数据到表格数据并保存
+          allData.value = mapApiDataToTableData(response.data)
           
-          // 如果有搜索关键词，进行前端过滤
-          let filteredData = allData
-          if (searchKeyword.value && searchKeyword.value.trim()) {
-            const keyword = searchKeyword.value.trim().toLowerCase()
-            filteredData = allData.filter((item) => {
-              return (
-                (item.appName && item.appName.toLowerCase().includes(keyword)) ||
-                (item.category && item.category.toLowerCase().includes(keyword)) ||
-                (item.description && item.description.toLowerCase().includes(keyword)) ||
-                (item.version && item.version.toLowerCase().includes(keyword))
-              )
-            })
-          }
-          
-          // 前端分页处理
-          const start = (pagination.current - 1) * pagination.size
-          const end = start + pagination.size
-          tableData.value = filteredData.slice(start, end)
-          pagination.total = filteredData.length
+          // 重置搜索和分页
+          pagination.current = 1
+          updateTableData()
         } else {
+          allData.value = []
           tableData.value = []
           pagination.total = 0
         }
       } catch (error) {
         ElMessage.error(t('appVersionChange.loadDataFailed') || '加载数据失败')
+        allData.value = []
         tableData.value = []
         pagination.total = 0
       } finally {
@@ -210,18 +216,18 @@ export default {
 
     const handleSearch = () => {
       pagination.current = 1
-      loadData()
+      updateTableData()
     }
 
     const handleSizeChange = (size) => {
       pagination.size = size
       pagination.current = 1
-      loadData()
+      updateTableData()
     }
 
     const handleCurrentChange = (current) => {
       pagination.current = current
-      loadData()
+      updateTableData()
     }
 
     const formatDateTime = (dateTime) => {
