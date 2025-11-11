@@ -289,7 +289,19 @@
 
         <!-- 步骤2：采集策略 -->
         <div class="step-panel">
-          <h3 class="step-title">{{ $t('collectTask.collectStrategyTitle') }}</h3>
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+            <h3 class="step-title" style="margin: 0;">{{ $t('collectTask.collectStrategyTitle') }}</h3>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <el-button @click="handleRefreshStrategy" :loading="strategyLoading" size="default">
+                <el-icon><Refresh /></el-icon>
+                {{ $t('common.refresh') }}
+              </el-button>
+              <el-button v-if="fromAppVersion" type="primary" @click="handleAddStrategy" size="default">
+                <el-icon><Plus /></el-icon>
+                {{ $t('common.add') }}
+              </el-button>
+            </div>
+          </div>
           <el-form
             ref="strategyFormRef"
             :model="strategyForm"
@@ -297,26 +309,14 @@
             label-width="120px"
           >
             <el-form-item :label="$t('collectTask.collectStrategyLabel')" prop="strategyId">
-              <div style="display: flex; align-items: center; gap: 10px;">
-                <el-select v-model="strategyForm.strategyId" :placeholder="$t('collectTask.collectStrategyPlaceholder')" style="flex: 1;" @change="handleStrategyChange">
-                  <el-option
-                    v-for="item in strategyOptions"
-                    :key="item.id"
-                    :label="`${item.name} (${item.collectCount}${$t('collectTask.collectCount')})`"
-                    :value="item.id"
-                  />
-                </el-select>
-                <div style="display: flex; align-items: center; gap: 10px; margin-left: auto;">
-                  <el-button @click="handleRefreshStrategy" :loading="strategyLoading" size="default">
-                    <el-icon><Refresh /></el-icon>
-                    {{ $t('common.refresh') }}
-                  </el-button>
-                  <el-button v-if="fromAppVersion" type="primary" @click="handleAddStrategy" size="default">
-                    <el-icon><Plus /></el-icon>
-                    {{ $t('common.add') }}
-                  </el-button>
-                </div>
-              </div>
+              <el-select v-model="strategyForm.strategyId" :placeholder="$t('collectTask.collectStrategyPlaceholder')" style="width: 100%;" @change="handleStrategyChange">
+                <el-option
+                  v-for="item in strategyOptions"
+                  :key="item.id"
+                  :label="`${item.name} (${item.collectCount}${$t('collectTask.collectCount')})`"
+                  :value="item.id"
+                />
+              </el-select>
             </el-form-item>
             <div v-if="selectedStrategy" class="strategy-info">
               <h4>{{ $t('collectTask.strategyDetails') }}</h4>
