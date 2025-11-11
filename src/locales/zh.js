@@ -849,6 +849,7 @@ export default {
     updateTime: '更新时间',
     changeRecord: '变更记录',
     changeHistory: '变更历史',
+    startDialTest: '发起拨测',
     packageName: '包名',
     oldVersion: '旧版本',
     newVersion: '新版本',

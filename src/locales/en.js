@@ -849,6 +849,7 @@ export default {
     updateTime: 'Update Time',
     changeRecord: 'Change Record',
     changeHistory: 'Change History',
+    startDialTest: 'Start Dial Test',
     packageName: 'Package Name',
     oldVersion: 'Old Version',
     newVersion: 'New Version',

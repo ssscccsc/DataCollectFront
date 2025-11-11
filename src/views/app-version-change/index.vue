@@ -63,8 +63,8 @@
         </el-table-column>
         <el-table-column :label="$t('common.operations')" :min-width="columnWidths.operations" fixed="right">
           <template #default="scope">
-            <el-button type="primary" size="small" @click="handleViewDetail(scope.row)">
-              {{ $t('common.view') }}
+            <el-button type="primary" size="small" @click="handleStartDialTest(scope.row)">
+              {{ $t('appVersionChange.startDialTest') }}
             </el-button>
             <el-button type="info" size="small" @click="handleViewChangeHistory(scope.row)">
               {{ $t('appVersionChange.changeHistory') }}
@@ -93,6 +93,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 import { Search, Refresh } from '@element-plus/icons-vue'
 import request from '@/utils/request'
 
@@ -104,6 +105,7 @@ export default {
   },
   setup() {
     const { t } = useI18n()
+    const router = useRouter()
     const loading = ref(false)
     const tableData = ref([])
     const searchKeyword = ref('')
@@ -255,9 +257,18 @@ export default {
       }
     }
 
-    const handleViewDetail = (row) => {
-      // TODO: 实现查看详情功能
-      ElMessage.info(t('appVersionChange.viewDetailNotImplemented'))
+    const handleStartDialTest = (row) => {
+      // 携带 app 信息跳转到新建采集任务页面
+      router.push({
+        name: 'CollectTask',
+        query: {
+          fromAppVersion: 'true',
+          appName: row.appName || '',
+          appVersion: row.version || '',
+          appCategory: row.category || '',
+          appDescription: row.description || '',
+        },
+      })
     }
 
     const handleViewChangeHistory = (row) => {
@@ -279,7 +290,7 @@ export default {
       handleSearch,
       handleSizeChange,
       handleCurrentChange,
-      handleViewDetail,
+      handleStartDialTest,
       handleViewChangeHistory,
       formatDateTime,
       getChangeTypeTag,

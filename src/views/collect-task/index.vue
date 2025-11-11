@@ -940,15 +940,18 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted, onUnmounted, computed } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, computed, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useI18n } from 'vue-i18n'
+import { useRoute, useRouter } from 'vue-router'
 import request from '@/utils/request'
 
 export default {
   name: 'CollectTask',
   setup() {
     const { t } = useI18n()
+    const route = useRoute()
+    const router = useRouter()
     const loading = ref(false)
     const tableData = ref([])
     const dialogVisible = ref(false)
@@ -2255,10 +2258,48 @@ export default {
       }
     }
 
+    // 检查路由参数，如果来自 app 版本变更页面，自动打开新建任务对话框
+    const checkRouteParams = () => {
+      if (route.query.fromAppVersion === 'true') {
+        const appName = route.query.appName || ''
+        const appVersion = route.query.appVersion || ''
+        const appCategory = route.query.appCategory || ''
+        const appDescription = route.query.appDescription || ''
+        
+        // 打开新建任务对话框
+        handleAdd()
+        
+        // 填充基本信息
+        if (appName) {
+          basicForm.name = `${appName}${appVersion ? `-${appVersion}` : ''}拨测任务`
+        }
+        if (appDescription || appCategory) {
+          let desc = `应用：${appName}`
+          if (appVersion) {
+            desc += `，版本：${appVersion}`
+          }
+          if (appCategory) {
+            desc += `，类别：${appCategory}`
+          }
+          if (appDescription) {
+            desc += `\n描述：${appDescription}`
+          }
+          basicForm.description = desc
+        }
+        
+        // 清除路由参数，避免刷新时重复触发
+        router.replace({ name: 'CollectTask', query: {} })
+      }
+    }
+
     onMounted(() => {
       loadData()
       loadStrategyOptions()
       startAutoRefresh()
+      // 延迟检查路由参数，确保数据已加载
+      setTimeout(() => {
+        checkRouteParams()
+      }, 500)
     })
 
     // 组件卸载时清理定时器
