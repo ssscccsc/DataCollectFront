@@ -1319,6 +1319,7 @@ export default {
       // 解析JSON字符串格式的字段
       let testCaseCustomParams = {}
       let testCaseExecutionCounts = {}
+      let selectedIds = []
       
       try {
         if (row.testCaseCustomParams && typeof row.testCaseCustomParams === 'string') {
@@ -1340,6 +1341,25 @@ export default {
       } catch (error) {
         console.warn('Failed to parse testCaseExecutionCounts:', error)
         testCaseExecutionCounts = {}
+      }
+      
+      // 解析选中的用例ID列表
+      try {
+        if (row.selectedTestCaseIds && typeof row.selectedTestCaseIds === 'string') {
+          selectedIds = JSON.parse(row.selectedTestCaseIds)
+        } else if (Array.isArray(row.selectedTestCaseIds)) {
+          selectedIds = row.selectedTestCaseIds
+        }
+      } catch (error) {
+        console.warn('Failed to parse selectedTestCaseIds:', error)
+        selectedIds = []
+      }
+      
+      // 如果没有selectedTestCaseIds字段，从testCaseExecutionCounts中获取（兼容旧数据）
+      if (selectedIds.length === 0 && Object.keys(testCaseExecutionCounts).length > 0) {
+        selectedIds = Object.keys(testCaseExecutionCounts)
+          .filter(testCaseId => testCaseExecutionCounts[testCaseId] > 0)
+          .map(id => parseInt(id))
       }
       
       // 转换testCaseCustomParams，确保value是数组格式
@@ -1385,6 +1405,9 @@ export default {
         status: row.status,
       })
       
+      // 设置选中的用例ID列表
+      selectedTestCaseIds.value = selectedIds
+      
       // 编辑策略时从第一步开始
       currentStep.value = 0
       
@@ -1396,10 +1419,7 @@ export default {
             handleAppChange(row.app)
           }
           
-          // 设置已选中的用例ID列表（根据testCaseExecutionCounts）
-          const selectedIds = Object.keys(testCaseExecutionCounts).filter(
-            testCaseId => testCaseExecutionCounts[testCaseId] > 0
-          ).map(id => parseInt(id))
+          // 设置已选中的用例ID列表（优先使用selectedTestCaseIds字段）
           selectedTestCaseIds.value = selectedIds
           
           // 等待DOM更新后，设置表格的选中状态
@@ -1416,9 +1436,7 @@ export default {
         })
       } else {
         // 如果没有用例集，也要设置已选中的用例ID列表
-        selectedTestCaseIds.value = Object.keys(testCaseExecutionCounts).filter(
-          testCaseId => testCaseExecutionCounts[testCaseId] > 0
-        ).map(id => parseInt(id))
+        selectedTestCaseIds.value = selectedIds
       }
       
       dialogVisible.value = true
@@ -1496,6 +1514,7 @@ export default {
           customParams: form.customParams.length > 0 ? JSON.stringify(form.customParams) : null,
           testCaseCustomParams: Object.keys(convertedTestCaseCustomParams).length > 0 ? JSON.stringify(convertedTestCaseCustomParams) : null,
           testCaseExecutionCounts: Object.keys(selectedTestCaseExecutionCounts).length > 0 ? JSON.stringify(selectedTestCaseExecutionCounts) : null,
+          selectedTestCaseIds: JSON.stringify(selectedTestCaseIds.value),
           description: form.description,
           status: form.status,
         }
