@@ -405,6 +405,7 @@ export default {
     batchConfigTip: '批量配置说明',
     batchConfigDescription: '共 {count} 个用例，点击展开可为每个用例单独配置执行次数和用例自定义参数',
     batchConfigSuccess: '批量配置保存成功',
+    atLeastOneTestCaseRequired: '请至少选择一个用例',
     // 表单验证
     strategyNameRequired: '请输入策略名称',
     collectCountRequired: '请输入采集次数',

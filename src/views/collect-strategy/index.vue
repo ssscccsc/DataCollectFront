@@ -307,7 +307,15 @@
               </div>
               
               <div v-if="showTestCaseList" class="test-case-table">
-                <el-table :data="filteredTestCaseList" size="small" max-height="300">
+                <el-table 
+                  ref="testCaseTableRef"
+                  :data="filteredTestCaseList" 
+                  size="small" 
+                  max-height="300"
+                  row-key="id"
+                  @selection-change="handleTestCaseSelectionChange"
+                >
+                  <el-table-column type="selection" width="55" :reserve-selection="true" />
                   <el-table-column prop="name" :label="$t('collectStrategy.testCaseName')" min-width="150" />
                   <el-table-column prop="number" :label="$t('collectStrategy.testCaseNumber')" width="100" />
                   <el-table-column prop="businessCategory" :label="$t('collectStrategy.businessCategory')" width="120">
@@ -733,10 +741,12 @@ export default {
     const dialogVisible = ref(false)
     const dialogTitle = ref('')
     const formRef = ref()
+    const testCaseTableRef = ref()
     const testCaseSetOptions = ref([])
     const selectedTestCaseSet = ref(null)
     const testCaseList = ref([])
     const showTestCaseList = ref(false)
+    const selectedTestCaseIds = ref([]) // 选中的用例ID列表
     const businessCategoryOptions = ref([])
     const appOptions = ref([])
     const intentOptions = ref([])
@@ -956,6 +966,20 @@ export default {
     // 获取用例的执行次数
     const getTestCaseExecutionCount = (testCaseId) => {
       return form.testCaseExecutionCounts[testCaseId] || 0
+    }
+    
+    // 处理用例选择变化
+    const handleTestCaseSelectionChange = (selection) => {
+      selectedTestCaseIds.value = selection.map(item => item.id)
+      
+      // 勾选后默认使用（设置默认执行次数为1）
+      selection.forEach(testCase => {
+        if (!form.testCaseExecutionCounts[testCase.id] || form.testCaseExecutionCounts[testCase.id] === 0) {
+          form.testCaseExecutionCounts[testCase.id] = 1
+        }
+      })
+      
+      // 取消勾选时，如果执行次数为默认值1，可以选择是否清除（这里保留，用户可能想保留配置）
     }
     
     // 步骤控制方法
@@ -1357,7 +1381,30 @@ export default {
           if (row.app) {
             handleAppChange(row.app)
           }
+          
+          // 设置已选中的用例ID列表（根据testCaseExecutionCounts）
+          const selectedIds = Object.keys(testCaseExecutionCounts).filter(
+            testCaseId => testCaseExecutionCounts[testCaseId] > 0
+          ).map(id => parseInt(id))
+          selectedTestCaseIds.value = selectedIds
+          
+          // 等待DOM更新后，设置表格的选中状态
+          setTimeout(() => {
+            if (testCaseTableRef.value && selectedIds.length > 0) {
+              const rowsToSelect = filteredTestCaseList.value.filter(
+                testCase => selectedIds.includes(testCase.id)
+              )
+              rowsToSelect.forEach(row => {
+                testCaseTableRef.value.toggleRowSelection(row, true)
+              })
+            }
+          }, 100)
         })
+      } else {
+        // 如果没有用例集，也要设置已选中的用例ID列表
+        selectedTestCaseIds.value = Object.keys(testCaseExecutionCounts).filter(
+          testCaseId => testCaseExecutionCounts[testCaseId] > 0
+        ).map(id => parseInt(id))
       }
       
       dialogVisible.value = true
@@ -1388,11 +1435,18 @@ export default {
       try {
         await formRef.value.validate()
         
+        // 验证是否至少选中一个用例
+        if (selectedTestCaseIds.value.length === 0) {
+          ElMessage.error(t('collectStrategy.atLeastOneTestCaseRequired'))
+          return
+        }
+        
+        // 只保存勾选的用例信息
         // 转换testCaseCustomParams，将数组格式的value转换为字符串（逗号分隔）
         const convertedTestCaseCustomParams = {}
-        Object.keys(form.testCaseCustomParams).forEach(testCaseId => {
+        selectedTestCaseIds.value.forEach(testCaseId => {
           const params = form.testCaseCustomParams[testCaseId]
-          if (Array.isArray(params) && params.length > 0) {
+          if (params && Array.isArray(params) && params.length > 0) {
             convertedTestCaseCustomParams[testCaseId] = params.map(param => {
               // 如果value是数组，转换为逗号分隔的字符串
               let valueStr = ''
@@ -1409,6 +1463,14 @@ export default {
           }
         })
         
+        // 只保存勾选用例的执行次数
+        const selectedTestCaseExecutionCounts = {}
+        selectedTestCaseIds.value.forEach(testCaseId => {
+          if (form.testCaseExecutionCounts[testCaseId] && form.testCaseExecutionCounts[testCaseId] > 0) {
+            selectedTestCaseExecutionCounts[testCaseId] = form.testCaseExecutionCounts[testCaseId]
+          }
+        })
+        
         // 发送所有字段到后端
         const submitData = {
           name: form.name,
@@ -1419,7 +1481,7 @@ export default {
           intent: form.intent || null,
           customParams: form.customParams.length > 0 ? JSON.stringify(form.customParams) : null,
           testCaseCustomParams: Object.keys(convertedTestCaseCustomParams).length > 0 ? JSON.stringify(convertedTestCaseCustomParams) : null,
-          testCaseExecutionCounts: Object.keys(form.testCaseExecutionCounts).length > 0 ? JSON.stringify(form.testCaseExecutionCounts) : null,
+          testCaseExecutionCounts: Object.keys(selectedTestCaseExecutionCounts).length > 0 ? JSON.stringify(selectedTestCaseExecutionCounts) : null,
           description: form.description,
           status: form.status,
         }
@@ -1465,6 +1527,7 @@ export default {
       selectedTestCaseSet.value = null
       testCaseList.value = []
       showTestCaseList.value = false
+      selectedTestCaseIds.value = []
       selectedAppEn.value = ''
       currentStep.value = 0 // 重置步骤
       clearFilterOptions()
@@ -1613,6 +1676,8 @@ export default {
       handleSizeChange,
       handleCurrentChange,
       viewTestCaseSetDetail,
+      handleTestCaseSelectionChange,
+      selectedTestCaseIds,
     }
   },
 }
