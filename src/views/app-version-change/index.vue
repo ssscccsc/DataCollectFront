@@ -145,25 +145,64 @@ export default {
       return textMap[type] || type
     }
 
+    // 将API返回的数据映射到表格数据
+    const mapApiDataToTableData = (apiData) => {
+      if (!apiData || !Array.isArray(apiData)) {
+        return []
+      }
+      
+      return apiData.map((item) => {
+        return {
+          appName: item.app_name || '-',
+          icon: item.icon || null,
+          category: item.app_category || '-',
+          description: item.app_description || '-',
+          version: item.app_version || '-',
+          updateTime: item.version_update_date || '-',
+          changeRecord: item.change_log || '-',
+          dialVersion: item.dial_verion || '-',
+        }
+      })
+    }
+
     const loadData = async () => {
       loading.value = true
       try {
-        // TODO: 替换为实际的API接口
-        // const response = await request.get('/app-version-change/page', {
-        //   params: {
-        //     current: pagination.current,
-        //     size: pagination.size,
-        //     keyword: searchKeyword.value,
-        //   },
-        // })
-        // tableData.value = response.data.records || []
-        // pagination.total = response.data.total || 0
+        const response = await request.post('/external/apps/get_version_history', {
+          is_ios: false,
+        })
         
-        // 模拟数据
+        if (response.code === 200 && response.message === 'success' && response.data) {
+          // 映射API数据到表格数据
+          const allData = mapApiDataToTableData(response.data)
+          
+          // 如果有搜索关键词，进行前端过滤
+          let filteredData = allData
+          if (searchKeyword.value && searchKeyword.value.trim()) {
+            const keyword = searchKeyword.value.trim().toLowerCase()
+            filteredData = allData.filter((item) => {
+              return (
+                (item.appName && item.appName.toLowerCase().includes(keyword)) ||
+                (item.category && item.category.toLowerCase().includes(keyword)) ||
+                (item.description && item.description.toLowerCase().includes(keyword)) ||
+                (item.version && item.version.toLowerCase().includes(keyword))
+              )
+            })
+          }
+          
+          // 前端分页处理
+          const start = (pagination.current - 1) * pagination.size
+          const end = start + pagination.size
+          tableData.value = filteredData.slice(start, end)
+          pagination.total = filteredData.length
+        } else {
+          tableData.value = []
+          pagination.total = 0
+        }
+      } catch (error) {
+        ElMessage.error(t('appVersionChange.loadDataFailed') || '加载数据失败')
         tableData.value = []
         pagination.total = 0
-      } catch (error) {
-        ElMessage.error(t('appVersionChange.loadDataFailed'))
       } finally {
         loading.value = false
       }
@@ -189,14 +228,25 @@ export default {
       if (!dateTime) {
         return '-'
       }
-      const date = new Date(dateTime)
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, '0')
-      const day = String(date.getDate()).padStart(2, '0')
-      const hours = String(date.getHours()).padStart(2, '0')
-      const minutes = String(date.getMinutes()).padStart(2, '0')
-      const seconds = String(date.getSeconds()).padStart(2, '0')
-      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+      // 如果已经是 YYYY-MM-DD 格式，直接返回
+      if (typeof dateTime === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateTime)) {
+        return dateTime
+      }
+      try {
+        const date = new Date(dateTime)
+        if (isNaN(date.getTime())) {
+          return dateTime
+        }
+        const year = date.getFullYear()
+        const month = String(date.getMonth() + 1).padStart(2, '0')
+        const day = String(date.getDate()).padStart(2, '0')
+        const hours = String(date.getHours()).padStart(2, '0')
+        const minutes = String(date.getMinutes()).padStart(2, '0')
+        const seconds = String(date.getSeconds()).padStart(2, '0')
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+      } catch (e) {
+        return dateTime
+      }
     }
 
     const handleViewDetail = (row) => {
