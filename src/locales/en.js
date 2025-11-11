@@ -406,6 +406,7 @@ export default {
     batchConfigDescription: 'Total {count} test cases, click to expand and configure execution count and test case custom parameters for each test case',
     batchConfigSuccess: 'Batch configuration saved successfully',
     atLeastOneTestCaseRequired: 'Please select at least one test case',
+    selectTestCasesFirst: 'Please select test cases first',
     // Form Validation
     strategyNameRequired: 'Please enter strategy name',
     collectCountRequired: 'Please enter collection count',

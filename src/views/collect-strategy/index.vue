@@ -387,7 +387,7 @@
                     type="primary" 
                     size="large"
                     @click="handleNextStep"
-                    :disabled="filteredTestCaseList.length === 0"
+                    :disabled="selectedTestCaseIds.length === 0"
                   >
                     {{ $t('collectStrategy.batchConfig') }}
                     <el-icon><Setting /></el-icon>
@@ -452,13 +452,13 @@
           style="margin-bottom: 16px;"
         >
           <template #default>
-            {{ $t('collectStrategy.batchConfigDescription', { count: filteredTestCaseList.length }) }}
+            {{ $t('collectStrategy.batchConfigDescription', { count: selectedTestCases.length }) }}
           </template>
         </el-alert>
 
         <el-collapse v-model="activeBatchConfigItems" accordion>
           <el-collapse-item 
-            v-for="(testCase, index) in filteredTestCaseList" 
+            v-for="(testCase, index) in selectedTestCases" 
             :key="testCase.id"
             :name="testCase.id"
           >
@@ -982,6 +982,13 @@ export default {
       // 取消勾选时，如果执行次数为默认值1，可以选择是否清除（这里保留，用户可能想保留配置）
     }
     
+    // 获取勾选的用例列表
+    const selectedTestCases = computed(() => {
+      return filteredTestCaseList.value.filter(
+        testCase => selectedTestCaseIds.value.includes(testCase.id)
+      )
+    })
+    
     // 步骤控制方法
     const handleNextStep = async () => {
       if (currentStep.value === 0) {
@@ -991,8 +998,15 @@ export default {
         showTestCaseList.value = true
       } else {
         // 从第二步到批量配置对话框
+        // 检查是否有勾选的用例
+        if (selectedTestCaseIds.value.length === 0) {
+          ElMessage.warning(t('collectStrategy.selectTestCasesFirst'))
+          return
+        }
+        
+        // 只处理勾选的用例
         // 初始化执行次数（如果未设置，默认为1）
-        filteredTestCaseList.value.forEach(testCase => {
+        selectedTestCases.value.forEach(testCase => {
           if (!form.testCaseExecutionCounts[testCase.id]) {
             form.testCaseExecutionCounts[testCase.id] = 1
           }
@@ -1006,9 +1020,9 @@ export default {
         await loadTestCaseCustomParams()
         
         batchConfigDialogVisible.value = true
-        // 默认展开第一个
-        if (filteredTestCaseList.value.length > 0) {
-          activeBatchConfigItems.value = [filteredTestCaseList.value[0].id]
+        // 默认展开第一个勾选的用例
+        if (selectedTestCases.value.length > 0) {
+          activeBatchConfigItems.value = [selectedTestCases.value[0].id]
         }
       }
     }
@@ -1678,6 +1692,7 @@ export default {
       viewTestCaseSetDetail,
       handleTestCaseSelectionChange,
       selectedTestCaseIds,
+      selectedTestCases,
     }
   },
 }
