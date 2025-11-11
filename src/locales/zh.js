@@ -293,6 +293,8 @@ export default {
     selectAtLeastOneEnvironment: '请至少选择一个逻辑环境',
     paramNameCannotBeEmpty: '参数名不能重复',
     customParamsSaved: '公共参数保存成功',
+    strategyRefreshSuccess: '采集策略刷新成功',
+    strategyRefreshFailed: '采集策略刷新失败',
     // 操作消息
     stopSuccess: '停止成功',
     stopFailed: '停止失败',

@@ -719,12 +719,15 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Link, Plus, Delete, Setting, ArrowRight, Clock, View, InfoFilled } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute, useRouter } from 'vue-router'
 import request from '@/utils/request'
 
 export default {
   name: 'CollectStrategy',
   setup() {
     const { t } = useI18n()
+    const route = useRoute()
+    const router = useRouter()
     const loading = ref(false)
     const tableData = ref([])
     const dialogVisible = ref(false)
@@ -1488,10 +1491,23 @@ export default {
       }
     }
 
+    // 检查路由参数，如果 action=add，自动打开新增对话框
+    const checkRouteParams = () => {
+      if (route.query.action === 'add') {
+        handleAdd()
+        // 清除路由参数，避免刷新时重复触发
+        router.replace({ name: 'CollectStrategy', query: {} })
+      }
+    }
+
     onMounted(() => {
       loadData()
       loadTestCaseSetOptions()
       loadIntentOptions()
+      // 延迟检查路由参数，确保数据已加载
+      setTimeout(() => {
+        checkRouteParams()
+      }, 500)
     })
 
     return {

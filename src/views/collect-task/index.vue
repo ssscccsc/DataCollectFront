@@ -297,14 +297,24 @@
             label-width="120px"
           >
             <el-form-item :label="$t('collectTask.collectStrategyLabel')" prop="strategyId">
-              <el-select v-model="strategyForm.strategyId" :placeholder="$t('collectTask.collectStrategyPlaceholder')" style="width: 100%" @change="handleStrategyChange">
-                <el-option
-                  v-for="item in strategyOptions"
-                  :key="item.id"
-                  :label="`${item.name} (${item.collectCount}${$t('collectTask.collectCount')})`"
-                  :value="item.id"
-                />
-              </el-select>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <el-select v-model="strategyForm.strategyId" :placeholder="$t('collectTask.collectStrategyPlaceholder')" style="flex: 1;" @change="handleStrategyChange">
+                  <el-option
+                    v-for="item in strategyOptions"
+                    :key="item.id"
+                    :label="`${item.name} (${item.collectCount}${$t('collectTask.collectCount')})`"
+                    :value="item.id"
+                  />
+                </el-select>
+                <el-button @click="handleRefreshStrategy" :loading="strategyLoading" size="default">
+                  <el-icon><Refresh /></el-icon>
+                  {{ $t('common.refresh') }}
+                </el-button>
+                <el-button type="primary" @click="handleAddStrategy" size="default">
+                  <el-icon><Plus /></el-icon>
+                  {{ $t('common.add') }}
+                </el-button>
+              </div>
             </el-form-item>
             <div v-if="selectedStrategy" class="strategy-info">
               <h4>{{ $t('collectTask.strategyDetails') }}</h4>
@@ -942,12 +952,17 @@
 <script>
 import { ref, reactive, onMounted, onUnmounted, computed, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Plus, Refresh } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import request from '@/utils/request'
 
 export default {
   name: 'CollectTask',
+  components: {
+    Plus,
+    Refresh,
+  },
   setup() {
     const { t } = useI18n()
     const route = useRoute()
@@ -957,6 +972,7 @@ export default {
     const dialogVisible = ref(false)
     const dialogTitle = ref('')
     const submitLoading = ref(false)
+    const strategyLoading = ref(false)
     
     // Tab相关
     const activeTab = ref('list')
@@ -1294,15 +1310,36 @@ export default {
     }
 
     const loadStrategyOptions = async () => {
+      strategyLoading.value = true
       try {
         const res = await request({
           url: '/collect-strategy/list',
           method: 'get',
         })
         strategyOptions.value = res.data
+        ElMessage.success(t('collectTask.strategyRefreshSuccess'))
       } catch (error) {
         console.error('加载策略数据失败:', error)
+        ElMessage.error(t('collectTask.strategyRefreshFailed'))
+      } finally {
+        strategyLoading.value = false
       }
+    }
+
+    // 刷新采集策略
+    const handleRefreshStrategy = () => {
+      loadStrategyOptions()
+    }
+
+    // 新增采集策略（打开新标签页）
+    const handleAddStrategy = () => {
+      const url = router.resolve({
+        name: 'CollectStrategy',
+        query: {
+          action: 'add',
+        },
+      }).href
+      window.open(url, '_blank')
     }
 
     const loadRegionOptions = async () => {
@@ -2363,6 +2400,9 @@ export default {
       handleSubmit,
       resetForm,
       handleStrategyChange,
+      handleRefreshStrategy,
+      handleAddStrategy,
+      strategyLoading,
       handleRegionChange,
       handleCountryChange,
       handleProvinceChange,

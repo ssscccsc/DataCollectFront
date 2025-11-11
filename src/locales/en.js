@@ -293,6 +293,8 @@ export default {
     selectAtLeastOneEnvironment: 'Please select at least one logic environment',
     paramNameCannotBeEmpty: 'Parameter names cannot be duplicated',
     customParamsSaved: 'Common parameters saved successfully',
+    strategyRefreshSuccess: 'Collection strategy refreshed successfully',
+    strategyRefreshFailed: 'Collection strategy refresh failed',
     // Operation Messages
     stopSuccess: 'Stop successful',
     stopFailed: 'Stop failed',
