@@ -723,7 +723,7 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted, computed, nextTick } from 'vue'
+import { ref, reactive, onMounted, computed, nextTick, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Link, Plus, Delete, Setting, ArrowRight, Clock, View, InfoFilled } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
@@ -1434,41 +1434,51 @@ export default {
           // 设置已选中的用例ID列表（优先使用selectedTestCaseIds字段）
           selectedTestCaseIds.value = selectedIds
           
-          // 等待DOM更新后，设置表格的选中状态
-          nextTick(() => {
-            // 再延迟一点时间，确保表格已完全渲染
-            setTimeout(() => {
-              if (testCaseTableRef.value && selectedIds.length > 0 && filteredTestCaseList.value.length > 0) {
-                console.log('准备勾选用例，selectedIds:', selectedIds)
-                console.log('用例列表:', filteredTestCaseList.value.map(tc => ({ id: tc.id, name: tc.name })))
-                
-                // 先清除所有选中状态
-                testCaseTableRef.value.clearSelection()
-                
-                // 确保 selectedIds 中的元素都是数字类型
-                const numericSelectedIds = selectedIds.map(id => typeof id === 'string' ? parseInt(id) : Number(id))
-                
-                // 然后选中对应的用例（使用严格比较，确保类型一致）
-                const rowsToSelect = filteredTestCaseList.value.filter(
-                  testCase => {
-                    const testCaseId = typeof testCase.id === 'string' ? parseInt(testCase.id) : Number(testCase.id)
-                    return numericSelectedIds.includes(testCaseId)
-                  }
-                )
-                
-                console.log('需要勾选的用例:', rowsToSelect.map(tc => ({ id: tc.id, name: tc.name })))
-                
-                if (rowsToSelect.length > 0) {
-                  rowsToSelect.forEach(testCaseRow => {
-                    testCaseTableRef.value.toggleRowSelection(testCaseRow, true)
-                  })
-                  console.log('用例勾选完成')
-                } else {
-                  console.warn('没有找到需要勾选的用例，可能ID不匹配')
-                }
+          // 使用 watch 监听 filteredTestCaseList 的变化，确保筛选完成后再勾选
+          const stopWatch = watch(
+            () => filteredTestCaseList.value,
+            (newList) => {
+              if (newList.length > 0 && selectedIds.length > 0) {
+                // 等待 DOM 更新
+                nextTick(() => {
+                  setTimeout(() => {
+                    if (testCaseTableRef.value) {
+                      console.log('准备勾选用例，selectedIds:', selectedIds)
+                      console.log('用例列表:', newList.map(tc => ({ id: tc.id, name: tc.name })))
+                      
+                      // 先清除所有选中状态
+                      testCaseTableRef.value.clearSelection()
+                      
+                      // 确保 selectedIds 中的元素都是数字类型
+                      const numericSelectedIds = selectedIds.map(id => typeof id === 'string' ? parseInt(id) : Number(id))
+                      
+                      // 然后选中对应的用例（使用严格比较，确保类型一致）
+                      const rowsToSelect = newList.filter(
+                        testCase => {
+                          const testCaseId = typeof testCase.id === 'string' ? parseInt(testCase.id) : Number(testCase.id)
+                          return numericSelectedIds.includes(testCaseId)
+                        }
+                      )
+                      
+                      console.log('需要勾选的用例:', rowsToSelect.map(tc => ({ id: tc.id, name: tc.name })))
+                      
+                      if (rowsToSelect.length > 0) {
+                        rowsToSelect.forEach(testCaseRow => {
+                          testCaseTableRef.value.toggleRowSelection(testCaseRow, true)
+                        })
+                        console.log('用例勾选完成')
+                        // 停止监听，避免重复触发
+                        stopWatch()
+                      } else {
+                        console.warn('没有找到需要勾选的用例，可能ID不匹配或已被筛选条件过滤')
+                      }
+                    }
+                  }, 500)
+                })
               }
-            }, 300)
-          })
+            },
+            { immediate: true }
+          )
         })
       } else {
         // 如果没有用例集，也要设置已选中的用例ID列表
