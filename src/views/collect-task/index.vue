@@ -290,14 +290,7 @@
         <!-- 步骤2：采集策略 -->
         <div class="step-panel">
           <h3 class="step-title">{{ $t('collectTask.collectStrategyTitle') }}</h3>
-          <el-form
-            ref="strategyFormRef"
-            :model="strategyForm"
-            :rules="strategyRules"
-            label-width="120px"
-          >
-            <el-form-item :label="$t('collectTask.collectStrategyLabel')" prop="strategyId">
-              <div style="display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 10px;">
+          <div style="display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 10px;">
                 <el-button @click="handleRefreshStrategy" :loading="strategyLoading" size="default">
                   <el-icon><Refresh /></el-icon>
                   {{ $t('common.refresh') }}
@@ -307,6 +300,13 @@
                   {{ $t('common.add') }}
                 </el-button>
               </div>
+          <el-form
+            ref="strategyFormRef"
+            :model="strategyForm"
+            :rules="strategyRules"
+            label-width="120px"
+          >
+            <el-form-item :label="$t('collectTask.collectStrategyLabel')" prop="strategyId">
               <el-select v-model="strategyForm.strategyId" :placeholder="$t('collectTask.collectStrategyPlaceholder')" style="width: 100%;" @change="handleStrategyChange">
                 <el-option
                   v-for="item in strategyOptions"
