@@ -723,7 +723,7 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, computed, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Link, Plus, Delete, Setting, ArrowRight, Clock, View, InfoFilled } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
@@ -872,15 +872,20 @@ export default {
           
           // 提取业务大类和App选项（用于策略配置）
           extractFilterOptions()
+          
+          // 返回 Promise 以便调用者可以等待
+          return Promise.resolve()
         } catch (error) {
           console.error('加载用例列表失败:', error)
           testCaseList.value = []
+          return Promise.reject(error)
         }
       } else {
         selectedTestCaseSet.value = null
         testCaseList.value = []
         showTestCaseList.value = false
         clearFilterOptions()
+        return Promise.resolve()
       }
     }
 
@@ -1423,16 +1428,26 @@ export default {
           selectedTestCaseIds.value = selectedIds
           
           // 等待DOM更新后，设置表格的选中状态
-          setTimeout(() => {
-            if (testCaseTableRef.value && selectedIds.length > 0) {
-              const rowsToSelect = filteredTestCaseList.value.filter(
-                testCase => selectedIds.includes(testCase.id)
-              )
-              rowsToSelect.forEach(row => {
-                testCaseTableRef.value.toggleRowSelection(row, true)
-              })
-            }
-          }, 100)
+          nextTick(() => {
+            // 再延迟一点时间，确保表格已完全渲染
+            setTimeout(() => {
+              if (testCaseTableRef.value && selectedIds.length > 0 && filteredTestCaseList.value.length > 0) {
+                // 先清除所有选中状态
+                testCaseTableRef.value.clearSelection()
+                
+                // 然后选中对应的用例
+                const rowsToSelect = filteredTestCaseList.value.filter(
+                  testCase => selectedIds.includes(testCase.id)
+                )
+                
+                if (rowsToSelect.length > 0) {
+                  rowsToSelect.forEach(testCaseRow => {
+                    testCaseTableRef.value.toggleRowSelection(testCaseRow, true)
+                  })
+                }
+              }
+            }, 200)
+          })
         })
       } else {
         // 如果没有用例集，也要设置已选中的用例ID列表
