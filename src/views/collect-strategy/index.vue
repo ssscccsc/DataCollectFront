@@ -1503,15 +1503,22 @@ export default {
           const appCategory = route.query.appCategory || ''
           const appDescription = route.query.appDescription || ''
           
+          // 根据app信息自动生成策略名称
+          if (appName) {
+            let strategyName = appName
+            if (appVersion) {
+              strategyName += `-${appVersion}`
+            }
+            strategyName += '采集策略'
+            form.name = strategyName
+          }
+          
           // 填充app字段（应用名称）
           if (appName) {
             form.app = appName
           }
           
-          // 如果有类别，填充businessCategory
-          if (appCategory) {
-            form.businessCategory = appCategory
-          }
+          // 业务大类不赋值（保持为空）
           
           // 如果有描述，填充到策略描述中
           if (appDescription) {
