@@ -1355,6 +1355,8 @@ export default {
         } else if (Array.isArray(row.selectedTestCaseIds)) {
           selectedIds = row.selectedTestCaseIds
         }
+        // 确保所有ID都是数字类型
+        selectedIds = selectedIds.map(id => typeof id === 'string' ? parseInt(id) : Number(id)).filter(id => !isNaN(id))
       } catch (error) {
         console.warn('Failed to parse selectedTestCaseIds:', error)
         selectedIds = []
@@ -1366,6 +1368,8 @@ export default {
           .filter(testCaseId => testCaseExecutionCounts[testCaseId] > 0)
           .map(id => parseInt(id))
       }
+      
+      console.log('解析后的选中用例ID:', selectedIds)
       
       // 转换testCaseCustomParams，确保value是数组格式
       const convertedTestCaseCustomParams = {}
@@ -1419,6 +1423,9 @@ export default {
       // 如果选择了用例集，加载用例列表
       if (row.testCaseSetId) {
         handleTestCaseSetChange(row.testCaseSetId).then(() => {
+          // 自动进入第二步，显示用例列表
+          currentStep.value = 1
+          showTestCaseList.value = true
           // 用例列表加载完成后，设置对应的appEn
           if (row.app) {
             handleAppChange(row.app)
@@ -1432,21 +1439,35 @@ export default {
             // 再延迟一点时间，确保表格已完全渲染
             setTimeout(() => {
               if (testCaseTableRef.value && selectedIds.length > 0 && filteredTestCaseList.value.length > 0) {
+                console.log('准备勾选用例，selectedIds:', selectedIds)
+                console.log('用例列表:', filteredTestCaseList.value.map(tc => ({ id: tc.id, name: tc.name })))
+                
                 // 先清除所有选中状态
                 testCaseTableRef.value.clearSelection()
                 
-                // 然后选中对应的用例
+                // 确保 selectedIds 中的元素都是数字类型
+                const numericSelectedIds = selectedIds.map(id => typeof id === 'string' ? parseInt(id) : Number(id))
+                
+                // 然后选中对应的用例（使用严格比较，确保类型一致）
                 const rowsToSelect = filteredTestCaseList.value.filter(
-                  testCase => selectedIds.includes(testCase.id)
+                  testCase => {
+                    const testCaseId = typeof testCase.id === 'string' ? parseInt(testCase.id) : Number(testCase.id)
+                    return numericSelectedIds.includes(testCaseId)
+                  }
                 )
+                
+                console.log('需要勾选的用例:', rowsToSelect.map(tc => ({ id: tc.id, name: tc.name })))
                 
                 if (rowsToSelect.length > 0) {
                   rowsToSelect.forEach(testCaseRow => {
                     testCaseTableRef.value.toggleRowSelection(testCaseRow, true)
                   })
+                  console.log('用例勾选完成')
+                } else {
+                  console.warn('没有找到需要勾选的用例，可能ID不匹配')
                 }
               }
-            }, 200)
+            }, 300)
           })
         })
       } else {
