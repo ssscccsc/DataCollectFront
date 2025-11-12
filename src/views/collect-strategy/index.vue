@@ -1444,8 +1444,8 @@ export default {
                 // 确保用例列表已加载且不为空
                 if (newList.length > 0 && selectedIds.length > 0) {
                   // 等待 DOM 更新和表格渲染
-                  nextTick(() => {
-                    setTimeout(() => {
+                  nextTick(async () => {
+                    setTimeout(async () => {
                       if (testCaseTableRef.value) {
                         console.log('准备勾选用例，selectedIds:', selectedIds)
                         console.log('用例列表总数:', newList.length)
@@ -1469,12 +1469,31 @@ export default {
                         console.log('需要勾选的用例:', rowsToSelect.map(tc => ({ id: tc.id, name: tc.name })))
                         
                         if (rowsToSelect.length > 0) {
-                          rowsToSelect.forEach(testCaseRow => {
+                          // 等待一下确保清除完成
+                          await new Promise(resolve => setTimeout(resolve, 100))
+                          
+                          // 从当前表格数据中重新获取行对象，确保引用正确
+                          const currentRowsToSelect = newList.filter(
+                            testCase => {
+                              const testCaseId = typeof testCase.id === 'string' ? parseInt(testCase.id) : Number(testCase.id)
+                              return numericSelectedIds.includes(testCaseId)
+                            }
+                          )
+                          
+                          // 然后选中对应的用例
+                          currentRowsToSelect.forEach(testCaseRow => {
                             testCaseTableRef.value.toggleRowSelection(testCaseRow, true)
                           })
-                          console.log('用例勾选完成，共勾选', rowsToSelect.length, '个用例')
+                          
+                          console.log('用例勾选完成，共勾选', currentRowsToSelect.length, '个用例')
+                          
+                          // 等待 DOM 更新完成后再调用 handleTestCaseSelectionChange
+                          await nextTick()
+                          // 再次等待确保表格选中状态已更新
+                          await new Promise(resolve => setTimeout(resolve, 200))
+                          
                           // 调用 handleTestCaseSelectionChange 方法，触发选择变化事件
-                          handleTestCaseSelectionChange(rowsToSelect)
+                          handleTestCaseSelectionChange(currentRowsToSelect)
                           // 停止监听，避免重复触发
                           stopWatch()
                         } else {
