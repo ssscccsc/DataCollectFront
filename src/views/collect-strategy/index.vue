@@ -755,6 +755,9 @@ export default {
     // 步骤控制
     const currentStep = ref(0)
     
+    // 保存 watch 监听器引用，用于清除
+    const testCaseListWatchStop = ref(null)
+    
     // 批量配置对话框
     const batchConfigDialogVisible = ref(false)
     const activeBatchConfigItems = ref([])
@@ -1438,6 +1441,13 @@ export default {
             showTestCaseList.value = true
             
             // 使用 watch 监听 filteredTestCaseList 的变化，确保筛选完成后再勾选
+            // 先清除之前的 watch 监听器（如果存在）
+            if (testCaseListWatchStop.value) {
+              testCaseListWatchStop.value()
+              testCaseListWatchStop.value = null
+            }
+            
+            let stopWatchFn = null
             const stopWatch = watch(
               () => filteredTestCaseList.value,
               (newList) => {
@@ -1494,14 +1504,20 @@ export default {
                           
                           // 调用 handleTestCaseSelectionChange 方法，触发选择变化事件
                           handleTestCaseSelectionChange(currentRowsToSelect)
-                          // 停止监听，避免重复触发
-                          stopWatch()
+                          // 停止监听，避免重复触发（使用 nextTick 确保 stopWatchFn 已被赋值）
+                          await nextTick()
+                          if (stopWatchFn) {
+                            stopWatchFn()
+                          }
                         } else {
                           console.warn('没有找到需要勾选的用例，可能ID不匹配或已被筛选条件过滤')
                           console.warn('筛选后的用例ID列表:', newList.map(tc => tc.id))
                           console.warn('需要勾选的用例ID列表:', numericSelectedIds)
                           // 即使没有找到用例，也停止监听
-                          stopWatch()
+                          await nextTick()
+                          if (stopWatchFn) {
+                            stopWatchFn()
+                          }
                         }
                       }
                     }, 500)
@@ -1509,15 +1525,27 @@ export default {
                 } else if (newList.length === 0) {
                   console.warn('用例列表为空，可能是筛选条件导致')
                   // 停止监听
-                  stopWatch()
+                  nextTick(() => {
+                    if (stopWatchFn) {
+                      stopWatchFn()
+                    }
+                  })
                 } else if (selectedIds.length === 0) {
                   console.log('没有需要勾选的用例')
                   // 停止监听
-                  stopWatch()
+                  nextTick(() => {
+                    if (stopWatchFn) {
+                      stopWatchFn()
+                    }
+                  })
                 }
               },
               { immediate: true }
             )
+            // 保存 stopWatch 函数引用
+            stopWatchFn = stopWatch
+            // 保存到组件级别的引用，以便在 resetForm 中清除
+            testCaseListWatchStop.value = stopWatch
           })
         }).catch(error => {
           console.error('加载用例列表失败:', error)
@@ -1653,6 +1681,18 @@ export default {
       selectedAppEn.value = ''
       currentStep.value = 0 // 重置步骤
       clearFilterOptions()
+      
+      // 清除 watch 监听器
+      if (testCaseListWatchStop.value) {
+        testCaseListWatchStop.value()
+        testCaseListWatchStop.value = null
+      }
+      
+      // 清除表格选中状态
+      if (testCaseTableRef.value) {
+        testCaseTableRef.value.clearSelection()
+      }
+      
       if (formRef.value) {
         formRef.value.resetFields()
       }
