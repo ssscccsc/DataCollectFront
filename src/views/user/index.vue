@@ -397,8 +397,14 @@ export default {
         return
       }
       
-      currentPasswordUserId.value = row.id
+      // 检查用户ID是否有效
+      if (!row.id || row.id === null) {
+        ElMessage.error('用户ID无效')
+        return
+      }
+      
       resetPasswordForm()
+      currentPasswordUserId.value = row.id
       passwordDialogVisible.value = true
     }
     
@@ -445,6 +451,12 @@ export default {
       
       await passwordFormRef.value.validate(async (valid) => {
         if (valid) {
+          // 检查用户ID是否有效
+          if (!currentPasswordUserId.value || currentPasswordUserId.value === null) {
+            ElMessage.error('用户ID无效，请重新选择用户')
+            return
+          }
+          
           try {
             // 根据是否需要旧密码来决定请求数据
             const requestData = {
