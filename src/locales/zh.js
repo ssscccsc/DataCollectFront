@@ -27,7 +27,7 @@ export default {
   menu: {
     dashboard: '仪表盘',
     appMonitor: '应用监控',
-    appMarketMonitor: '应用市场监控',
+    appMarketMonitor: 'Top应用监控',
     appVersionChange: 'APP版本变更',
     dataCollect: '数据采集',
     collectTask: '采集任务管理',
@@ -49,7 +49,7 @@ export default {
   // 页面标题
   pageTitle: {
     dashboard: '仪表盘',
-    appMarketMonitor: '应用市场监控',
+    appMarketMonitor: 'Top应用监控',
     appVersionChange: 'APP版本变更',
     collectTask: '采集任务管理',
     collectStrategy: '采集策略管理',
@@ -845,9 +845,9 @@ export default {
     submitFailed: '提交失败',
   },
   
-  // 应用市场监控
+  // Top应用监控
   appMarketMonitor: {
-    description: '监控应用市场中的应用信息，包括版本、状态等',
+    description: '监控Top应用信息，包括版本、状态等',
     appName: '应用名称',
     currentVersion: '当前版本',
     loadDataFailed: '加载数据失败',
@@ -857,8 +857,9 @@ export default {
     xiaomiMarket: '小米应用市场',
     selectDate: '选择日期',
     datePlaceholder: '请选择日期',
-    today: '今天',
-    yesterday: '昨天',
+    thisWeek: '本周',
+    thisMonth: '本月',
+    thisQuarter: '本季度',
     appCategory: '应用类别',
     app: '应用',
     game: '游戏',

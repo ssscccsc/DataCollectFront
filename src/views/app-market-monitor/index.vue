@@ -43,11 +43,14 @@
             style="width: 200px; margin-right: 10px;"
             @change="handleDateChange"
           />
-          <el-button @click="handleTodayClick" :type="isToday ? 'primary' : ''">
-            {{ $t('appMarketMonitor.today') }}
+          <el-button @click="handleThisWeekClick" :type="isThisWeek ? 'primary' : ''">
+            {{ $t('appMarketMonitor.thisWeek') }}
           </el-button>
-          <el-button @click="handleYesterdayClick" :type="isYesterday ? 'primary' : ''" style="margin-left: 10px;">
-            {{ $t('appMarketMonitor.yesterday') }}
+          <el-button @click="handleThisMonthClick" :type="isThisMonth ? 'primary' : ''" style="margin-left: 10px;">
+            {{ $t('appMarketMonitor.thisMonth') }}
+          </el-button>
+          <el-button @click="handleThisQuarterClick" :type="isThisQuarter ? 'primary' : ''" style="margin-left: 10px;">
+            {{ $t('appMarketMonitor.thisQuarter') }}
           </el-button>
         </div>
         <div class="filter-item" style="margin-left: 30px;">
@@ -161,24 +164,43 @@ export default {
       return formatDate(new Date())
     }
 
-    // 获取昨天的日期
-    const getYesterday = () => {
-      const yesterday = new Date()
-      yesterday.setDate(yesterday.getDate() - 1)
-      return formatDate(yesterday)
+    // 获取本周最后一天（今天）
+    const getThisWeek = () => {
+      return formatDate(new Date())
+    }
+
+    // 获取本月最后一天
+    const getThisMonth = () => {
+      const today = new Date()
+      const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0)
+      return formatDate(lastDay)
+    }
+
+    // 获取本季度最后一天
+    const getThisQuarter = () => {
+      const today = new Date()
+      const quarter = Math.floor(today.getMonth() / 3)
+      const quarterEndMonth = (quarter + 1) * 3 - 1
+      const lastDay = new Date(today.getFullYear(), quarterEndMonth + 1, 0)
+      return formatDate(lastDay)
     }
 
     // 初始化日期为今天
     selectedDate.value = getToday()
 
-    // 判断是否选择了今天
-    const isToday = computed(() => {
-      return selectedDate.value === getToday()
+    // 判断是否选择了本周
+    const isThisWeek = computed(() => {
+      return selectedDate.value === getThisWeek()
     })
 
-    // 判断是否选择了昨天
-    const isYesterday = computed(() => {
-      return selectedDate.value === getYesterday()
+    // 判断是否选择了本月
+    const isThisMonth = computed(() => {
+      return selectedDate.value === getThisMonth()
+    })
+
+    // 判断是否选择了本季度
+    const isThisQuarter = computed(() => {
+      return selectedDate.value === getThisQuarter()
     })
 
     const getCollectionStatusType = (status) => {
@@ -289,14 +311,20 @@ export default {
       loadData()
     }
 
-    const handleTodayClick = () => {
-      selectedDate.value = getToday()
+    const handleThisWeekClick = () => {
+      selectedDate.value = getThisWeek()
       pagination.current = 1
       loadData()
     }
 
-    const handleYesterdayClick = () => {
-      selectedDate.value = getYesterday()
+    const handleThisMonthClick = () => {
+      selectedDate.value = getThisMonth()
+      pagination.current = 1
+      loadData()
+    }
+
+    const handleThisQuarterClick = () => {
+      selectedDate.value = getThisQuarter()
       pagination.current = 1
       loadData()
     }
@@ -334,13 +362,15 @@ export default {
       activeTab,
       selectedDate,
       selectedCategory,
-      isToday,
-      isYesterday,
+      isThisWeek,
+      isThisMonth,
+      isThisQuarter,
       loadData,
       handleTabChange,
       handleDateChange,
-      handleTodayClick,
-      handleYesterdayClick,
+      handleThisWeekClick,
+      handleThisMonthClick,
+      handleThisQuarterClick,
       handleCategoryChange,
       handleSizeChange,
       handleCurrentChange,

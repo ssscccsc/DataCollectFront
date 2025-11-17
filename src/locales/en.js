@@ -27,7 +27,7 @@ export default {
   menu: {
     dashboard: 'Dashboard',
     appMonitor: 'App Monitor',
-    appMarketMonitor: 'App Market Monitor',
+    appMarketMonitor: 'Top App Monitor',
     appVersionChange: 'APP Version Change',
     dataCollect: 'Data Collection',
     collectTask: 'Collection Task Management',
@@ -49,7 +49,7 @@ export default {
   // Page Titles
   pageTitle: {
     dashboard: 'Dashboard',
-    appMarketMonitor: 'App Market Monitor',
+    appMarketMonitor: 'Top App Monitor',
     appVersionChange: 'APP Version Change',
     collectTask: 'Collection Task Management',
     collectStrategy: 'Collection Strategy Management',
@@ -845,9 +845,9 @@ export default {
     submitFailed: 'Submit failed',
   },
   
-  // App Market Monitor
+  // Top App Monitor
   appMarketMonitor: {
-    description: 'Monitor app information in app markets, including versions, status, etc.',
+    description: 'Monitor Top app information, including versions, status, etc.',
     appName: 'App Name',
     currentVersion: 'Current Version',
     loadDataFailed: 'Load data failed',
@@ -857,8 +857,9 @@ export default {
     xiaomiMarket: 'Xiaomi App Store',
     selectDate: 'Select Date',
     datePlaceholder: 'Please select date',
-    today: 'Today',
-    yesterday: 'Yesterday',
+    thisWeek: 'This Week',
+    thisMonth: 'This Month',
+    thisQuarter: 'This Quarter',
     appCategory: 'App Category',
     app: 'App',
     game: 'Game',
