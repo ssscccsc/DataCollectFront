@@ -20,6 +20,7 @@ export default {
     info: 'Info',
     view: 'View',
     operations: 'Operations',
+    createTime: 'Create Time',
   },
   
   // Navigation Menu
@@ -38,6 +39,11 @@ export default {
     ue: 'UE Management',
     region: 'Region Management',
     networkType: 'Network Type Management',
+    experienceTest: 'Experience Test',
+    clientData: 'Client Data Management',
+    networkData: 'Network Data Management',
+    dataComparison: 'Client-Network Data Comparison',
+    networkSettings: 'Network Settings',
   },
   
   // Page Titles
@@ -54,6 +60,10 @@ export default {
     ue: 'UE Management',
     region: 'Region Management',
     networkType: 'Network Type Management',
+    clientData: 'Client Data Management',
+    networkData: 'Network Data Management',
+    dataComparison: 'Client-Network Data Comparison',
+    networkSettings: 'Network Settings',
   },
   
   // System Info
@@ -865,5 +875,38 @@ export default {
     loadDataFailed: 'Load data failed',
     viewDetailNotImplemented: 'View detail feature not implemented',
     viewChangeHistoryNotImplemented: 'View change history feature not implemented',
+  },
+  
+  // Experience Test
+  experienceTest: {
+    clientData: {
+      description: 'Manage client-side data, including viewing, editing, deleting, etc.',
+      name: 'Name',
+      addNotImplemented: 'Add feature not implemented',
+      editNotImplemented: 'Edit feature not implemented',
+      deleteConfirm: 'Are you sure to delete this data?',
+    },
+    networkData: {
+      description: 'Manage network-side data, including viewing, editing, deleting, etc.',
+      name: 'Name',
+      addNotImplemented: 'Add feature not implemented',
+      editNotImplemented: 'Edit feature not implemented',
+      deleteConfirm: 'Are you sure to delete this data?',
+    },
+    dataComparison: {
+      description: 'Client-network data comparison analysis, support data comparison and viewing',
+      name: 'Name',
+      compare: 'Compare',
+      compareNotImplemented: 'Compare feature not implemented',
+      viewNotImplemented: 'View feature not implemented',
+      deleteConfirm: 'Are you sure to delete this comparison record?',
+    },
+    networkSettings: {
+      description: 'Network information settings, including network parameter configuration, etc.',
+      name: 'Name',
+      addNotImplemented: 'Add feature not implemented',
+      editNotImplemented: 'Edit feature not implemented',
+      deleteConfirm: 'Are you sure to delete this setting?',
+    },
   },
 }

@@ -20,6 +20,7 @@ export default {
     info: '提示',
     view: '查看',
     operations: '操作',
+    createTime: '创建时间',
   },
   
   // 导航菜单
@@ -38,6 +39,11 @@ export default {
     ue: 'UE管理',
     region: '地域管理',
     networkType: '网络类型管理',
+    experienceTest: '体验测试',
+    clientData: '端侧数据管理',
+    networkData: '网络侧数据管理',
+    dataComparison: '端网数据对比',
+    networkSettings: '网络信息设置',
   },
   
   // 页面标题
@@ -54,6 +60,10 @@ export default {
     ue: 'UE管理',
     region: '地域管理',
     networkType: '网络类型管理',
+    clientData: '端侧数据管理',
+    networkData: '网络侧数据管理',
+    dataComparison: '端网数据对比',
+    networkSettings: '网络信息设置',
   },
   
   // 系统信息
@@ -865,5 +875,38 @@ export default {
     loadDataFailed: '加载数据失败',
     viewDetailNotImplemented: '查看详情功能待实现',
     viewChangeHistoryNotImplemented: '查看变更历史功能待实现',
+  },
+  
+  // 体验测试
+  experienceTest: {
+    clientData: {
+      description: '管理端侧数据，包括数据查看、编辑、删除等操作',
+      name: '名称',
+      addNotImplemented: '添加功能待实现',
+      editNotImplemented: '编辑功能待实现',
+      deleteConfirm: '确定要删除该数据吗？',
+    },
+    networkData: {
+      description: '管理网络侧数据，包括数据查看、编辑、删除等操作',
+      name: '名称',
+      addNotImplemented: '添加功能待实现',
+      editNotImplemented: '编辑功能待实现',
+      deleteConfirm: '确定要删除该数据吗？',
+    },
+    dataComparison: {
+      description: '端网数据对比分析，支持数据对比和查看',
+      name: '名称',
+      compare: '对比',
+      compareNotImplemented: '对比功能待实现',
+      viewNotImplemented: '查看功能待实现',
+      deleteConfirm: '确定要删除该对比记录吗？',
+    },
+    networkSettings: {
+      description: '网络信息设置，包括网络参数配置等',
+      name: '名称',
+      addNotImplemented: '添加功能待实现',
+      editNotImplemented: '编辑功能待实现',
+      deleteConfirm: '确定要删除该设置吗？',
+    },
   },
 }

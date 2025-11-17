@@ -81,6 +81,29 @@
             <span>用户管理</span>
           </el-menu-item>
         </el-sub-menu>
+        
+        <el-sub-menu index="experience-test">
+          <template #title>
+            <el-icon><DataAnalysis /></el-icon>
+            <span>{{ $t('menu.experienceTest') }}</span>
+          </template>
+          <el-menu-item index="/experience-test/client-data/index">
+            <el-icon><DataBoard /></el-icon>
+            <span>{{ $t('menu.clientData') }}</span>
+          </el-menu-item>
+          <el-menu-item index="/experience-test/network-data/index">
+            <el-icon><Connection /></el-icon>
+            <span>{{ $t('menu.networkData') }}</span>
+          </el-menu-item>
+          <el-menu-item index="/experience-test/data-comparison/index">
+            <el-icon><DataAnalysis /></el-icon>
+            <span>{{ $t('menu.dataComparison') }}</span>
+          </el-menu-item>
+          <el-menu-item index="/experience-test/network-settings/index">
+            <el-icon><Setting /></el-icon>
+            <span>{{ $t('menu.networkSettings') }}</span>
+          </el-menu-item>
+        </el-sub-menu>
       </el-menu>
     </el-aside>
     
@@ -112,7 +135,7 @@
 </template>
 
 <script>
-import { Iphone } from '@element-plus/icons-vue'
+import { Iphone, DataBoard } from '@element-plus/icons-vue'
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -143,6 +166,10 @@ export default {
         '/region/index': t('pageTitle.region'),
         '/network-type/index': t('pageTitle.networkType'),
         '/user/index': '用户管理',
+        '/experience-test/client-data/index': t('pageTitle.clientData'),
+        '/experience-test/network-data/index': t('pageTitle.networkData'),
+        '/experience-test/data-comparison/index': t('pageTitle.dataComparison'),
+        '/experience-test/network-settings/index': t('pageTitle.networkSettings'),
       }
       return routeMap[route.path] || t('system.title')
     })

@@ -162,6 +162,54 @@ const routes = [
       },
     ],
   },
+  {
+    path: '/experience-test/client-data',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        name: 'ClientData',
+        component: () => import('@/views/experience-test/client-data/index.vue'),
+        meta: { title: 'pageTitle.clientData', icon: 'DataBoard' },
+      },
+    ],
+  },
+  {
+    path: '/experience-test/network-data',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        name: 'NetworkData',
+        component: () => import('@/views/experience-test/network-data/index.vue'),
+        meta: { title: 'pageTitle.networkData', icon: 'Connection' },
+      },
+    ],
+  },
+  {
+    path: '/experience-test/data-comparison',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        name: 'DataComparison',
+        component: () => import('@/views/experience-test/data-comparison/index.vue'),
+        meta: { title: 'pageTitle.dataComparison', icon: 'DataAnalysis' },
+      },
+    ],
+  },
+  {
+    path: '/experience-test/network-settings',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        name: 'NetworkSettings',
+        component: () => import('@/views/experience-test/network-settings/index.vue'),
+        meta: { title: 'pageTitle.networkSettings', icon: 'Setting' },
+      },
+    ],
+  },
 ]
 
 const router = createRouter({
