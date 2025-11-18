@@ -657,7 +657,7 @@ export default {
     const removeUe = async (ue) => {
       try {
         await request({
-          url: `/logic-environment/${currentLogicEnvironmentId.value}/ue/${ue.ueId}`,
+          url: `/logic-environment/${currentLogicEnvironmentId.value}/ue/${ue.id}`,
           method: 'delete',
         })
         ElMessage.success(t('logicEnvironment.removeUeSuccess'))
