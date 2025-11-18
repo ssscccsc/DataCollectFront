@@ -299,7 +299,7 @@
                   <el-icon><Plus /></el-icon>
                   {{ $t('common.add') }}
                 </el-button>
-              </div>
+              </div>   
           <el-form
             ref="strategyFormRef"
             :model="strategyForm"
@@ -564,7 +564,6 @@
                   class="environment-card"
                   shadow="hover"
                   :class="{ 'selected': selectedEnvironmentIds.includes(env.id) }"
-                  @click="toggleEnvironmentSelection(env.id)"
                 >
                   <div class="environment-header">
                     <h5 class="environment-name">{{ env.name }}</h5>
@@ -604,39 +603,57 @@
                         @change="handleEnvironmentSelection"
                         :disabled="env.status !== 1 || env.onlineStatus !== true"
                         style="margin-left: 8px;"
+                        @click.stop
                       />
                     </div>
                   </div>
-                  <div class="environment-info">
-                    <p><strong>{{ $t('collectTask.executor') }}：</strong>{{ env.executorName }} ({{ env.executorIpAddress }})</p>
-                    <p><strong>{{ $t('collectTask.region') }}：</strong>{{ env.executorRegionName }}</p>
-                    <p v-if="env.description"><strong>{{ $t('collectTask.description') }}：</strong>{{ env.description }}</p>
+                  <div class="environment-actions">
+                    <el-button 
+                      type="text" 
+                      size="small" 
+                      @click.stop="toggleEnvironmentDetail(env.id)"
+                      style="padding: 0;"
+                    >
+                      {{ expandedEnvironmentIds.includes(env.id) ? $t('collectTask.hideDetail') : $t('collectTask.showDetail') }}
+                      <el-icon style="margin-left: 4px;">
+                        <ArrowDown v-if="!expandedEnvironmentIds.includes(env.id)" />
+                        <ArrowUp v-else />
+                      </el-icon>
+                    </el-button>
                   </div>
-                  <div v-if="env.ueList && env.ueList.length > 0" class="environment-ue">
-                    <p><strong>{{ $t('collectTask.ueDevices') }}：</strong></p>
-                    <div class="ue-list">
-                      <el-tag 
-                        v-for="ue in env.ueList" 
-                        :key="ue.id" 
-                        size="small" 
-                        style="margin-right: 8px; margin-bottom: 4px;"
-                      >
-                        {{ ue.name }} ({{ ue.ueId }})
-                      </el-tag>
+                  <!-- 环境详情（可展开） -->
+                  <div v-if="expandedEnvironmentIds.includes(env.id)" class="environment-detail">
+                    <div class="environment-info">
+                      <p><strong>{{ $t('collectTask.executor') }}：</strong>{{ env.executorName }} ({{ env.executorIpAddress }})</p>
+                      <p><strong>{{ $t('collectTask.region') }}：</strong>{{ env.executorRegionName }}</p>
+                      <p v-if="env.description"><strong>{{ $t('collectTask.description') }}：</strong>{{ env.description }}</p>
                     </div>
-                  </div>
-                  <div v-if="env.networkList && env.networkList.length > 0" class="environment-networks">
-                    <p><strong>{{ $t('collectTask.environmentNetworking') }}：</strong></p>
-                    <div class="network-list">
-                      <el-tag 
-                        v-for="network in env.networkList" 
-                        :key="network.id" 
-                        type="info" 
-                        size="small" 
-                        style="margin-right: 8px; margin-bottom: 4px;"
-                      >
-                        {{ network.name }}
-                      </el-tag>
+                    <div v-if="env.ueList && env.ueList.length > 0" class="environment-ue">
+                      <p><strong>{{ $t('collectTask.ueDevices') }}：</strong></p>
+                      <div class="ue-list">
+                        <el-tag 
+                          v-for="ue in env.ueList" 
+                          :key="ue.id" 
+                          size="small" 
+                          style="margin-right: 8px; margin-bottom: 4px;"
+                        >
+                          {{ ue.name }} ({{ ue.ueId }})
+                        </el-tag>
+                      </div>
+                    </div>
+                    <div v-if="env.networkList && env.networkList.length > 0" class="environment-networks">
+                      <p><strong>{{ $t('collectTask.environmentNetworking') }}：</strong></p>
+                      <div class="network-list">
+                        <el-tag 
+                          v-for="network in env.networkList" 
+                          :key="network.id" 
+                          type="info" 
+                          size="small" 
+                          style="margin-right: 8px; margin-bottom: 4px;"
+                        >
+                          {{ network.name }}
+                        </el-tag>
+                      </div>
                     </div>
                   </div>
                 </el-card>
@@ -952,7 +969,7 @@
 <script>
 import { ref, reactive, onMounted, onUnmounted, computed, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Refresh } from '@element-plus/icons-vue'
+import { Plus, Refresh, ArrowDown, ArrowUp } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import request from '@/utils/request'
@@ -962,6 +979,8 @@ export default {
   components: {
     Plus,
     Refresh,
+    ArrowDown,
+    ArrowUp,
   },
   setup() {
     const { t } = useI18n()
@@ -1028,6 +1047,9 @@ export default {
     
     // 选中的逻辑环境ID列表
     const selectedEnvironmentIds = ref([])
+    
+    // 展开详情的环境ID列表
+    const expandedEnvironmentIds = ref([])
     
     // 筛选用例相关
     const showFilteredTestCases = ref(false)
@@ -1674,6 +1696,16 @@ export default {
       }
     }
     
+    // 切换环境详情展开/收起
+    const toggleEnvironmentDetail = (environmentId) => {
+      const index = expandedEnvironmentIds.value.indexOf(environmentId)
+      if (index > -1) {
+        expandedEnvironmentIds.value.splice(index, 1)
+      } else {
+        expandedEnvironmentIds.value.push(environmentId)
+      }
+    }
+    
     // 处理逻辑环境选择变化
     const handleEnvironmentSelection = () => {
       // 这里可以添加选择变化时的逻辑
@@ -1829,6 +1861,7 @@ export default {
       // 重置逻辑环境选择
       selectedEnvironmentIds.value = []
       availableEnvironments.value = []
+      expandedEnvironmentIds.value = []
       
       // 重置表单验证
       if (basicFormRef.value) {
@@ -2388,6 +2421,8 @@ export default {
       availableEnvironments,
       environmentsLoading,
       selectedEnvironmentIds,
+      expandedEnvironmentIds,
+      toggleEnvironmentDetail,
       showFilteredTestCases,
       
       // 自定义参数相关
@@ -2615,7 +2650,6 @@ export default {
 .environment-card {
   border: 1px solid #ebeef5;
   transition: all 0.3s ease;
-  cursor: pointer;
 }
 
 .environment-card:hover {
@@ -2634,6 +2668,40 @@ export default {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
+}
+
+.environment-actions {
+  margin-top: 8px;
+  margin-bottom: 0;
+  padding-top: 8px;
+  border-top: 1px solid #ebeef5;
+}
+
+.environment-actions .el-button {
+  color: #409eff;
+  font-size: 13px;
+}
+
+.environment-actions .el-button:hover {
+  color: #66b1ff;
+}
+
+.environment-detail {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #ebeef5;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 1000px;
+  }
 }
 
 .environment-status {
