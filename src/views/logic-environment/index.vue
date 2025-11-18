@@ -97,7 +97,11 @@
         label-width="120px"
       >
         <el-form-item :label="$t('logicEnvironment.logicEnvironmentNameLabel')" prop="name">
-          <el-input v-model="form.name" :placeholder="$t('logicEnvironment.logicEnvironmentNamePlaceholder')" />
+          <el-input
+              v-model="form.name"
+              :placeholder="$t('logicEnvironment.logicEnvironmentNamePlaceholder')"
+              disabled
+          />
         </el-form-item>
         <el-form-item :label="$t('logicEnvironment.executorLabel')" prop="executorId">
           <el-select v-model="form.executorId" :placeholder="$t('logicEnvironment.executorPlaceholder')" style="width: 100%">
@@ -139,6 +143,15 @@
             </el-tag>
           </div>
         </el-form-item>
+        <el-form-item :label="$t('logicEnvironment.networkLabel')" prop="network">
+          <el-select v-model="form.network" :placeholder="$t(logicEnvironment.networkPlaceholder')" style="width: 100%">
+            <el-option :label="$t('logicEnvironment.networkNormal')" value="normal" />
+            <el-option :label="$t('logicEnvironment.networkWeak')" value="weak" />
+            <el-option :label="$t('logicEnvironment.networkCongestion')" value="congestion" />
+            <el-option :label="$t('logicEnvironment.networkWeakCongestion')" value="weakcongestion" />
+            <el-option :label="$t('logicEnvironment.networkSunshang')" value="sunshang" />
+          </el-select>
+        </el-form-item>
         <el-form-item :label="$t('logicEnvironment.logicNetworkSelection')" prop="selectedNetworkIds">
           <div style="margin-bottom: 10px;">
             <el-button size="small" type="primary" @click="showAddNetworkDialog">
@@ -173,6 +186,21 @@
             >
               {{ getNetworkDisplayName(networkId) }}
             </el-tag>
+          </div>
+        </el-form-item>
+        <el-form-item :label="$t('logicEnvironment.physicalNetworkLabel')" prop="physicalNetwork">
+          <div v-if="physicalNetworks.length > 0" class="physical-network-list">
+            <el-tag
+              v-for="(item, index) in physicalNetworks"
+              :key="index"
+              type="info"
+              style="margin-right: 8px; margin-bottom: 8px;"
+            >
+              {{ item }}
+            </el-tag>
+          </div>
+          <div v-else style="color: #909399; font-size: 14px;">
+             {{ $t('logicEnvironment.noPhysicalNetwork') }}
           </div>
         </el-form-item>
         <el-form-item :label="$t('logicEnvironment.descriptionLabel')" prop="description">
@@ -331,7 +359,7 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import request from '@/utils/request'
@@ -348,6 +376,7 @@ export default {
     const executorOptions = ref([])
     const ueOptions = ref([])
     const networkOptions = ref([])
+    const physicalNetworks = ref([])
     
     // UE管理相关
     const ueDialogVisible = ref(false)
@@ -376,6 +405,7 @@ export default {
       id: null,
       name: '',
       executorId: null,
+      network: null,
       selectedUeIds: [],
       selectedNetworkIds: [],
       description: '',
@@ -514,6 +544,12 @@ export default {
       loadExecutorOptions()
       loadUeOptions()
       loadNetworkOptions()
+
+      // 等待数据加载后生成物理组网和逻辑环境名称
+      setTimeout(() =>{
+        generatePhysicalNetworks()
+        generateLogicEnvironmentName()
+      }, 100)
     }
 
     const handleDelete = async (row) => {
@@ -548,6 +584,7 @@ export default {
               name: form.name,
               executorId: form.executorId,
               description: form.description,
+              network: form.network,
               status: form.status,
             },
             ueIds: form.selectedUeIds,
@@ -567,6 +604,7 @@ export default {
               name: form.name,
               executorId: form.executorId,
               description: form.description,
+              network: form.network,
               status: form.status,
             },
             ueIds: form.selectedUeIds,
@@ -594,6 +632,7 @@ export default {
         id: null,
         name: '',
         executorId: null,
+        network: null,
         selectedUeIds: [],
         selectedNetworkIds: [],
         description: '',
@@ -801,6 +840,76 @@ export default {
       pagination.current = val
       loadData()
     }
+
+    // 生成物理组网
+    const generatePhysicalNetworks = () => {
+      const networks = []
+
+      // 检查必须得数据是否都已选择
+      if (!form.selectedNetworkIds || form.selectedNetworkIds.length === 0 
+          || !form.network 
+          || !form.selectedUeIds || form.selectedUeIds.length === 0) {
+            physicalNetworks.value = []
+            return
+      }
+
+      // 获取选中的逻辑组网名称列表
+      const logicNetworkNames = form.selectedNetworkIds.map(id => {
+        const network = networkOption.value.find(n => n.id ===id)
+        return network ? network.name : null
+      }).filter(name => name)
+
+      //获取选中的UE的厂商列表（去重）
+      const vendors = [...new Set(
+        form.selectedUeIds.map(id => {
+          const ue = ueOptions.value.find(u => u.id ===id)
+          return ue ? ue.vendor : null
+        }).filter(vendor => vendor)
+      )]
+
+      // 生成物理组网: 逻辑组网_网络_厂商
+      for (const logicNetworkName of logicNetworkNames) {
+        for (const vendor of vendors) {
+          const physicalNetworkName = `${logicNetworkName}_${form.network}_${vendor}`
+          networks.push(physicalNetworkName)
+        }
+      }
+
+      physicalNetworks.value = networks
+    }
+
+    // 监听表单变化，自动生成物理组网
+    watch(() => [form.selectedNetworkIds, form.network, form.selectedUeIds],
+          () => {generatePhysicalNetworks()},
+          {deep: true}
+          )   
+
+    // 生成逻辑环境名称
+    const generateLogicEnvironmentName = () => {
+      // 检查必须得数据
+      if (!form.executorId || !physicalNetworks.value || physicalNetworks.value.length === 0) {
+        form.name = ''
+        return
+      }
+
+      // 获取执行机名称
+      const executor = executorOptions.value.find(e => e.id === form.executorId)
+      if (!executor) {
+        form.name = ''
+        return
+      }
+
+      // 生成逻辑环境名称：执行机_物理组网
+      const executorName = executor.name
+      const physicalNetworkNames = physicalNetworks.value.join("_")
+      form.name = `${executorName}_${physicalNetworkNames}`
+    }
+
+      // 监听表单变化，自动生成物理组网
+    watch(() => [form.executorId, physicalNetworks.value],
+          () => {generateLogicEnvironmentName()},
+          {deep: true}
+          ) 
 
     onMounted(() => {
       loadData()
