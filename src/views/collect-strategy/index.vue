@@ -506,104 +506,92 @@
                     </el-collapse-item>
                   </el-collapse>
 
-                  <!-- 执行次数配置（默认隐藏） -->
-                  <el-collapse v-model="testCaseConfigCollapse" style="margin-bottom: 16px;">
-                    <el-collapse-item :name="`execution-${testCase.id}`">
-                      <template #title>
-                        <span style="font-size: 14px; color: #606266;">
-                          <el-icon><Clock /></el-icon>
-                          {{ $t('collectStrategy.executionConfig') }}
-                        </span>
-                      </template>
-                      <div class="config-section">
-                        <el-input-number
-                          v-model="form.testCaseExecutionCounts[testCase.id]"
-                          :min="1"
-                          :max="100"
-                          :placeholder="$t('collectStrategy.executionCountPlaceholder')"
-                          style="width: 200px;"
-                        />
-                        <span style="margin-left: 12px; color: #909399; font-size: 12px;">
-                          {{ $t('collectStrategy.executionCountTip') }}
-                        </span>
-                      </div>
-                    </el-collapse-item>
-                  </el-collapse>
+                  <!-- 执行次数配置 -->
+                  <div class="config-section">
+                    <div class="config-section-title">
+                      <el-icon><Clock /></el-icon>
+                      <span>{{ $t('collectStrategy.executionConfig') }}</span>
+                    </div>
+                    <el-input-number
+                      v-model="form.testCaseExecutionCounts[testCase.id]"
+                      :min="1"
+                      :max="100"
+                      :placeholder="$t('collectStrategy.executionCountPlaceholder')"
+                      style="width: 200px;"
+                    />
+                    <span style="margin-left: 12px; color: #909399; font-size: 12px;">
+                      {{ $t('collectStrategy.executionCountTip') }}
+                    </span>
+                  </div>
 
-                  <!-- 自定义参数配置（默认隐藏） -->
-                  <el-collapse v-model="testCaseConfigCollapse" style="margin-bottom: 16px;">
-                    <el-collapse-item :name="`params-${testCase.id}`">
-                      <template #title>
-                        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-                          <span style="font-size: 14px; color: #606266;">
-                            <el-icon><Setting /></el-icon>
-                            {{ $t('collectStrategy.testCaseParamsLabel') }}
-                          </span>
-                          <el-button 
-                            type="primary" 
-                            size="small" 
-                            @click.stop="addBatchTestCaseParam(testCase.id)"
-                            :icon="Plus"
-                            style="margin-right: 8px;"
-                          >
-                            {{ $t('collectStrategy.addParam') }}
-                          </el-button>
-                        </div>
-                      </template>
-                      
-                      <div v-if="!form.testCaseCustomParams[testCase.id] || form.testCaseCustomParams[testCase.id].length === 0" class="empty-params-inline">
-                        <span style="color: #909399; font-size: 12px;">{{ $t('collectStrategy.noTestCaseParams') }}</span>
-                      </div>
-                      
-                      <div v-else class="params-list-inline">
-                        <div 
-                          v-for="(param, paramIndex) in form.testCaseCustomParams[testCase.id]" 
-                          :key="paramIndex" 
-                          class="param-item-inline"
+                  <!-- 自定义参数配置 -->
+                  <div class="config-section">
+                    <div class="config-section-title">
+                      <el-icon><Setting /></el-icon>
+                      <span>{{ $t('collectStrategy.testCaseParamsLabel') }}</span>
+                      <el-button 
+                        type="primary" 
+                        size="small" 
+                        @click="addBatchTestCaseParam(testCase.id)"
+                        :icon="Plus"
+                        style="margin-left: auto;"
+                      >
+                        {{ $t('collectStrategy.addParam') }}
+                      </el-button>
+                    </div>
+                    
+                    <div v-if="!form.testCaseCustomParams[testCase.id] || form.testCaseCustomParams[testCase.id].length === 0" class="empty-params-inline">
+                      <span style="color: #909399; font-size: 12px;">{{ $t('collectStrategy.noTestCaseParams') }}</span>
+                    </div>
+                    
+                    <div v-else class="params-list-inline">
+                      <div 
+                        v-for="(param, paramIndex) in form.testCaseCustomParams[testCase.id]" 
+                        :key="paramIndex" 
+                        class="param-item-inline"
+                      >
+                        <div class="param-index-small">{{ paramIndex + 1 }}</div>
+                        <el-select 
+                          v-model="param.key" 
+                          :placeholder="$t('collectStrategy.paramKey')" 
+                          size="small"
+                          filterable
+                          clearable
+                          style="flex: 1;"
+                          @change="handleBatchParamKeyChange(testCase.id, paramIndex)"
                         >
-                          <div class="param-index-small">{{ paramIndex + 1 }}</div>
-                          <el-select 
-                            v-model="param.key" 
-                            :placeholder="$t('collectStrategy.paramKey')" 
-                            size="small"
-                            filterable
-                            clearable
-                            style="flex: 1;"
-                            @change="handleBatchParamKeyChange(testCase.id, paramIndex)"
-                          >
-                            <el-option
-                              v-for="paramOption in getBatchParamKeyOptions(testCase)"
-                              :key="paramOption.paramName"
-                              :label="paramOption.paramName"
-                              :value="paramOption.paramName"
-                            />
-                          </el-select>
-                          <el-select 
-                            v-model="param.value" 
-                            :placeholder="$t('collectStrategy.paramValue')" 
-                            size="small"
-                            multiple
-                            filterable
-                            clearable
-                            style="flex: 1;"
-                          >
-                            <el-option
-                              v-for="valueOption in getBatchParamValueOptions(testCase.id, paramIndex)"
-                              :key="valueOption"
-                              :label="valueOption"
-                              :value="valueOption"
-                            />
-                          </el-select>
-                          <el-button 
-                            type="danger" 
-                            size="small" 
-                            @click="removeBatchTestCaseParam(testCase.id, paramIndex)"
-                            :icon="Delete"
+                          <el-option
+                            v-for="paramOption in getBatchParamKeyOptions(testCase)"
+                            :key="paramOption.paramName"
+                            :label="paramOption.paramName"
+                            :value="paramOption.paramName"
                           />
-                        </div>
+                        </el-select>
+                        <el-select 
+                          v-model="param.value" 
+                          :placeholder="$t('collectStrategy.paramValue')" 
+                          size="small"
+                          multiple
+                          filterable
+                          clearable
+                          style="flex: 1;"
+                        >
+                          <el-option
+                            v-for="valueOption in getBatchParamValueOptions(testCase.id, paramIndex)"
+                            :key="valueOption"
+                            :label="valueOption"
+                            :value="valueOption"
+                          />
+                        </el-select>
+                        <el-button 
+                          type="danger" 
+                          size="small" 
+                          @click="removeBatchTestCaseParam(testCase.id, paramIndex)"
+                          :icon="Delete"
+                        />
                       </div>
-                    </el-collapse-item>
-                  </el-collapse>
+                    </div>
+                  </div>
                 </div>
               </el-collapse-item>
             </el-collapse>
@@ -964,7 +952,6 @@ export default {
     const batchConfigDialogVisible = ref(false)
     const activeBatchConfigItems = ref([])
     const testCaseInfoCollapse = ref([]) // 用例信息折叠状态（默认隐藏，空数组表示全部折叠）
-    const testCaseConfigCollapse = ref([]) // 用例配置折叠状态（执行次数和参数配置，默认隐藏，空数组表示全部折叠）
     const isAutoSelecting = ref(false) // 标记是否正在自动勾选，避免重复触发
     
     // 用例自定义参数配置
@@ -2093,7 +2080,6 @@ export default {
       currentStep.value = 0 // 重置步骤
       activeBatchConfigItems.value = [] // 重置批量配置展开项
       testCaseInfoCollapse.value = [] // 重置用例信息折叠状态
-      testCaseConfigCollapse.value = [] // 重置用例配置折叠状态
       clearFilterOptions()
       
       // 清除 watch 监听器
