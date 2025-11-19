@@ -384,6 +384,7 @@ export default {
     collapse: '收起',
     testCaseName: '用例名称',
     testCaseNumber: '用例编号',
+    testCaseInfo: '用例信息',
     businessCategory: '业务大类',
     logicNetwork: '逻辑组网',
     descriptionLabel: '描述',

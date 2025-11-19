@@ -247,32 +247,34 @@
         <div v-if="currentStep === 1" class="step-content">
           <!-- 筛选条件配置 -->
           <el-form-item :label="$t('collectStrategy.businessCategoryFilter')" v-if="selectedTestCaseSet">
-            <div class="filter-item-row">
-              <el-select 
-                v-model="form.businessCategory" 
-                :placeholder="$t('collectStrategy.businessCategoryPlaceholder')" 
-                clearable 
-                style="flex: 1;"
-                @change="handleBusinessCategoryChange"
+            <el-select 
+              v-model="form.businessCategory" 
+              :placeholder="$t('collectStrategy.businessCategoryPlaceholder')" 
+              clearable 
+              style="width: 100%"
+              @change="handleBusinessCategoryChange"
+            >
+              <el-option
+                v-for="category in businessCategoryOptions"
+                :key="category"
+                :label="category"
+                :value="category"
               >
-                <el-option
-                  v-for="category in businessCategoryOptions"
-                  :key="category"
-                  :label="category"
-                  :value="category"
-                />
-              </el-select>
-              <el-button 
-                v-if="form.businessCategory"
-                type="danger" 
-                size="small" 
-                :icon="Delete"
-                @click="clearBusinessCategory"
-                style="margin-left: 8px;"
-              >
-                {{ $t('common.delete') }}
-              </el-button>
-            </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                  <span style="flex: 1;">{{ category }}</span>
+                  <el-button 
+                    v-if="form.businessCategory === category"
+                    type="danger" 
+                    size="small" 
+                    text
+                    :icon="Delete"
+                    @click.stop.prevent="clearBusinessCategory"
+                    style="margin-left: 8px; padding: 0 4px;"
+                  >
+                  </el-button>
+                </div>
+              </el-option>
+            </el-select>
           </el-form-item>
           
           <el-form-item :label="$t('collectStrategy.appFilter')" v-if="selectedTestCaseSet">
@@ -289,7 +291,21 @@
                   :key="app.app"
                   :label="app.app"
                   :value="app.app"
-                />
+                >
+                  <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                    <span style="flex: 1;">{{ app.app }}</span>
+                    <el-button 
+                      v-if="form.app === app.app"
+                      type="danger" 
+                      size="small" 
+                      text
+                      :icon="Delete"
+                      @click.stop.prevent="clearApp"
+                      style="margin-left: 8px; padding: 0 4px;"
+                    >
+                    </el-button>
+                  </div>
+                </el-option>
               </el-select>
               <el-input 
                 v-if="form.app"
@@ -302,16 +318,6 @@
                   <el-icon><InfoFilled /></el-icon>
                 </template>
               </el-input>
-              <el-button 
-                v-if="form.app"
-                type="danger" 
-                size="small" 
-                :icon="Delete"
-                @click="clearApp"
-                style="margin-left: 8px;"
-              >
-                {{ $t('common.delete') }}
-              </el-button>
             </div>
           </el-form-item>
           
@@ -429,7 +435,7 @@
               </template>
             </el-alert>
 
-            <el-collapse v-model="activeBatchConfigItems" accordion>
+            <el-collapse v-model="activeBatchConfigItems">
               <el-collapse-item 
                 v-for="(testCase, index) in selectedTestCases" 
                 :key="testCase.id"
@@ -451,28 +457,38 @@
                 </template>
                 
                 <div class="batch-config-item-content">
-                  <!-- 用例基本信息 -->
-                  <el-descriptions :column="3" border size="small" style="margin-bottom: 16px;">
-                    <el-descriptions-item :label="$t('collectStrategy.businessCategory')">
-                      {{ testCase.businessCategory || $t('collectStrategy.notConfigured') }}
-                    </el-descriptions-item>
-                    <el-descriptions-item :label="$t('collectStrategy.app')">
-                      {{ testCase.app || $t('collectStrategy.notConfigured') }}
-                    </el-descriptions-item>
-                    <el-descriptions-item :label="$t('collectStrategy.logicNetwork')">
-                      <div v-if="testCase.logicNetwork">
-                        <el-tag 
-                          v-for="network in testCase.logicNetwork.split(';')" 
-                          :key="network"
-                          size="small"
-                          style="margin-right: 4px;"
-                        >
-                          {{ network }}
-                        </el-tag>
-                      </div>
-                      <span v-else>{{ $t('collectStrategy.notConfigured') }}</span>
-                    </el-descriptions-item>
-                  </el-descriptions>
+                  <!-- 用例基本信息（默认隐藏） -->
+                  <el-collapse v-model="testCaseInfoCollapse" style="margin-bottom: 16px;">
+                    <el-collapse-item :name="testCase.id">
+                      <template #title>
+                        <span style="font-size: 14px; color: #606266;">
+                          <el-icon><InfoFilled /></el-icon>
+                          {{ $t('collectStrategy.testCaseInfo') }}
+                        </span>
+                      </template>
+                      <el-descriptions :column="3" border size="small">
+                        <el-descriptions-item :label="$t('collectStrategy.businessCategory')">
+                          {{ testCase.businessCategory || $t('collectStrategy.notConfigured') }}
+                        </el-descriptions-item>
+                        <el-descriptions-item :label="$t('collectStrategy.app')">
+                          {{ testCase.app || $t('collectStrategy.notConfigured') }}
+                        </el-descriptions-item>
+                        <el-descriptions-item :label="$t('collectStrategy.logicNetwork')">
+                          <div v-if="testCase.logicNetwork">
+                            <el-tag 
+                              v-for="network in testCase.logicNetwork.split(';')" 
+                              :key="network"
+                              size="small"
+                              style="margin-right: 4px;"
+                            >
+                              {{ network }}
+                            </el-tag>
+                          </div>
+                          <span v-else>{{ $t('collectStrategy.notConfigured') }}</span>
+                        </el-descriptions-item>
+                      </el-descriptions>
+                    </el-collapse-item>
+                  </el-collapse>
 
                   <!-- 执行次数配置 -->
                   <div class="config-section">
@@ -937,6 +953,7 @@ export default {
     // 批量配置对话框
     const batchConfigDialogVisible = ref(false)
     const activeBatchConfigItems = ref([])
+    const testCaseInfoCollapse = ref([]) // 用例信息折叠状态（默认隐藏，空数组表示全部折叠）
     
     // 用例自定义参数配置
     const testCaseParamsDialogVisible = ref(false)
@@ -1179,9 +1196,9 @@ export default {
       // 取消勾选时，如果执行次数为默认值1，可以选择是否清除（这里保留，用户可能想保留配置）
     }
     
-    // 获取勾选的用例列表
+    // 获取勾选的用例列表（基于所有用例列表，不受筛选条件影响）
     const selectedTestCases = computed(() => {
-      return filteredTestCaseList.value.filter(
+      return testCaseList.value.filter(
         testCase => selectedTestCaseIds.value.includes(testCase.id)
       )
     })
@@ -1888,6 +1905,7 @@ export default {
       selectedAppEn.value = ''
       currentStep.value = 0 // 重置步骤
       activeBatchConfigItems.value = [] // 重置批量配置展开项
+      testCaseInfoCollapse.value = [] // 重置用例信息折叠状态
       clearFilterOptions()
       
       // 清除 watch 监听器

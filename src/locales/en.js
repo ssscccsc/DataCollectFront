@@ -384,6 +384,7 @@ export default {
     collapse: 'Collapse',
     testCaseName: 'Test Case Name',
     testCaseNumber: 'Test Case Number',
+    testCaseInfo: 'Test Case Info',
     businessCategory: 'Business Category',
     logicNetwork: 'Logic Network',
     descriptionLabel: 'Description',
