@@ -1368,10 +1368,8 @@ export default {
         
         // 进入第三步
         currentStep.value = 2
-        // 默认展开第一个勾选的用例
-        if (selectedTestCases.value.length > 0) {
-          activeBatchConfigItems.value = [selectedTestCases.value[0].id]
-        }
+        // 默认所有用例都折叠隐藏
+        activeBatchConfigItems.value = []
       }
     }
     
@@ -1823,9 +1821,8 @@ export default {
                   // 等待用例列表加载完成后再进入第三步
                   setTimeout(() => {
                     currentStep.value = 2
-                    if (selectedTestCases.value.length > 0) {
-                      activeBatchConfigItems.value = [selectedTestCases.value[0].id]
-                    }
+                    // 默认所有用例都折叠隐藏
+                    activeBatchConfigItems.value = []
                   }, 500)
                 })
               })
