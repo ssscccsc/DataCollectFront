@@ -1275,21 +1275,6 @@ export default {
       setTimeout(trySelect, 300)
     }
     
-    // 监听用例列表变化，自动勾选已选择的用例（编辑模式）
-    watch(
-      () => [filteredTestCaseList.value, currentStep.value, showTestCaseList.value],
-      ([newList, step, showList]) => {
-        // 只在第二步且用例列表展开时，且是编辑模式时自动勾选
-        if (step === 1 && showList && form.id && selectedTestCaseIds.value.length > 0 && newList.length > 0) {
-          // 延迟执行，确保表格已渲染
-          setTimeout(() => {
-            autoSelectTestCases()
-          }, 500)
-        }
-      },
-      { deep: true }
-    )
-    
     // 步骤控制方法
     const handleNextStep = async () => {
       if (currentStep.value === 0) {
@@ -1614,6 +1599,21 @@ export default {
         return true
       })
     })
+
+    // 监听用例列表变化，自动勾选已选择的用例（编辑模式）
+    watch(
+      () => [filteredTestCaseList.value, currentStep.value, showTestCaseList.value],
+      ([newList, step, showList]) => {
+        // 只在第二步且用例列表展开时，且是编辑模式时自动勾选
+        if (step === 1 && showList && form.id && selectedTestCaseIds.value.length > 0 && newList.length > 0) {
+          // 延迟执行，确保表格已渲染
+          setTimeout(() => {
+            autoSelectTestCases()
+          }, 500)
+        }
+      },
+      { deep: true }
+    )
 
 
 
