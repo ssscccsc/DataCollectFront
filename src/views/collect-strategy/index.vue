@@ -1203,41 +1203,92 @@ export default {
     
     // 自动勾选已选择的用例
     const autoSelectTestCases = async () => {
-      if (!testCaseTableRef.value || selectedTestCaseIds.value.length === 0) {
+      if (selectedTestCaseIds.value.length === 0) {
         return
       }
       
-      await nextTick()
       // 等待表格渲染完成
-      setTimeout(() => {
-        if (testCaseTableRef.value && filteredTestCaseList.value.length > 0) {
-          // 先清除所有选中状态
-          testCaseTableRef.value.clearSelection()
-          
-          // 确保 selectedIds 中的元素都是数字类型
-          const numericSelectedIds = selectedTestCaseIds.value.map(id => 
-            typeof id === 'string' ? parseInt(id) : Number(id)
-          ).filter(id => !isNaN(id))
-          
-          // 从筛选后的用例列表中找到需要勾选的用例
-          const rowsToSelect = filteredTestCaseList.value.filter(testCase => {
-            const testCaseId = typeof testCase.id === 'string' ? parseInt(testCase.id) : Number(testCase.id)
-            return numericSelectedIds.includes(testCaseId)
-          })
-          
-          // 勾选对应的用例
-          if (rowsToSelect.length > 0) {
-            setTimeout(() => {
-              rowsToSelect.forEach(testCaseRow => {
-                testCaseTableRef.value.toggleRowSelection(testCaseRow, true)
-              })
-              // 触发选择变化事件
-              handleTestCaseSelectionChange(rowsToSelect)
-            }, 100)
+      await nextTick()
+      
+      // 使用多次尝试，确保表格已渲染
+      let attempts = 0
+      const maxAttempts = 10
+      
+      const trySelect = () => {
+        attempts++
+        
+        if (!testCaseTableRef.value) {
+          if (attempts < maxAttempts) {
+            setTimeout(trySelect, 200)
           }
+          return
         }
-      }, 300)
+        
+        // 等待用例列表加载
+        if (filteredTestCaseList.value.length === 0) {
+          if (attempts < maxAttempts) {
+            setTimeout(trySelect, 200)
+          }
+          return
+        }
+        
+        // 先清除所有选中状态
+        testCaseTableRef.value.clearSelection()
+        
+        // 确保 selectedIds 中的元素都是数字类型
+        const numericSelectedIds = selectedTestCaseIds.value.map(id => 
+          typeof id === 'string' ? parseInt(id) : Number(id)
+        ).filter(id => !isNaN(id))
+        
+        // 从筛选后的用例列表中找到需要勾选的用例
+        const rowsToSelect = filteredTestCaseList.value.filter(testCase => {
+          const testCaseId = typeof testCase.id === 'string' ? parseInt(testCase.id) : Number(testCase.id)
+          return numericSelectedIds.includes(testCaseId)
+        })
+        
+        // 勾选对应的用例
+        if (rowsToSelect.length > 0) {
+          setTimeout(() => {
+            // 再次清除，确保状态正确
+            testCaseTableRef.value.clearSelection()
+            
+            // 逐个勾选用例
+            rowsToSelect.forEach((testCaseRow, index) => {
+              setTimeout(() => {
+                if (testCaseTableRef.value) {
+                  testCaseTableRef.value.toggleRowSelection(testCaseRow, true)
+                  
+                  // 最后一个用例勾选完成后，触发选择变化事件
+                  if (index === rowsToSelect.length - 1) {
+                    setTimeout(() => {
+                      handleTestCaseSelectionChange(rowsToSelect)
+                    }, 100)
+                  }
+                }
+              }, index * 50)
+            })
+          }, 100)
+        }
+      }
+      
+      // 开始尝试勾选
+      setTimeout(trySelect, 300)
     }
+    
+    // 监听用例列表变化，自动勾选已选择的用例（编辑模式）
+    watch(
+      () => [filteredTestCaseList.value, currentStep.value, showTestCaseList.value],
+      ([newList, step, showList]) => {
+        // 只在第二步且用例列表展开时，且是编辑模式时自动勾选
+        if (step === 1 && showList && form.id && selectedTestCaseIds.value.length > 0 && newList.length > 0) {
+          // 延迟执行，确保表格已渲染
+          setTimeout(() => {
+            autoSelectTestCases()
+          }, 500)
+        }
+      },
+      { deep: true }
+    )
     
     // 步骤控制方法
     const handleNextStep = async () => {
@@ -1709,6 +1760,10 @@ export default {
             } else {
               currentStep.value = 1
               showTestCaseList.value = true
+              // 即使没有选中的用例，也尝试自动勾选（可能用户想重新选择）
+              if (selectedIds.length > 0) {
+                autoSelectTestCases()
+              }
             }
             
             // 使用 watch 监听 filteredTestCaseList 的变化，确保筛选完成后再勾选
