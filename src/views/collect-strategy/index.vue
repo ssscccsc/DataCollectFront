@@ -123,7 +123,7 @@
     <el-dialog
       v-model="dialogVisible"
       :title="dialogTitle"
-      width="90%"
+      width="60%"
       top="8vh"
       :close-on-click-modal="false"
       @close="resetForm"
@@ -1127,12 +1127,14 @@ export default {
       selectedAppEn.value = ''
       // 更新APP选项
       updateAppOptionsByCategory(category)
+      // 注意：筛选条件变化不影响已勾选的用例，只影响展示
     }
     
     // 清除业务大类筛选
     const clearBusinessCategory = () => {
       form.businessCategory = ''
       handleBusinessCategoryChange('')
+      // 注意：清除筛选条件不影响已勾选的用例，只影响展示
     }
     
     // APP选择变化处理
@@ -1144,6 +1146,7 @@ export default {
       } else {
         selectedAppEn.value = ''
       }
+      // 注意：筛选条件变化不影响已勾选的用例，只影响展示
     }
     
     // 清除App筛选
@@ -1268,60 +1271,61 @@ export default {
           return
         }
         
-        // 先清除所有选中状态
-        testCaseTableRef.value.clearSelection()
-        
         // 确保 selectedIds 中的元素都是数字类型
         const numericSelectedIds = selectedTestCaseIds.value.map(id => 
           typeof id === 'string' ? parseInt(id) : Number(id)
         ).filter(id => !isNaN(id))
         
-        // 从筛选后的用例列表中找到需要勾选的用例
+        // 从筛选后的用例列表中找到需要勾选的用例（只勾选在当前筛选列表中的用例）
         const rowsToSelect = filteredTestCaseList.value.filter(testCase => {
           const testCaseId = typeof testCase.id === 'string' ? parseInt(testCase.id) : Number(testCase.id)
           return numericSelectedIds.includes(testCaseId)
         })
         
-        // 勾选对应的用例
-        if (rowsToSelect.length > 0) {
-          // 先清除，确保状态正确
-          testCaseTableRef.value.clearSelection()
+        // 获取当前表格中已经选中的行（包括不在当前筛选列表中的，因为 reserve-selection）
+        const currentSelectedRows = testCaseTableRef.value?.getSelectionRows() || []
+        const currentSelectedIds = currentSelectedRows.map(row => {
+          const id = typeof row.id === 'string' ? parseInt(row.id) : Number(row.id)
+          return id
+        })
+        
+        // 只勾选那些应该被选中但当前未选中的用例（在当前筛选列表中的）
+        // 不清除已选中的用例，即使它们不在当前筛选列表中
+        rowsToSelect.forEach(testCaseRow => {
+          const testCaseId = typeof testCaseRow.id === 'string' ? parseInt(testCaseRow.id) : Number(testCaseRow.id)
+          // 如果用例应该被选中但当前未选中，则勾选它
+          if (numericSelectedIds.includes(testCaseId) && !currentSelectedIds.includes(testCaseId)) {
+            if (testCaseTableRef.value) {
+              testCaseTableRef.value.toggleRowSelection(testCaseRow, true)
+            }
+          }
+        })
+        
+        // 等待勾选完成
+        setTimeout(() => {
+          // 获取当前表格中所有选中的行（包括不在当前筛选列表中的）
+          const allSelectedRows = testCaseTableRef.value?.getSelectionRows() || []
           
-          // 等待一下确保清除完成
-          setTimeout(() => {
-            // 批量勾选所有用例（不使用延迟，避免状态不一致）
-            rowsToSelect.forEach(testCaseRow => {
-              if (testCaseTableRef.value) {
-                testCaseTableRef.value.toggleRowSelection(testCaseRow, true)
-              }
-            })
-            
-            // 等待所有勾选完成后再更新状态
-            setTimeout(() => {
-              // 获取当前表格中所有选中的行
-              const currentSelected = testCaseTableRef.value?.getSelectionRows() || []
-              
-              // 重置标记（在更新状态之前重置，这样 handleTestCaseSelectionChange 可以正常执行）
-              isAutoSelecting.value = false
-              
-              // 更新选中状态
-              if (currentSelected.length > 0) {
-                // 直接更新 selectedTestCaseIds，不通过 handleTestCaseSelectionChange
-                // 因为 handleTestCaseSelectionChange 会检查 isAutoSelecting
-                selectedTestCaseIds.value = currentSelected.map(item => item.id)
-                
-                // 确保执行次数已设置
-                currentSelected.forEach(testCase => {
-                  if (!form.testCaseExecutionCounts[testCase.id] || form.testCaseExecutionCounts[testCase.id] === 0) {
-                    form.testCaseExecutionCounts[testCase.id] = 1
-                  }
-                })
-              }
-            }, 200)
-          }, 100)
-        } else {
+          // 重置标记
           isAutoSelecting.value = false
-        }
+          
+          // 合并所有已选中的用例ID（包括不在当前筛选列表中的）
+          const allSelectedIds = new Set(selectedTestCaseIds.value)
+          allSelectedRows.forEach(row => {
+            const id = typeof row.id === 'string' ? parseInt(row.id) : Number(row.id)
+            allSelectedIds.add(id)
+          })
+          
+          // 更新选中状态（保留所有已选中的用例，不受筛选条件影响）
+          selectedTestCaseIds.value = Array.from(allSelectedIds)
+          
+          // 确保执行次数已设置
+          allSelectedRows.forEach(testCase => {
+            if (!form.testCaseExecutionCounts[testCase.id] || form.testCaseExecutionCounts[testCase.id] === 0) {
+              form.testCaseExecutionCounts[testCase.id] = 1
+            }
+          })
+        }, 200)
       }
       
       // 开始尝试勾选
