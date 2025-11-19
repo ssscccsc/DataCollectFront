@@ -1201,6 +1201,44 @@ export default {
       )
     })
     
+    // 自动勾选已选择的用例
+    const autoSelectTestCases = async () => {
+      if (!testCaseTableRef.value || selectedTestCaseIds.value.length === 0) {
+        return
+      }
+      
+      await nextTick()
+      // 等待表格渲染完成
+      setTimeout(() => {
+        if (testCaseTableRef.value && filteredTestCaseList.value.length > 0) {
+          // 先清除所有选中状态
+          testCaseTableRef.value.clearSelection()
+          
+          // 确保 selectedIds 中的元素都是数字类型
+          const numericSelectedIds = selectedTestCaseIds.value.map(id => 
+            typeof id === 'string' ? parseInt(id) : Number(id)
+          ).filter(id => !isNaN(id))
+          
+          // 从筛选后的用例列表中找到需要勾选的用例
+          const rowsToSelect = filteredTestCaseList.value.filter(testCase => {
+            const testCaseId = typeof testCase.id === 'string' ? parseInt(testCase.id) : Number(testCase.id)
+            return numericSelectedIds.includes(testCaseId)
+          })
+          
+          // 勾选对应的用例
+          if (rowsToSelect.length > 0) {
+            setTimeout(() => {
+              rowsToSelect.forEach(testCaseRow => {
+                testCaseTableRef.value.toggleRowSelection(testCaseRow, true)
+              })
+              // 触发选择变化事件
+              handleTestCaseSelectionChange(rowsToSelect)
+            }, 100)
+          }
+        }
+      }, 300)
+    }
+    
     // 步骤控制方法
     const handleNextStep = async () => {
       if (currentStep.value === 0) {
@@ -1208,6 +1246,10 @@ export default {
         currentStep.value = 1
         // 自动展开用例列表
         showTestCaseList.value = true
+        // 如果是编辑模式且有已选择的用例，自动勾选
+        if (form.id && selectedTestCaseIds.value.length > 0) {
+          await autoSelectTestCases()
+        }
       } else if (currentStep.value === 1) {
         // 从第二步到第三步（用例参数配置）
         // 检查是否有勾选的用例
@@ -1241,9 +1283,13 @@ export default {
     }
     
     // 上一步
-    const handlePrevStep = () => {
+    const handlePrevStep = async () => {
       if (currentStep.value > 0) {
         currentStep.value--
+        // 如果返回到第二步，自动勾选已选择的用例
+        if (currentStep.value === 1 && selectedTestCaseIds.value.length > 0) {
+          await autoSelectTestCases()
+        }
       }
     }
     
@@ -1647,15 +1693,18 @@ export default {
               // 先进入第二步，然后自动进入第三步
               currentStep.value = 1
               showTestCaseList.value = true
-              // 加载用例自定义参数列表
-              loadTestCaseCustomParams().then(() => {
-                // 等待用例列表加载完成后再进入第三步
-                setTimeout(() => {
-                  currentStep.value = 2
-                  if (selectedTestCases.value.length > 0) {
-                    activeBatchConfigItems.value = [selectedTestCases.value[0].id]
-                  }
-                }, 500)
+              // 自动勾选已选择的用例
+              autoSelectTestCases().then(() => {
+                // 加载用例自定义参数列表
+                loadTestCaseCustomParams().then(() => {
+                  // 等待用例列表加载完成后再进入第三步
+                  setTimeout(() => {
+                    currentStep.value = 2
+                    if (selectedTestCases.value.length > 0) {
+                      activeBatchConfigItems.value = [selectedTestCases.value[0].id]
+                    }
+                  }, 500)
+                })
               })
             } else {
               currentStep.value = 1
