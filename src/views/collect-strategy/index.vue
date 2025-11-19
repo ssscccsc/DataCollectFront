@@ -1685,6 +1685,17 @@ export default {
       { deep: true }
     )
 
+    // 监听用例展开/折叠状态，同步用例信息的展开/折叠
+    watch(
+      () => activeBatchConfigItems.value,
+      (newItems) => {
+        // 同步用例信息的展开/折叠状态
+        // 当用例展开时，用例信息也展开；当用例折叠时，用例信息也折叠
+        testCaseInfoCollapse.value = [...newItems]
+      },
+      { deep: true }
+    )
+
 
 
     const handleAdd = () => {
