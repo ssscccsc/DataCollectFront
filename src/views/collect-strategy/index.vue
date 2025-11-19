@@ -1188,7 +1188,30 @@ export default {
         return
       }
       
-      selectedTestCaseIds.value = selection.map(item => item.id)
+      // 获取当前所有已选中的用例ID（包括不在当前筛选列表中的）
+      // 因为表格设置了 reserve-selection，所以需要合并当前选中和之前已选中的
+      const currentSelectedIds = selection.map(item => item.id)
+      
+      // 合并当前选中的用例和之前已选中的用例（基于所有用例列表）
+      // 这样可以保留不在当前筛选列表中的已选用例
+      const allSelectedIds = new Set(selectedTestCaseIds.value)
+      
+      // 添加当前选中的用例
+      currentSelectedIds.forEach(id => {
+        allSelectedIds.add(id)
+      })
+      
+      // 检查哪些用例被取消勾选了（在当前筛选列表中的用例）
+      const filteredIds = filteredTestCaseList.value.map(tc => tc.id)
+      filteredIds.forEach(id => {
+        // 如果用例在当前筛选列表中，但不在当前选中列表中，说明被取消勾选了
+        if (!currentSelectedIds.includes(id)) {
+          allSelectedIds.delete(id)
+        }
+      })
+      
+      // 更新选中状态
+      selectedTestCaseIds.value = Array.from(allSelectedIds)
       
       // 勾选后默认使用（设置默认执行次数为1）
       selection.forEach(testCase => {
@@ -1631,18 +1654,20 @@ export default {
     })
 
     // 监听用例列表变化，自动勾选已选择的用例（编辑模式）
+    // 注意：筛选条件变化时不应该触发自动勾选，因为已勾选的用例应该保留
     watch(
-      () => [filteredTestCaseList.value, currentStep.value, showTestCaseList.value],
+      () => [testCaseList.value, currentStep.value, showTestCaseList.value],
       ([newList, step, showList], [oldList, oldStep, oldShowList]) => {
         // 只在第二步且用例列表展开时，且是编辑模式时自动勾选
-        // 避免在步骤切换时重复触发（只在首次进入或列表变化时触发）
-        if (step === 1 && showList && form.id && selectedTestCaseIds.value.length > 0 && newList.length > 0) {
+        // 只在用例列表从空变为有数据，或者步骤从其他变为第二步时触发
+        // 注意：使用 testCaseList 而不是 filteredTestCaseList，避免筛选条件变化时触发
+        if (step === 1 && showList && form.id && selectedTestCaseIds.value.length > 0) {
           // 如果正在自动勾选，不重复触发
           if (isAutoSelecting.value) {
             return
           }
           
-          // 只在列表从空变为有数据，或者步骤从其他变为第二步时触发
+          // 只在用例列表从空变为有数据，或者步骤从其他变为第二步时触发
           const shouldTrigger = (oldList?.length === 0 && newList.length > 0) || 
                                (oldStep !== 1 && step === 1) ||
                                (oldShowList !== showList && showList)
@@ -2214,6 +2239,7 @@ export default {
       handleTestCaseSelectionChange,
       selectedTestCaseIds,
       selectedTestCases,
+      testCaseTableRef,
     }
   },
 }
