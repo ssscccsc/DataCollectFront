@@ -952,6 +952,7 @@ export default {
     const batchConfigDialogVisible = ref(false)
     const activeBatchConfigItems = ref([])
     const testCaseInfoCollapse = ref([]) // 用例信息折叠状态（默认隐藏，空数组表示全部折叠）
+    const isAutoSelecting = ref(false) // 标记是否正在自动勾选，避免重复触发
     
     // 用例自定义参数配置
     const testCaseParamsDialogVisible = ref(false)
@@ -1182,6 +1183,11 @@ export default {
     
     // 处理用例选择变化
     const handleTestCaseSelectionChange = (selection) => {
+      // 如果正在自动勾选，不更新状态（避免覆盖）
+      if (isAutoSelecting.value) {
+        return
+      }
+      
       selectedTestCaseIds.value = selection.map(item => item.id)
       
       // 勾选后默认使用（设置默认执行次数为1）
@@ -1203,9 +1209,12 @@ export default {
     
     // 自动勾选已选择的用例
     const autoSelectTestCases = async () => {
-      if (selectedTestCaseIds.value.length === 0) {
+      if (selectedTestCaseIds.value.length === 0 || isAutoSelecting.value) {
         return
       }
+      
+      // 设置标记，防止重复触发
+      isAutoSelecting.value = true
       
       // 等待表格渲染完成
       await nextTick()
@@ -1220,6 +1229,8 @@ export default {
         if (!testCaseTableRef.value) {
           if (attempts < maxAttempts) {
             setTimeout(trySelect, 200)
+          } else {
+            isAutoSelecting.value = false
           }
           return
         }
@@ -1228,6 +1239,8 @@ export default {
         if (filteredTestCaseList.value.length === 0) {
           if (attempts < maxAttempts) {
             setTimeout(trySelect, 200)
+          } else {
+            isAutoSelecting.value = false
           }
           return
         }
@@ -1248,26 +1261,43 @@ export default {
         
         // 勾选对应的用例
         if (rowsToSelect.length > 0) {
+          // 先清除，确保状态正确
+          testCaseTableRef.value.clearSelection()
+          
+          // 等待一下确保清除完成
           setTimeout(() => {
-            // 再次清除，确保状态正确
-            testCaseTableRef.value.clearSelection()
-            
-            // 逐个勾选用例
-            rowsToSelect.forEach((testCaseRow, index) => {
-              setTimeout(() => {
-                if (testCaseTableRef.value) {
-                  testCaseTableRef.value.toggleRowSelection(testCaseRow, true)
-                  
-                  // 最后一个用例勾选完成后，触发选择变化事件
-                  if (index === rowsToSelect.length - 1) {
-                    setTimeout(() => {
-                      handleTestCaseSelectionChange(rowsToSelect)
-                    }, 100)
-                  }
-                }
-              }, index * 50)
+            // 批量勾选所有用例（不使用延迟，避免状态不一致）
+            rowsToSelect.forEach(testCaseRow => {
+              if (testCaseTableRef.value) {
+                testCaseTableRef.value.toggleRowSelection(testCaseRow, true)
+              }
             })
+            
+            // 等待所有勾选完成后再更新状态
+            setTimeout(() => {
+              // 获取当前表格中所有选中的行
+              const currentSelected = testCaseTableRef.value?.getSelectionRows() || []
+              
+              // 重置标记（在更新状态之前重置，这样 handleTestCaseSelectionChange 可以正常执行）
+              isAutoSelecting.value = false
+              
+              // 更新选中状态
+              if (currentSelected.length > 0) {
+                // 直接更新 selectedTestCaseIds，不通过 handleTestCaseSelectionChange
+                // 因为 handleTestCaseSelectionChange 会检查 isAutoSelecting
+                selectedTestCaseIds.value = currentSelected.map(item => item.id)
+                
+                // 确保执行次数已设置
+                currentSelected.forEach(testCase => {
+                  if (!form.testCaseExecutionCounts[testCase.id] || form.testCaseExecutionCounts[testCase.id] === 0) {
+                    form.testCaseExecutionCounts[testCase.id] = 1
+                  }
+                })
+              }
+            }, 200)
           }, 100)
+        } else {
+          isAutoSelecting.value = false
         }
       }
       
@@ -1603,13 +1633,26 @@ export default {
     // 监听用例列表变化，自动勾选已选择的用例（编辑模式）
     watch(
       () => [filteredTestCaseList.value, currentStep.value, showTestCaseList.value],
-      ([newList, step, showList]) => {
+      ([newList, step, showList], [oldList, oldStep, oldShowList]) => {
         // 只在第二步且用例列表展开时，且是编辑模式时自动勾选
+        // 避免在步骤切换时重复触发（只在首次进入或列表变化时触发）
         if (step === 1 && showList && form.id && selectedTestCaseIds.value.length > 0 && newList.length > 0) {
-          // 延迟执行，确保表格已渲染
-          setTimeout(() => {
-            autoSelectTestCases()
-          }, 500)
+          // 如果正在自动勾选，不重复触发
+          if (isAutoSelecting.value) {
+            return
+          }
+          
+          // 只在列表从空变为有数据，或者步骤从其他变为第二步时触发
+          const shouldTrigger = (oldList?.length === 0 && newList.length > 0) || 
+                               (oldStep !== 1 && step === 1) ||
+                               (oldShowList !== showList && showList)
+          
+          if (shouldTrigger) {
+            // 延迟执行，确保表格已渲染
+            setTimeout(() => {
+              autoSelectTestCases()
+            }, 500)
+          }
         }
       },
       { deep: true }
