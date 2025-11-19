@@ -241,6 +241,22 @@
               />
             </el-select>
           </el-form-item>
+          
+          <!-- 描述和状态字段 -->
+          <el-form-item :label="$t('collectStrategy.descriptionLabel')" prop="description">
+            <el-input
+              v-model="form.description"
+              type="textarea"
+              :rows="3"
+              :placeholder="$t('collectStrategy.descriptionPlaceholder')"
+            />
+          </el-form-item>
+          <el-form-item :label="$t('collectStrategy.statusLabel')" prop="status">
+            <el-radio-group v-model="form.status">
+              <el-radio :label="1">{{ $t('collectStrategy.enabled') }}</el-radio>
+              <el-radio :label="0">{{ $t('collectStrategy.disabled') }}</el-radio>
+            </el-radio-group>
+          </el-form-item>
         </div>
         
         <!-- 第二步：用例处理配置 -->
@@ -580,24 +596,6 @@
               </el-collapse-item>
             </el-collapse>
           </div>
-        </div>
-        
-        <!-- 描述和状态字段（仅在编辑时显示） -->
-        <div v-if="form.id" class="step-content">
-          <el-form-item :label="$t('collectStrategy.descriptionLabel')" prop="description">
-            <el-input
-              v-model="form.description"
-              type="textarea"
-              :rows="3"
-              :placeholder="$t('collectStrategy.descriptionPlaceholder')"
-            />
-          </el-form-item>
-          <el-form-item :label="$t('collectStrategy.statusLabel')" prop="status">
-            <el-radio-group v-model="form.status">
-              <el-radio :label="1">{{ $t('collectStrategy.enabled') }}</el-radio>
-              <el-radio :label="0">{{ $t('collectStrategy.disabled') }}</el-radio>
-            </el-radio-group>
-          </el-form-item>
         </div>
       </el-form>
       <template #footer>
