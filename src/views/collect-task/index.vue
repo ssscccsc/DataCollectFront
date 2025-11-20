@@ -2717,6 +2717,9 @@ export default {
 
 .environments-content {
   min-height: 200px;
+  max-height: 500px;
+  overflow-y: auto;
+  padding-right: 8px;
 }
 
 .no-environments {
