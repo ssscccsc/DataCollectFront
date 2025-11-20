@@ -727,7 +727,7 @@
               </template>
             </el-alert>
 
-            <el-collapse v-model="activeTestCaseConfigItems">
+            <el-collapse v-model="activeTestCaseConfigItems" accordion>
               <el-collapse-item 
                 v-for="(testCase, index) in selectedTestCases" 
                 :key="testCase.id"
@@ -749,38 +749,34 @@
                 </template>
                 
                 <div class="test-case-config-item-content">
-                  <!-- 用例基本信息（默认隐藏） -->
-                  <el-collapse v-model="taskTestCaseInfoCollapse" style="margin-bottom: 16px;">
-                    <el-collapse-item :name="testCase.id">
-                      <template #title>
-                        <span style="font-size: 14px; color: #606266;">
-                          <el-icon><InfoFilled /></el-icon>
-                          {{ $t('collectTask.testCaseInfo') }}
-                        </span>
-                      </template>
-                      <el-descriptions :column="3" border size="small">
-                        <el-descriptions-item :label="$t('collectTask.businessCategory')">
-                          {{ testCase.businessCategory || $t('collectTask.notConfigured') }}
-                        </el-descriptions-item>
-                        <el-descriptions-item :label="$t('collectTask.app')">
-                          {{ testCase.app || $t('collectTask.notConfigured') }}
-                        </el-descriptions-item>
-                        <el-descriptions-item :label="$t('collectTask.logicNetwork')">
-                          <div v-if="testCase.logicNetwork">
-                            <el-tag 
-                              v-for="network in testCase.logicNetwork.split(';')" 
-                              :key="network"
-                              size="small"
-                              style="margin-right: 4px;"
-                            >
-                              {{ network }}
-                            </el-tag>
-                          </div>
-                          <span v-else>{{ $t('collectTask.notConfigured') }}</span>
-                        </el-descriptions-item>
-                      </el-descriptions>
-                    </el-collapse-item>
-                  </el-collapse>
+                  <!-- 用例基本信息（直接显示） -->
+                  <div class="test-case-info-section" style="margin-bottom: 16px;">
+                    <div class="test-case-info-title" style="font-size: 14px; color: #606266; margin-bottom: 12px; font-weight: 600;">
+                      <el-icon><InfoFilled /></el-icon>
+                      <span style="margin-left: 4px;">{{ $t('collectTask.testCaseInfo') }}</span>
+                    </div>
+                    <el-descriptions :column="3" border size="small">
+                      <el-descriptions-item :label="$t('collectTask.businessCategory')">
+                        {{ testCase.businessCategory || $t('collectTask.notConfigured') }}
+                      </el-descriptions-item>
+                      <el-descriptions-item :label="$t('collectTask.app')">
+                        {{ testCase.app || $t('collectTask.notConfigured') }}
+                      </el-descriptions-item>
+                      <el-descriptions-item :label="$t('collectTask.logicNetwork')">
+                        <div v-if="testCase.logicNetwork">
+                          <el-tag 
+                            v-for="network in testCase.logicNetwork.split(';')" 
+                            :key="network"
+                            size="small"
+                            style="margin-right: 4px;"
+                          >
+                            {{ network }}
+                          </el-tag>
+                        </div>
+                        <span v-else>{{ $t('collectTask.notConfigured') }}</span>
+                      </el-descriptions-item>
+                    </el-descriptions>
+                  </div>
 
                   <!-- 执行次数配置 -->
                   <div class="config-section">
@@ -1283,8 +1279,7 @@ export default {
     const currentStep = ref(0)
     
     // 用例配置相关
-    const activeTestCaseConfigItems = ref([]) // 用例配置展开项
-    const taskTestCaseInfoCollapse = ref([]) // 用例信息折叠状态
+    const activeTestCaseConfigItems = ref(null) // 用例配置展开项（accordion模式，只展开一个）
     const taskTestCaseExecutionCounts = ref({}) // 用例执行次数 { testCaseId: count }
     const taskTestCaseCustomParams = ref({}) // 用例自定义参数 { testCaseId: [{ key: '', value: [] }] }
     const testCaseCustomParamList = ref([]) // 用例自定义参数列表
@@ -2180,8 +2175,7 @@ export default {
       currentStep.value = 0
       
       // 重置用例配置
-      activeTestCaseConfigItems.value = []
-      taskTestCaseInfoCollapse.value = []
+      activeTestCaseConfigItems.value = null
       taskTestCaseExecutionCounts.value = {}
       taskTestCaseCustomParams.value = {}
       testCaseCustomParamList.value = []
@@ -2347,9 +2341,26 @@ export default {
       }
     }
     
-    // 获取参数键选项（根据用例的业务大类和appEn匹配，并去重）
+    // 获取当前展开的用例
+    const currentExpandedTestCase = computed(() => {
+      if (!activeTestCaseConfigItems.value) {
+        return null
+      }
+      const expandedId = typeof activeTestCaseConfigItems.value === 'string' 
+        ? parseInt(activeTestCaseConfigItems.value) 
+        : Number(activeTestCaseConfigItems.value)
+      return selectedTestCases.value.find(tc => {
+        const tcId = typeof tc.id === 'string' ? parseInt(tc.id) : Number(tc.id)
+        return tcId === expandedId
+      }) || null
+    })
+    
+    // 获取参数键选项（根据当前展开用例的业务大类和appEn匹配，并去重）
     const getTaskParamKeyOptions = (testCase) => {
-      if (!testCase || !testCaseCustomParamList.value || testCaseCustomParamList.value.length === 0) {
+      // 如果传入了testCase，使用传入的testCase；否则使用当前展开的用例
+      const targetTestCase = testCase || currentExpandedTestCase.value
+      
+      if (!targetTestCase || !testCaseCustomParamList.value || testCaseCustomParamList.value.length === 0) {
         return []
       }
       
@@ -2360,10 +2371,10 @@ export default {
         }
         
         // 匹配业务大类
-        const businessCategoryMatch = !param.businessCategory || param.businessCategory === testCase.businessCategory
+        const businessCategoryMatch = !param.businessCategory || param.businessCategory === targetTestCase.businessCategory
         
         // 匹配appEn（需要从用例中获取appEn，如果没有则使用app字段）
-        const appEn = testCase.appEn || testCase.app || ''
+        const appEn = targetTestCase.appEn || targetTestCase.app || ''
         const appEnMatch = !param.appEn || param.appEn === appEn
         
         // 如果参数有业务大类或appEn限制，需要同时匹配
@@ -2387,7 +2398,7 @@ export default {
       return uniqueParams
     }
     
-    // 获取参数值选项（根据用例的业务大类和appEn匹配）
+    // 获取参数值选项（根据当前展开用例的业务大类和appEn匹配）
     const getTaskParamValueOptions = (testCaseId, paramIndex) => {
       const id = typeof testCaseId === 'string' ? parseInt(testCaseId) : Number(testCaseId)
       const params = taskTestCaseCustomParams.value[id]
@@ -2400,11 +2411,14 @@ export default {
         return []
       }
       
-      // 找到对应的用例对象
-      const testCase = selectedTestCases.value.find(tc => {
-        const tcId = typeof tc.id === 'string' ? parseInt(tc.id) : Number(tc.id)
-        return tcId === id
-      })
+      // 优先使用当前展开的用例，如果没有展开则使用传入的testCaseId对应的用例
+      let testCase = currentExpandedTestCase.value
+      if (!testCase) {
+        testCase = selectedTestCases.value.find(tc => {
+          const tcId = typeof tc.id === 'string' ? parseInt(tc.id) : Number(tc.id)
+          return tcId === id
+        })
+      }
       
       if (!testCase) {
         return []
@@ -3026,7 +3040,7 @@ export default {
       // 用例配置相关
       selectedTestCases,
       activeTestCaseConfigItems,
-      taskTestCaseInfoCollapse,
+      currentExpandedTestCase,
       taskTestCaseExecutionCounts,
       taskTestCaseCustomParams,
       getTaskTestCaseExecutionCount,
