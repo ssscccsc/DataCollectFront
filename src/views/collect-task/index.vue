@@ -2260,7 +2260,7 @@ export default {
         }
         taskTestCaseExecutionCounts.value[testCaseId] = executionCount
         
-        // 初始化自定义参数（从策略中获取）
+        // 初始化自定义参数（从策略中获取，每个用例独立）
         let customParams = []
         if (selectedStrategy.value.testCaseCustomParams) {
           let testCaseCustomParams = {}
@@ -2270,15 +2270,13 @@ export default {
             testCaseCustomParams = selectedStrategy.value.testCaseCustomParams
           }
           if (testCaseCustomParams[testCaseId] && Array.isArray(testCaseCustomParams[testCaseId])) {
+            // 深拷贝，确保每个用例的参数完全独立
             customParams = JSON.parse(JSON.stringify(testCaseCustomParams[testCaseId]))
           }
         }
         
-        // 如果没有参数，添加一个空的参数项
-        if (customParams.length === 0) {
-          customParams.push({ key: '', value: [] })
-        }
-        
+        // 确保每个用例都有独立的参数数组（即使为空）
+        // 不强制添加空参数项，让用户自己决定是否添加参数
         taskTestCaseCustomParams.value[testCaseId] = customParams
       })
       
@@ -2334,9 +2332,9 @@ export default {
       const id = typeof testCaseId === 'string' ? parseInt(testCaseId) : Number(testCaseId)
       if (taskTestCaseCustomParams.value[id] && taskTestCaseCustomParams.value[id].length > paramIndex) {
         taskTestCaseCustomParams.value[id].splice(paramIndex, 1)
-        // 确保至少有一个参数项
-        if (taskTestCaseCustomParams.value[id].length === 0) {
-          taskTestCaseCustomParams.value[id].push({ key: '', value: [] })
+        // 如果删除后数组为空，确保数组存在但为空数组（不强制添加空项）
+        if (!taskTestCaseCustomParams.value[id]) {
+          taskTestCaseCustomParams.value[id] = []
         }
       }
     }
