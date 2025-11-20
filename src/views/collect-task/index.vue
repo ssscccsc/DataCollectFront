@@ -2264,19 +2264,67 @@ export default {
         let customParams = []
         if (selectedStrategy.value.testCaseCustomParams) {
           let testCaseCustomParams = {}
-          if (typeof selectedStrategy.value.testCaseCustomParams === 'string') {
-            testCaseCustomParams = JSON.parse(selectedStrategy.value.testCaseCustomParams)
-          } else if (typeof selectedStrategy.value.testCaseCustomParams === 'object') {
-            testCaseCustomParams = selectedStrategy.value.testCaseCustomParams
+          try {
+            if (typeof selectedStrategy.value.testCaseCustomParams === 'string') {
+              testCaseCustomParams = JSON.parse(selectedStrategy.value.testCaseCustomParams)
+            } else if (typeof selectedStrategy.value.testCaseCustomParams === 'object') {
+              testCaseCustomParams = selectedStrategy.value.testCaseCustomParams
+            }
+          } catch (error) {
+            console.warn('Failed to parse testCaseCustomParams:', error)
+            testCaseCustomParams = {}
           }
+          
+          // 尝试多种ID格式匹配（字符串ID、数字ID）
+          let matchedParams = null
           if (testCaseCustomParams[testCaseId] && Array.isArray(testCaseCustomParams[testCaseId])) {
+            matchedParams = testCaseCustomParams[testCaseId]
+          } else if (testCaseCustomParams[String(testCaseId)] && Array.isArray(testCaseCustomParams[String(testCaseId)])) {
+            matchedParams = testCaseCustomParams[String(testCaseId)]
+          }
+          
+          if (matchedParams && Array.isArray(matchedParams)) {
             // 深拷贝，确保每个用例的参数完全独立
-            customParams = JSON.parse(JSON.stringify(testCaseCustomParams[testCaseId]))
+            customParams = JSON.parse(JSON.stringify(matchedParams))
+            
+            // 确保参数值的格式正确（value应该是数组）
+            customParams = customParams.map(param => {
+              let valueArray = []
+              if (Array.isArray(param.value)) {
+                // 如果已经是数组，直接使用
+                valueArray = param.value
+              } else if (param.value !== null && param.value !== undefined) {
+                // 如果是字符串，尝试解析或转换为数组
+                if (typeof param.value === 'string') {
+                  try {
+                    // 尝试解析JSON数组
+                    const parsed = JSON.parse(param.value)
+                    if (Array.isArray(parsed)) {
+                      valueArray = parsed
+                    } else {
+                      // 如果不是数组，尝试按逗号分隔
+                      valueArray = param.value.split(',').map(v => v.trim()).filter(v => v)
+                    }
+                  } catch {
+                    // 解析失败，按逗号分隔
+                    valueArray = param.value.split(',').map(v => v.trim()).filter(v => v)
+                  }
+                } else {
+                  // 其他类型，转换为数组
+                  valueArray = [String(param.value)]
+                }
+              }
+              
+              return {
+                key: param.key || '',
+                value: valueArray
+              }
+            })
           }
         }
         
         // 确保每个用例都有独立的参数数组（即使为空）
-        // 不强制添加空参数项，让用户自己决定是否添加参数
+        // 如果策略中有参数，自动回填；如果没有，初始化为空数组
         taskTestCaseCustomParams.value[testCaseId] = customParams
       })
       
