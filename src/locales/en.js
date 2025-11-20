@@ -191,6 +191,17 @@ export default {
     resultBlocked: 'Blocked',
     // Create Task Dialog
     createTask: 'Create Collection Task',
+    // Step Navigation
+    step1Title: 'Basic Information',
+    step1Desc: 'Fill in basic task information',
+    step2Title: 'Collection Strategy',
+    step2Desc: 'Select collection strategy',
+    step3Title: 'Environment Orchestration',
+    step3Desc: 'Configure execution environment',
+    step4Title: 'Test Case Configuration',
+    step4Desc: 'Configure test case parameters and execution count',
+    prevStep: 'Previous Step',
+    nextStep: 'Next Step',
     basicInfoTitle: 'Basic Information',
     taskNameLabel: 'Task Name',
     taskNamePlaceholder: 'Please enter collection task name',
@@ -318,6 +329,20 @@ export default {
     taskCreatedFailed: 'Task creation failed',
     dataRefreshSuccess: 'Data refresh successful',
     dataRefreshFailed: 'Data refresh failed',
+    // Test Case Configuration
+    testCaseConfigTitle: 'Test Case Configuration',
+    testCaseConfigTip: 'Test Case Configuration Tips',
+    testCaseConfigDescription: 'Selected {count} test cases, please configure execution count and custom parameters for each test case',
+    testCaseInfo: 'Test Case Information',
+    executionConfig: 'Execution Count Configuration',
+    executionCountPlaceholder: 'Please enter execution count',
+    executionCountTip: 'Execution count for each test case, range: 1-100',
+    testCaseParamsLabel: 'Test Case Custom Parameters',
+    noTestCaseParams: 'No parameters',
+    noTestCasesSelected: 'No test cases selected',
+    paramKey: 'Parameter Name',
+    businessCategory: 'Business Category',
+    app: 'APP',
   },
   
   // Collection Strategy Management
