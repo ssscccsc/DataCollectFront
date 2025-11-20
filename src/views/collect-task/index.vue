@@ -259,7 +259,7 @@
     <el-dialog
       v-model="dialogVisible"
       :title="dialogTitle"
-      width="90%"
+      width="60%"
       top="5vh"
       @close="resetForm"
     >
