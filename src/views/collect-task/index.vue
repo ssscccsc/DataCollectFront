@@ -500,7 +500,13 @@
             label-width="120px"
           >
             <el-form-item :label="$t('collectTask.regionFilter')" prop="regionId">
-              <el-select v-model="environmentForm.regionId" :placeholder="$t('collectTask.regionPlaceholder')" style="width: 100%" @change="handleRegionChange">
+              <el-select 
+                v-model="environmentForm.regionId" 
+                :placeholder="$t('collectTask.regionPlaceholder')" 
+                style="width: 100%" 
+                clearable
+                @change="handleRegionChange"
+              >
                 <el-option
                   v-for="item in regionOptions"
                   :key="item.id"
@@ -510,7 +516,14 @@
               </el-select>
             </el-form-item>
             <el-form-item :label="$t('collectTask.countryFilter')" prop="countryId">
-              <el-select v-model="environmentForm.countryId" :placeholder="$t('collectTask.countryPlaceholder')" style="width: 100%" @change="handleCountryChange" :disabled="!environmentForm.regionId">
+              <el-select 
+                v-model="environmentForm.countryId" 
+                :placeholder="$t('collectTask.countryPlaceholder')" 
+                style="width: 100%" 
+                clearable
+                @change="handleCountryChange" 
+                :disabled="!environmentForm.regionId"
+              >
                 <el-option
                   v-for="item in countryOptions"
                   :key="item.id"
@@ -520,7 +533,14 @@
               </el-select>
             </el-form-item>
             <el-form-item :label="$t('collectTask.provinceFilter')" prop="provinceId">
-              <el-select v-model="environmentForm.provinceId" :placeholder="$t('collectTask.provincePlaceholder')" style="width: 100%" @change="handleProvinceChange" :disabled="!environmentForm.countryId">
+              <el-select 
+                v-model="environmentForm.provinceId" 
+                :placeholder="$t('collectTask.provincePlaceholder')" 
+                style="width: 100%" 
+                clearable
+                @change="handleProvinceChange" 
+                :disabled="!environmentForm.countryId"
+              >
                 <el-option
                   v-for="item in provinceOptions"
                   :key="item.id"
@@ -530,7 +550,14 @@
               </el-select>
             </el-form-item>
             <el-form-item :label="$t('collectTask.cityFilter')" prop="cityId">
-              <el-select v-model="environmentForm.cityId" :placeholder="$t('collectTask.cityPlaceholder')" style="width: 100%" @change="handleCityChange" :disabled="!environmentForm.provinceId">
+              <el-select 
+                v-model="environmentForm.cityId" 
+                :placeholder="$t('collectTask.cityPlaceholder')" 
+                style="width: 100%" 
+                clearable
+                @change="handleCityChange" 
+                :disabled="!environmentForm.provinceId"
+              >
                 <el-option
                   v-for="item in cityOptions"
                   :key="item.id"
@@ -1640,36 +1667,54 @@ export default {
 
     // 环境选择事件处理
     const handleRegionChange = async (regionId) => {
-      environmentForm.countryId = null
-      environmentForm.provinceId = null
-      environmentForm.cityId = null
-      countryOptions.value = []
-      provinceOptions.value = []
-      cityOptions.value = []
-      
-      if (regionId) {
+      // 如果清除了区域选择，清空下级选项
+      if (!regionId) {
+        environmentForm.countryId = null
+        environmentForm.provinceId = null
+        environmentForm.cityId = null
+        countryOptions.value = []
+        provinceOptions.value = []
+        cityOptions.value = []
+      } else {
+        // 如果选择了区域，清空下级选项并加载国家选项
+        environmentForm.countryId = null
+        environmentForm.provinceId = null
+        environmentForm.cityId = null
+        countryOptions.value = []
+        provinceOptions.value = []
+        cityOptions.value = []
         await loadCountryOptions(regionId)
       }
       await loadAvailableEnvironments()
     }
 
     const handleCountryChange = async (countryId) => {
-      environmentForm.provinceId = null
-      environmentForm.cityId = null
-      provinceOptions.value = []
-      cityOptions.value = []
-      
-      if (countryId) {
+      // 如果清除了国家选择，清空下级选项
+      if (!countryId) {
+        environmentForm.provinceId = null
+        environmentForm.cityId = null
+        provinceOptions.value = []
+        cityOptions.value = []
+      } else {
+        // 如果选择了国家，清空下级选项并加载省份选项
+        environmentForm.provinceId = null
+        environmentForm.cityId = null
+        provinceOptions.value = []
+        cityOptions.value = []
         await loadProvinceOptions(countryId)
       }
       await loadAvailableEnvironments()
     }
 
     const handleProvinceChange = async (provinceId) => {
-      environmentForm.cityId = null
-      cityOptions.value = []
-      
-      if (provinceId) {
+      // 如果清除了省份选择，清空下级选项
+      if (!provinceId) {
+        environmentForm.cityId = null
+        cityOptions.value = []
+      } else {
+        // 如果选择了省份，清空下级选项并加载城市选项
+        environmentForm.cityId = null
+        cityOptions.value = []
         await loadCityOptions(provinceId)
       }
       await loadAvailableEnvironments()
