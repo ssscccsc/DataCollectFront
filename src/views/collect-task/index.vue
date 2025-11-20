@@ -832,6 +832,8 @@
                           :placeholder="$t('collectTask.paramKey')" 
                           size="small"
                           filterable
+                          allow-create
+                          default-first-option
                           clearable
                           style="flex: 1;"
                           @change="handleTaskParamKeyChange(testCase.id, paramIndex)"
@@ -849,6 +851,8 @@
                           size="small"
                           multiple
                           filterable
+                          allow-create
+                          default-first-option
                           clearable
                           style="flex: 1;"
                         >
@@ -2343,13 +2347,13 @@ export default {
       }
     }
     
-    // 获取参数键选项（根据用例的业务大类和appEn匹配）
+    // 获取参数键选项（根据用例的业务大类和appEn匹配，并去重）
     const getTaskParamKeyOptions = (testCase) => {
       if (!testCase || !testCaseCustomParamList.value || testCaseCustomParamList.value.length === 0) {
         return []
       }
       
-      return testCaseCustomParamList.value.filter(param => {
+      const matchedParams = testCaseCustomParamList.value.filter(param => {
         // 如果参数没有业务大类限制，则所有用例都可以使用
         if (!param.businessCategory && !param.appEn) {
           return true
@@ -2369,6 +2373,18 @@ export default {
         
         return true
       })
+      
+      // 根据 paramName 去重
+      const uniqueParams = []
+      const seenParamNames = new Set()
+      matchedParams.forEach(param => {
+        if (param.paramName && !seenParamNames.has(param.paramName)) {
+          seenParamNames.add(param.paramName)
+          uniqueParams.push(param)
+        }
+      })
+      
+      return uniqueParams
     }
     
     // 获取参数值选项（根据用例的业务大类和appEn匹配）
@@ -2421,15 +2437,24 @@ export default {
         return true
       })
       
-      // 如果找到匹配的参数定义，返回参数值列表
-      if (matchedParams.length > 0) {
-        const paramDef = matchedParams[0]
-        if (paramDef.paramValues && Array.isArray(paramDef.paramValues)) {
-          return paramDef.paramValues
-        }
-      }
+      // 合并所有匹配参数的参数值列表，并去重
+      const allParamValues = []
+      const seenValues = new Set()
       
-      return []
+      matchedParams.forEach(paramDef => {
+        if (paramDef.paramValues && Array.isArray(paramDef.paramValues)) {
+          paramDef.paramValues.forEach(value => {
+            // 确保值是字符串类型，并去重
+            const valueStr = String(value).trim()
+            if (valueStr && !seenValues.has(valueStr)) {
+              seenValues.add(valueStr)
+              allParamValues.push(valueStr)
+            }
+          })
+        }
+      })
+      
+      return allParamValues
     }
     
     // 处理参数键变化
