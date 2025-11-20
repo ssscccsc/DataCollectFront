@@ -2290,18 +2290,15 @@ export default {
     
     // 加载用例自定义参数列表
     const loadTestCaseCustomParamList = async () => {
-      if (!selectedStrategy.value || !selectedStrategy.value.testCaseSetId) {
-        testCaseCustomParamList.value = []
-        return
-      }
-      
       try {
         const res = await request({
-          url: `/test-case-set/${selectedStrategy.value.testCaseSetId}/custom-params`,
+          url: '/test-case-custom-param/list',
           method: 'get',
         })
         if (res.data) {
-          testCaseCustomParamList.value = res.data
+          testCaseCustomParamList.value = res.data || []
+        } else {
+          testCaseCustomParamList.value = []
         }
       } catch (error) {
         console.error('加载用例自定义参数列表失败:', error)
@@ -2346,15 +2343,35 @@ export default {
       }
     }
     
-    // 获取参数键选项
+    // 获取参数键选项（根据用例的业务大类和appEn匹配）
     const getTaskParamKeyOptions = (testCase) => {
+      if (!testCase || !testCaseCustomParamList.value || testCaseCustomParamList.value.length === 0) {
+        return []
+      }
+      
       return testCaseCustomParamList.value.filter(param => {
-        // 可以根据用例的其他属性进行过滤
+        // 如果参数没有业务大类限制，则所有用例都可以使用
+        if (!param.businessCategory && !param.appEn) {
+          return true
+        }
+        
+        // 匹配业务大类
+        const businessCategoryMatch = !param.businessCategory || param.businessCategory === testCase.businessCategory
+        
+        // 匹配appEn（需要从用例中获取appEn，如果没有则使用app字段）
+        const appEn = testCase.appEn || testCase.app || ''
+        const appEnMatch = !param.appEn || param.appEn === appEn
+        
+        // 如果参数有业务大类或appEn限制，需要同时匹配
+        if (param.businessCategory || param.appEn) {
+          return businessCategoryMatch && appEnMatch
+        }
+        
         return true
       })
     }
     
-    // 获取参数值选项
+    // 获取参数值选项（根据用例的业务大类和appEn匹配）
     const getTaskParamValueOptions = (testCaseId, paramIndex) => {
       const id = typeof testCaseId === 'string' ? parseInt(testCaseId) : Number(testCaseId)
       const params = taskTestCaseCustomParams.value[id]
@@ -2367,10 +2384,49 @@ export default {
         return []
       }
       
-      // 从参数列表中查找对应的参数定义
-      const paramDef = testCaseCustomParamList.value.find(p => p.paramName === paramKey)
-      if (paramDef && paramDef.paramValues && Array.isArray(paramDef.paramValues)) {
-        return paramDef.paramValues
+      // 找到对应的用例对象
+      const testCase = selectedTestCases.value.find(tc => {
+        const tcId = typeof tc.id === 'string' ? parseInt(tc.id) : Number(tc.id)
+        return tcId === id
+      })
+      
+      if (!testCase) {
+        return []
+      }
+      
+      // 从参数列表中查找对应的参数定义，并根据业务大类和appEn匹配
+      const matchedParams = testCaseCustomParamList.value.filter(p => {
+        // 参数名必须匹配
+        if (p.paramName !== paramKey) {
+          return false
+        }
+        
+        // 如果参数没有业务大类限制，则所有用例都可以使用
+        if (!p.businessCategory && !p.appEn) {
+          return true
+        }
+        
+        // 匹配业务大类
+        const businessCategoryMatch = !p.businessCategory || p.businessCategory === testCase.businessCategory
+        
+        // 匹配appEn（需要从用例中获取appEn，如果没有则使用app字段）
+        const appEn = testCase.appEn || testCase.app || ''
+        const appEnMatch = !p.appEn || p.appEn === appEn
+        
+        // 如果参数有业务大类或appEn限制，需要同时匹配
+        if (p.businessCategory || p.appEn) {
+          return businessCategoryMatch && appEnMatch
+        }
+        
+        return true
+      })
+      
+      // 如果找到匹配的参数定义，返回参数值列表
+      if (matchedParams.length > 0) {
+        const paramDef = matchedParams[0]
+        if (paramDef.paramValues && Array.isArray(paramDef.paramValues)) {
+          return paramDef.paramValues
+        }
       }
       
       return []
