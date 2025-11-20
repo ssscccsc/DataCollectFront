@@ -192,12 +192,8 @@ export default {
     // 创建任务对话框
     createTask: '新建采集任务',
     // 步骤导航
-    step1Title: '基本信息',
-    step1Desc: '填写任务基本信息',
-    step2Title: '采集策略',
-    step2Desc: '选择采集策略',
-    step3Title: '环境编排',
-    step3Desc: '配置执行环境',
+    step1Title: '任务配置',
+    step1Desc: '填写基本信息、选择采集策略、配置执行环境',
     step4Title: '用例配置',
     step4Desc: '配置用例参数和执行次数',
     prevStep: '上一步',

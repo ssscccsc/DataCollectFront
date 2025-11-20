@@ -267,17 +267,17 @@
       <div class="step-navigation">
         <el-steps :active="currentStep" align-center>
           <el-step :title="$t('collectTask.step1Title')" :description="$t('collectTask.step1Desc')" />
-          <el-step :title="$t('collectTask.step2Title')" :description="$t('collectTask.step2Desc')" />
-          <el-step :title="$t('collectTask.step3Title')" :description="$t('collectTask.step3Desc')" />
           <el-step :title="$t('collectTask.step4Title')" :description="$t('collectTask.step4Desc')" />
         </el-steps>
       </div>
       
       <!-- 步骤内容 -->
       <div class="step-content">
-        <!-- 步骤1：基本信息 -->
+        <!-- 步骤1：基本信息、采集策略、环境编排 -->
         <div v-if="currentStep === 0" class="step-panel">
-          <h3 class="step-title">{{ $t('collectTask.basicInfoTitle') }}</h3>
+          <!-- 基本信息 -->
+          <div class="sub-step-section">
+            <h3 class="step-title">{{ $t('collectTask.basicInfoTitle') }}</h3>
           <el-form
             ref="basicFormRef"
             :model="basicForm"
@@ -296,11 +296,11 @@
               />
             </el-form-item>
           </el-form>
-        </div>
+          </div>
 
-        <!-- 步骤2：采集策略 -->
-        <div v-if="currentStep === 1" class="step-panel">
-          <h3 class="step-title">{{ $t('collectTask.collectStrategyTitle') }}</h3>
+          <!-- 采集策略 -->
+          <div class="sub-step-section">
+            <h3 class="step-title">{{ $t('collectTask.collectStrategyTitle') }}</h3>
           <div style="display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 10px;">
                 <el-button @click="handleRefreshStrategy" :loading="strategyLoading" size="default">
                   <el-icon><Refresh /></el-icon>
@@ -499,11 +499,11 @@
               </div>
             </div>
           </el-form>
-        </div>
+          </div>
 
-        <!-- 步骤3：环境编排 -->
-        <div v-if="currentStep === 2" class="step-panel">
-          <h3 class="step-title">{{ $t('collectTask.environmentOrchestration') }}</h3>
+          <!-- 环境编排 -->
+          <div class="sub-step-section">
+            <h3 class="step-title">{{ $t('collectTask.environmentOrchestration') }}</h3>
           <el-form
             ref="environmentFormRef"
             :model="environmentForm"
@@ -708,10 +708,11 @@
               />
             </div>
           </div>
+          </div>
         </div>
 
-        <!-- 步骤4：用例配置 -->
-        <div v-if="currentStep === 3" class="step-panel">
+        <!-- 步骤2：用例配置 -->
+        <div v-if="currentStep === 1" class="step-panel">
           <h3 class="step-title">{{ $t('collectTask.testCaseConfigTitle') }}</h3>
           <div v-if="selectedStrategy && selectedTestCases.length > 0" class="test-case-config-container">
             <el-alert
@@ -887,7 +888,7 @@
             {{ $t('collectTask.prevStep') }}
           </el-button>
           <el-button 
-            v-if="currentStep < 3" 
+            v-if="currentStep < 1" 
             type="primary" 
             @click="handleNextStep"
             :disabled="!canProceedToNextStep"
@@ -896,7 +897,7 @@
             <el-icon><ArrowRight /></el-icon>
           </el-button>
           <el-button 
-            v-if="currentStep === 3" 
+            v-if="currentStep === 1" 
             type="success" 
             @click="handleSubmit"
             :loading="submitLoading"
@@ -2196,31 +2197,22 @@ export default {
     // 步骤控制方法
     const handleNextStep = async () => {
       if (currentStep.value === 0) {
-        // 验证基本信息
+        // 验证基本信息、采集策略、环境编排
         try {
-          await basicFormRef.value.validate()
-          currentStep.value = 1
-        } catch (error) {
-          // 验证失败，不切换步骤
-        }
-      } else if (currentStep.value === 1) {
-        // 验证采集策略
-        try {
-          await strategyFormRef.value.validate()
-          currentStep.value = 2
-        } catch (error) {
-          // 验证失败，不切换步骤
-        }
-      } else if (currentStep.value === 2) {
-        // 验证环境编排
-        try {
-          await environmentFormRef.value.validate()
+          await Promise.all([
+            basicFormRef.value.validate(),
+            strategyFormRef.value.validate(),
+            environmentFormRef.value.validate()
+          ])
+          
+          // 验证逻辑环境选择
           if (!validateEnvironmentSelection()) {
             return
           }
+          
           // 初始化用例配置
           await initializeTestCaseConfig()
-          currentStep.value = 3
+          currentStep.value = 1
         } catch (error) {
           // 验证失败，不切换步骤
         }
@@ -2236,11 +2228,11 @@ export default {
     // 判断是否可以进入下一步
     const canProceedToNextStep = computed(() => {
       if (currentStep.value === 0) {
-        return basicForm.name.trim() !== ''
-      } else if (currentStep.value === 1) {
-        return strategyForm.strategyId !== null
-      } else if (currentStep.value === 2) {
-        return environmentForm.regionId !== null && selectedEnvironmentIds.value.length > 0
+        // 步骤1：需要基本信息、采集策略、环境编排都完成
+        return basicForm.name.trim() !== '' && 
+               strategyForm.strategyId !== null && 
+               environmentForm.regionId !== null && 
+               selectedEnvironmentIds.value.length > 0
       }
       return true
     })
@@ -3212,6 +3204,17 @@ export default {
   font-weight: 600;
   padding-bottom: 10px;
   border-bottom: 2px solid #409eff;
+}
+
+.sub-step-section {
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #ebeef5;
+}
+
+.sub-step-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
 }
 
 /* 策略信息样式 */

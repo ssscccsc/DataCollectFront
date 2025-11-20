@@ -192,12 +192,8 @@ export default {
     // Create Task Dialog
     createTask: 'Create Collection Task',
     // Step Navigation
-    step1Title: 'Basic Information',
-    step1Desc: 'Fill in basic task information',
-    step2Title: 'Collection Strategy',
-    step2Desc: 'Select collection strategy',
-    step3Title: 'Environment Orchestration',
-    step3Desc: 'Configure execution environment',
+    step1Title: 'Task Configuration',
+    step1Desc: 'Fill in basic information, select collection strategy, configure execution environment',
     step4Title: 'Test Case Configuration',
     step4Desc: 'Configure test case parameters and execution count',
     prevStep: 'Previous Step',
