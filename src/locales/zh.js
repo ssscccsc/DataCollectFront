@@ -339,6 +339,7 @@ export default {
     paramKey: '参数名',
     businessCategory: '业务大类',
     app: 'APP',
+    appen: 'APPEN',
   },
   
   // 采集策略管理

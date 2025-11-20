@@ -339,6 +339,7 @@ export default {
     paramKey: 'Parameter Name',
     businessCategory: 'Business Category',
     app: 'APP',
+    appen: 'APPEN',
   },
   
   // Collection Strategy Management

@@ -762,6 +762,9 @@
                       <el-descriptions-item :label="$t('collectTask.app')">
                         {{ testCase.app || $t('collectTask.notConfigured') }}
                       </el-descriptions-item>
+                      <el-descriptions-item :label="$t('collectTask.appen')">
+                        {{ testCase.appEn || testCase.appen || $t('collectTask.notConfigured') }}
+                      </el-descriptions-item>
                       <el-descriptions-item :label="$t('collectTask.logicNetwork')">
                         <div v-if="testCase.logicNetwork">
                           <el-tag 
@@ -2508,8 +2511,8 @@ export default {
       }
       
       // 从预组装的参数选项中查找对应的参数定义
-      const testCaseId = typeof testCase.id === 'string' ? parseInt(testCase.id) : Number(testCase.id)
-      const availableParams = testCaseParamOptions.value[testCaseId] || []
+      const testCaseNumber = typeof testCase.id === 'string' ? parseInt(testCase.id) : Number(testCase.id)
+      const availableParams = testCaseParamOptions.value[testCaseNumber] || []
       
       // 从可用参数中查找匹配的参数名
       const matchedParams = availableParams.filter(p => {
