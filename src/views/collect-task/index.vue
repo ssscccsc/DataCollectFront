@@ -1283,6 +1283,7 @@ export default {
     const taskTestCaseExecutionCounts = ref({}) // 用例执行次数 { testCaseId: count }
     const taskTestCaseCustomParams = ref({}) // 用例自定义参数 { testCaseId: [{ key: '', value: [] }] }
     const testCaseCustomParamList = ref([]) // 用例自定义参数列表
+    const testCaseParamOptions = ref({}) // 每个用例的参数选项 { testCaseId: [paramOptions] }
     
     // 筛选用例相关
     const showFilteredTestCases = ref(false)
@@ -2179,6 +2180,7 @@ export default {
       taskTestCaseExecutionCounts.value = {}
       taskTestCaseCustomParams.value = {}
       testCaseCustomParamList.value = []
+      testCaseParamOptions.value = {}
       
       // 重置表单验证
       if (basicFormRef.value) {
@@ -2328,8 +2330,11 @@ export default {
         taskTestCaseCustomParams.value[testCaseId] = customParams
       })
       
-      // 加载用例自定义参数列表
+      // 加载用例自定义参数列表（加载完成后会自动为每个用例组装参数选项）
       await loadTestCaseCustomParamList()
+      
+      // 确保在加载完参数列表后，重新组装参数选项（以防用例列表变化）
+      buildTestCaseParamOptions()
     }
     
     // 加载用例自定义参数列表
@@ -2344,10 +2349,66 @@ export default {
         } else {
           testCaseCustomParamList.value = []
         }
+        
+        // 加载完参数列表后，为每个用例组装参数选项
+        buildTestCaseParamOptions()
       } catch (error) {
         console.error('加载用例自定义参数列表失败:', error)
         testCaseCustomParamList.value = []
+        testCaseParamOptions.value = {}
       }
+    }
+    
+    // 根据每个用例的业务大类和appEn组装参数选项
+    const buildTestCaseParamOptions = () => {
+      if (!testCaseCustomParamList.value || testCaseCustomParamList.value.length === 0) {
+        testCaseParamOptions.value = {}
+        return
+      }
+      
+      const options = {}
+      
+      // 为每个用例计算可用的参数选项
+      selectedTestCases.value.forEach(testCase => {
+        const testCaseId = typeof testCase.id === 'string' ? parseInt(testCase.id) : Number(testCase.id)
+        const businessCategory = testCase.businessCategory
+        const appEn = testCase.appEn || testCase.app || ''
+        
+        // 根据业务大类和appEn过滤参数选项
+        const matchedParams = testCaseCustomParamList.value.filter(param => {
+          // 如果参数没有业务大类限制，则所有用例都可以使用
+          if (!param.businessCategory && !param.app) {
+            return true
+          }
+          
+          // 匹配业务大类
+          const businessCategoryMatch = !param.businessCategory || param.businessCategory === businessCategory
+          
+          // 匹配appEn（参数中的app字段对应用例的appEn）
+          const appMatch = !param.app || param.app === appEn
+          
+          // 如果参数有业务大类或app限制，需要同时匹配
+          if (param.businessCategory || param.app) {
+            return businessCategoryMatch && appMatch
+          }
+          
+          return true
+        })
+        
+        // 根据 paramName 去重
+        const uniqueParams = []
+        const seenParamNames = new Set()
+        matchedParams.forEach(param => {
+          if (param.paramName && !seenParamNames.has(param.paramName)) {
+            seenParamNames.add(param.paramName)
+            uniqueParams.push(param)
+          }
+        })
+        
+        options[testCaseId] = uniqueParams
+      })
+      
+      testCaseParamOptions.value = options
     }
     
     // 获取用例执行次数
@@ -2401,47 +2462,23 @@ export default {
       }) || null
     })
     
-    // 获取参数键选项（根据当前展开用例的业务大类和appEn匹配，并去重）
+    // 获取参数键选项（使用预组装的参数选项）
     const getTaskParamKeyOptions = (testCase) => {
       // 如果传入了testCase，使用传入的testCase；否则使用当前展开的用例
       const targetTestCase = testCase || currentExpandedTestCase.value
       
-      if (!targetTestCase || !testCaseCustomParamList.value || testCaseCustomParamList.value.length === 0) {
+      if (!targetTestCase) {
         return []
       }
       
-      const matchedParams = testCaseCustomParamList.value.filter(param => {
-        // 如果参数没有业务大类限制，则所有用例都可以使用
-        if (!param.businessCategory && !param.appEn) {
-          return true
-        }
-        
-        // 匹配业务大类
-        const businessCategoryMatch = !param.businessCategory || param.businessCategory === targetTestCase.businessCategory
-        
-        // 匹配appEn（需要从用例中获取appEn，如果没有则使用app字段）
-        const appEn = targetTestCase.appEn || targetTestCase.app || ''
-        const appEnMatch = !param.appEn || param.appEn === appEn
-        
-        // 如果参数有业务大类或appEn限制，需要同时匹配
-        if (param.businessCategory || param.appEn) {
-          return businessCategoryMatch && appEnMatch
-        }
-        
-        return true
-      })
+      const testCaseId = typeof targetTestCase.id === 'string' ? parseInt(targetTestCase.id) : Number(targetTestCase.id)
       
-      // 根据 paramName 去重
-      const uniqueParams = []
-      const seenParamNames = new Set()
-      matchedParams.forEach(param => {
-        if (param.paramName && !seenParamNames.has(param.paramName)) {
-          seenParamNames.add(param.paramName)
-          uniqueParams.push(param)
-        }
-      })
+      // 使用预组装的参数选项
+      if (testCaseParamOptions.value[testCaseId] && Array.isArray(testCaseParamOptions.value[testCaseId])) {
+        return testCaseParamOptions.value[testCaseId]
+      }
       
-      return uniqueParams
+      return []
     }
     
     // 获取参数值选项（根据当前展开用例的业务大类和appEn匹配）
@@ -2470,31 +2507,14 @@ export default {
         return []
       }
       
-      // 从参数列表中查找对应的参数定义，并根据业务大类和appEn匹配
-      const matchedParams = testCaseCustomParamList.value.filter(p => {
+      // 从预组装的参数选项中查找对应的参数定义
+      const testCaseId = typeof testCase.id === 'string' ? parseInt(testCase.id) : Number(testCase.id)
+      const availableParams = testCaseParamOptions.value[testCaseId] || []
+      
+      // 从可用参数中查找匹配的参数名
+      const matchedParams = availableParams.filter(p => {
         // 参数名必须匹配
-        if (p.paramName !== paramKey) {
-          return false
-        }
-        
-        // 如果参数没有业务大类限制，则所有用例都可以使用
-        if (!p.businessCategory && !p.appEn) {
-          return true
-        }
-        
-        // 匹配业务大类
-        const businessCategoryMatch = !p.businessCategory || p.businessCategory === testCase.businessCategory
-        
-        // 匹配appEn（需要从用例中获取appEn，如果没有则使用app字段）
-        const appEn = testCase.appEn || testCase.app || ''
-        const appEnMatch = !p.appEn || p.appEn === appEn
-        
-        // 如果参数有业务大类或appEn限制，需要同时匹配
-        if (p.businessCategory || p.appEn) {
-          return businessCategoryMatch && appEnMatch
-        }
-        
-        return true
+        return p.paramName === paramKey
       })
       
       // 合并所有匹配参数的参数值列表，并去重
