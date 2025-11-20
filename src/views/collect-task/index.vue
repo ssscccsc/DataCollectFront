@@ -710,6 +710,171 @@
           </div>
         </div>
 
+        <!-- 步骤4：用例配置 -->
+        <div v-if="currentStep === 3" class="step-panel">
+          <h3 class="step-title">{{ $t('collectTask.testCaseConfigTitle') }}</h3>
+          <div v-if="selectedStrategy && selectedTestCases.length > 0" class="test-case-config-container">
+            <el-alert
+              :title="$t('collectTask.testCaseConfigTip')"
+              type="info"
+              :closable="false"
+              show-icon
+              style="margin-bottom: 16px;"
+            >
+              <template #default>
+                {{ $t('collectTask.testCaseConfigDescription', { count: selectedTestCases.length }) }}
+              </template>
+            </el-alert>
+
+            <el-collapse v-model="activeTestCaseConfigItems">
+              <el-collapse-item 
+                v-for="(testCase, index) in selectedTestCases" 
+                :key="testCase.id"
+                :name="testCase.id"
+              >
+                <template #title>
+                  <div class="test-case-config-item-title">
+                    <el-tag type="primary" size="small" style="margin-right: 8px;">{{ index + 1 }}</el-tag>
+                    <strong style="margin-right: 12px;">{{ testCase.name }}</strong>
+                    <el-tag size="small" type="info">{{ testCase.number }}</el-tag>
+                    <span style="margin-left: auto; margin-right: 12px; font-size: 12px; color: #909399;">
+                      <el-icon v-if="getTaskTestCaseExecutionCount(testCase.id) > 0" style="color: #e6a23c;"><Clock /></el-icon>
+                      {{ getTaskTestCaseExecutionCount(testCase.id) > 0 ? `${getTaskTestCaseExecutionCount(testCase.id)} 次` : $t('collectTask.notConfigured') }}
+                      <el-divider direction="vertical" />
+                      <el-icon v-if="getTaskTestCaseParamCount(testCase.id) > 0" style="color: #67c23a;"><Setting /></el-icon>
+                      {{ getTaskTestCaseParamCount(testCase.id) > 0 ? `${getTaskTestCaseParamCount(testCase.id)} 个参数` : $t('collectTask.noParams') }}
+                    </span>
+                  </div>
+                </template>
+                
+                <div class="test-case-config-item-content">
+                  <!-- 用例基本信息（默认隐藏） -->
+                  <el-collapse v-model="taskTestCaseInfoCollapse" style="margin-bottom: 16px;">
+                    <el-collapse-item :name="testCase.id">
+                      <template #title>
+                        <span style="font-size: 14px; color: #606266;">
+                          <el-icon><InfoFilled /></el-icon>
+                          {{ $t('collectTask.testCaseInfo') }}
+                        </span>
+                      </template>
+                      <el-descriptions :column="3" border size="small">
+                        <el-descriptions-item :label="$t('collectTask.businessCategory')">
+                          {{ testCase.businessCategory || $t('collectTask.notConfigured') }}
+                        </el-descriptions-item>
+                        <el-descriptions-item :label="$t('collectTask.app')">
+                          {{ testCase.app || $t('collectTask.notConfigured') }}
+                        </el-descriptions-item>
+                        <el-descriptions-item :label="$t('collectTask.logicNetwork')">
+                          <div v-if="testCase.logicNetwork">
+                            <el-tag 
+                              v-for="network in testCase.logicNetwork.split(';')" 
+                              :key="network"
+                              size="small"
+                              style="margin-right: 4px;"
+                            >
+                              {{ network }}
+                            </el-tag>
+                          </div>
+                          <span v-else>{{ $t('collectTask.notConfigured') }}</span>
+                        </el-descriptions-item>
+                      </el-descriptions>
+                    </el-collapse-item>
+                  </el-collapse>
+
+                  <!-- 执行次数配置 -->
+                  <div class="config-section">
+                    <div class="config-section-title">
+                      <el-icon><Clock /></el-icon>
+                      <span>{{ $t('collectTask.executionConfig') }}</span>
+                    </div>
+                    <el-input-number
+                      v-model="taskTestCaseExecutionCounts[testCase.id]"
+                      :min="1"
+                      :max="100"
+                      :placeholder="$t('collectTask.executionCountPlaceholder')"
+                      style="width: 200px;"
+                    />
+                    <span style="margin-left: 12px; color: #909399; font-size: 12px;">
+                      {{ $t('collectTask.executionCountTip') }}
+                    </span>
+                  </div>
+
+                  <!-- 自定义参数配置 -->
+                  <div class="config-section">
+                    <div class="config-section-title">
+                      <el-icon><Setting /></el-icon>
+                      <span>{{ $t('collectTask.testCaseParamsLabel') }}</span>
+                      <el-button 
+                        type="primary" 
+                        size="small" 
+                        @click="addTaskTestCaseParam(testCase.id)"
+                        :icon="Plus"
+                        style="margin-left: auto;"
+                      >
+                        {{ $t('collectTask.addParam') }}
+                      </el-button>
+                    </div>
+                    
+                    <div v-if="!taskTestCaseCustomParams[testCase.id] || taskTestCaseCustomParams[testCase.id].length === 0" class="empty-params-inline">
+                      <span style="color: #909399; font-size: 12px;">{{ $t('collectTask.noTestCaseParams') }}</span>
+                    </div>
+                    
+                    <div v-else class="params-list-inline">
+                      <div 
+                        v-for="(param, paramIndex) in taskTestCaseCustomParams[testCase.id]" 
+                        :key="paramIndex" 
+                        class="param-item-inline"
+                      >
+                        <div class="param-index-small">{{ paramIndex + 1 }}</div>
+                        <el-select 
+                          v-model="param.key" 
+                          :placeholder="$t('collectTask.paramKey')" 
+                          size="small"
+                          filterable
+                          clearable
+                          style="flex: 1;"
+                          @change="handleTaskParamKeyChange(testCase.id, paramIndex)"
+                        >
+                          <el-option
+                            v-for="paramOption in getTaskParamKeyOptions(testCase)"
+                            :key="paramOption.paramName"
+                            :label="paramOption.paramName"
+                            :value="paramOption.paramName"
+                          />
+                        </el-select>
+                        <el-select 
+                          v-model="param.value" 
+                          :placeholder="$t('collectTask.paramValue')" 
+                          size="small"
+                          multiple
+                          filterable
+                          clearable
+                          style="flex: 1;"
+                        >
+                          <el-option
+                            v-for="valueOption in getTaskParamValueOptions(testCase.id, paramIndex)"
+                            :key="valueOption"
+                            :label="valueOption"
+                            :value="valueOption"
+                          />
+                        </el-select>
+                        <el-button 
+                          type="danger" 
+                          size="small" 
+                          @click="removeTaskTestCaseParam(testCase.id, paramIndex)"
+                          :icon="Delete"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </el-collapse-item>
+            </el-collapse>
+          </div>
+          <div v-else class="no-test-cases">
+            <el-empty :description="$t('collectTask.noTestCasesSelected')" />
+          </div>
+        </div>
 
       </div>
 
@@ -717,7 +882,21 @@
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="dialogVisible = false">{{ $t('collectTask.cancel') }}</el-button>
+          <el-button v-if="currentStep > 0" @click="handlePrevStep">
+            <el-icon><ArrowLeft /></el-icon>
+            {{ $t('collectTask.prevStep') }}
+          </el-button>
           <el-button 
+            v-if="currentStep < 3" 
+            type="primary" 
+            @click="handleNextStep"
+            :disabled="!canProceedToNextStep"
+          >
+            {{ $t('collectTask.nextStep') }}
+            <el-icon><ArrowRight /></el-icon>
+          </el-button>
+          <el-button 
+            v-if="currentStep === 3" 
             type="success" 
             @click="handleSubmit"
             :loading="submitLoading"
@@ -1846,64 +2025,6 @@ export default {
     // 获取筛选后的用例列表（只显示策略中勾选的测试用例）
     const getFilteredTestCases = () => {
       return selectedTestCases.value
-    }
-      if (!selectedStrategy.value || !selectedStrategy.value.testCaseList) {
-        return []
-      }
-
-      // 获取策略中勾选的用例ID列表
-      let selectedTestCaseIds = []
-      try {
-        if (selectedStrategy.value.selectedTestCaseIds) {
-          if (typeof selectedStrategy.value.selectedTestCaseIds === 'string') {
-            selectedTestCaseIds = JSON.parse(selectedStrategy.value.selectedTestCaseIds)
-          } else if (Array.isArray(selectedStrategy.value.selectedTestCaseIds)) {
-            selectedTestCaseIds = selectedStrategy.value.selectedTestCaseIds
-          }
-        }
-        // 如果没有selectedTestCaseIds字段，从testCaseExecutionCounts中获取（兼容旧数据）
-        if (selectedTestCaseIds.length === 0 && selectedStrategy.value.testCaseExecutionCounts) {
-          let executionCounts = {}
-          if (typeof selectedStrategy.value.testCaseExecutionCounts === 'string') {
-            executionCounts = JSON.parse(selectedStrategy.value.testCaseExecutionCounts)
-          } else if (typeof selectedStrategy.value.testCaseExecutionCounts === 'object') {
-            executionCounts = selectedStrategy.value.testCaseExecutionCounts
-          }
-          selectedTestCaseIds = Object.keys(executionCounts)
-            .filter(testCaseId => executionCounts[testCaseId] > 0)
-            .map(id => parseInt(id))
-        }
-        // 确保所有ID都是数字类型
-        selectedTestCaseIds = selectedTestCaseIds.map(id => typeof id === 'string' ? parseInt(id) : Number(id)).filter(id => !isNaN(id))
-      } catch (error) {
-        console.warn('Failed to parse selectedTestCaseIds:', error)
-        selectedTestCaseIds = []
-      }
-
-      // 如果策略中有勾选的用例ID，只返回这些用例
-      if (selectedTestCaseIds.length > 0) {
-        return selectedStrategy.value.testCaseList.filter(testCase => {
-          const testCaseId = typeof testCase.id === 'string' ? parseInt(testCase.id) : Number(testCase.id)
-          return selectedTestCaseIds.includes(testCaseId)
-        })
-      }
-
-      // 如果没有勾选的用例ID（兼容旧数据），使用原来的筛选逻辑
-      return selectedStrategy.value.testCaseList.filter(testCase => {
-        // 业务大类筛选
-        if (selectedStrategy.value.businessCategory && testCase.businessCategory !== selectedStrategy.value.businessCategory) {
-          return false
-        }
-        
-        // App筛选（直接使用 app 字段匹配）
-        if (selectedStrategy.value.app) {
-          if (testCase.app !== selectedStrategy.value.app) {
-            return false
-          }
-        }
-        
-        return true
-      })
     }
 
 
