@@ -191,6 +191,17 @@ export default {
     resultBlocked: '阻塞',
     // 创建任务对话框
     createTask: '新建采集任务',
+    // 步骤导航
+    step1Title: '基本信息',
+    step1Desc: '填写任务基本信息',
+    step2Title: '采集策略',
+    step2Desc: '选择采集策略',
+    step3Title: '环境编排',
+    step3Desc: '配置执行环境',
+    step4Title: '用例配置',
+    step4Desc: '配置用例参数和执行次数',
+    prevStep: '上一步',
+    nextStep: '下一步',
     basicInfoTitle: '基本信息',
     taskNameLabel: '任务名称',
     taskNamePlaceholder: '请输入采集任务名称',
@@ -318,6 +329,20 @@ export default {
     taskCreatedFailed: '任务创建失败',
     dataRefreshSuccess: '数据刷新成功',
     dataRefreshFailed: '刷新数据失败',
+    // 用例配置
+    testCaseConfigTitle: '用例配置',
+    testCaseConfigTip: '用例配置提示',
+    testCaseConfigDescription: '共选择了 {count} 个用例，请为每个用例配置执行次数和自定义参数',
+    testCaseInfo: '用例信息',
+    executionConfig: '执行次数配置',
+    executionCountPlaceholder: '请输入执行次数',
+    executionCountTip: '每个用例的执行次数，范围：1-100',
+    testCaseParamsLabel: '用例自定义参数',
+    noTestCaseParams: '暂无参数',
+    noTestCasesSelected: '未选择用例',
+    paramKey: '参数名',
+    businessCategory: '业务大类',
+    app: 'APP',
   },
   
   // 采集策略管理

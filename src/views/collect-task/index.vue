@@ -259,13 +259,24 @@
     <el-dialog
       v-model="dialogVisible"
       :title="dialogTitle"
-      width="800px"
+      width="90%"
+      top="5vh"
       @close="resetForm"
     >
+      <!-- 步骤导航 -->
+      <div class="step-navigation">
+        <el-steps :active="currentStep" align-center>
+          <el-step :title="$t('collectTask.step1Title')" :description="$t('collectTask.step1Desc')" />
+          <el-step :title="$t('collectTask.step2Title')" :description="$t('collectTask.step2Desc')" />
+          <el-step :title="$t('collectTask.step3Title')" :description="$t('collectTask.step3Desc')" />
+          <el-step :title="$t('collectTask.step4Title')" :description="$t('collectTask.step4Desc')" />
+        </el-steps>
+      </div>
+      
       <!-- 步骤内容 -->
       <div class="step-content">
         <!-- 步骤1：基本信息 -->
-        <div class="step-panel">
+        <div v-if="currentStep === 0" class="step-panel">
           <h3 class="step-title">{{ $t('collectTask.basicInfoTitle') }}</h3>
           <el-form
             ref="basicFormRef"
@@ -288,7 +299,7 @@
         </div>
 
         <!-- 步骤2：采集策略 -->
-        <div class="step-panel">
+        <div v-if="currentStep === 1" class="step-panel">
           <h3 class="step-title">{{ $t('collectTask.collectStrategyTitle') }}</h3>
           <div style="display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 10px;">
                 <el-button @click="handleRefreshStrategy" :loading="strategyLoading" size="default">
@@ -491,7 +502,7 @@
         </div>
 
         <!-- 步骤3：环境编排 -->
-        <div class="step-panel">
+        <div v-if="currentStep === 2" class="step-panel">
           <h3 class="step-title">{{ $t('collectTask.environmentOrchestration') }}</h3>
           <el-form
             ref="environmentFormRef"
@@ -996,7 +1007,7 @@
 <script>
 import { ref, reactive, onMounted, onUnmounted, computed, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Refresh, ArrowDown, ArrowUp } from '@element-plus/icons-vue'
+import { Plus, Refresh, ArrowDown, ArrowUp, Delete, Setting, Clock, ArrowLeft, ArrowRight, InfoFilled } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import request from '@/utils/request'
@@ -1008,6 +1019,12 @@ export default {
     Refresh,
     ArrowDown,
     ArrowUp,
+    Delete,
+    Setting,
+    Clock,
+    ArrowLeft,
+    ArrowRight,
+    InfoFilled,
   },
   setup() {
     const { t } = useI18n()
@@ -1077,6 +1094,16 @@ export default {
     
     // 展开详情的环境ID列表
     const expandedEnvironmentIds = ref([])
+    
+    // 步骤控制
+    const currentStep = ref(0)
+    
+    // 用例配置相关
+    const activeTestCaseConfigItems = ref([]) // 用例配置展开项
+    const taskTestCaseInfoCollapse = ref([]) // 用例信息折叠状态
+    const taskTestCaseExecutionCounts = ref({}) // 用例执行次数 { testCaseId: count }
+    const taskTestCaseCustomParams = ref({}) // 用例自定义参数 { testCaseId: [{ key: '', value: [] }] }
+    const testCaseCustomParamList = ref([]) // 用例自定义参数列表
     
     // 筛选用例相关
     const showFilteredTestCases = ref(false)
@@ -1756,17 +1783,70 @@ export default {
       // 这里可以添加选择变化时的逻辑
     }
 
+    // 获取策略中勾选的用例ID列表
+    const getSelectedTestCaseIds = () => {
+      if (!selectedStrategy.value) {
+        return []
+      }
+      
+      let selectedTestCaseIds = []
+      try {
+        if (selectedStrategy.value.selectedTestCaseIds) {
+          if (typeof selectedStrategy.value.selectedTestCaseIds === 'string') {
+            selectedTestCaseIds = JSON.parse(selectedStrategy.value.selectedTestCaseIds)
+          } else if (Array.isArray(selectedStrategy.value.selectedTestCaseIds)) {
+            selectedTestCaseIds = selectedStrategy.value.selectedTestCaseIds
+          }
+        }
+        // 如果没有selectedTestCaseIds字段，从testCaseExecutionCounts中获取（兼容旧数据）
+        if (selectedTestCaseIds.length === 0 && selectedStrategy.value.testCaseExecutionCounts) {
+          let executionCounts = {}
+          if (typeof selectedStrategy.value.testCaseExecutionCounts === 'string') {
+            executionCounts = JSON.parse(selectedStrategy.value.testCaseExecutionCounts)
+          } else if (typeof selectedStrategy.value.testCaseExecutionCounts === 'object') {
+            executionCounts = selectedStrategy.value.testCaseExecutionCounts
+          }
+          selectedTestCaseIds = Object.keys(executionCounts)
+            .filter(testCaseId => executionCounts[testCaseId] > 0)
+            .map(id => parseInt(id))
+        }
+        // 确保所有ID都是数字类型
+        selectedTestCaseIds = selectedTestCaseIds.map(id => typeof id === 'string' ? parseInt(id) : Number(id)).filter(id => !isNaN(id))
+      } catch (error) {
+        console.warn('Failed to parse selectedTestCaseIds:', error)
+        selectedTestCaseIds = []
+      }
+      
+      return selectedTestCaseIds
+    }
+    
+    // 获取策略中勾选的用例列表
+    const selectedTestCases = computed(() => {
+      if (!selectedStrategy.value || !selectedStrategy.value.testCaseList) {
+        return []
+      }
+      
+      const selectedTestCaseIds = getSelectedTestCaseIds()
+      
+      if (selectedTestCaseIds.length > 0) {
+        return selectedStrategy.value.testCaseList.filter(testCase => {
+          const testCaseId = typeof testCase.id === 'string' ? parseInt(testCase.id) : Number(testCase.id)
+          return selectedTestCaseIds.includes(testCaseId)
+        })
+      }
+      
+      return []
+    })
+    
     // 获取筛选后的用例数量
     const getFilteredTestCaseCount = () => {
-      if (!selectedStrategy.value || !selectedStrategy.value.testCaseList) {
-        return 0
-      }
-
-      return getFilteredTestCases().length
+      return selectedTestCases.value.length
     }
 
     // 获取筛选后的用例列表（只显示策略中勾选的测试用例）
     const getFilteredTestCases = () => {
+      return selectedTestCases.value
+    }
       if (!selectedStrategy.value || !selectedStrategy.value.testCaseList) {
         return []
       }
@@ -1877,6 +1957,28 @@ export default {
           return
         }
         
+        // 构建用例配置数据
+        const testCaseConfigs = []
+        selectedTestCases.value.forEach(testCase => {
+          const testCaseId = typeof testCase.id === 'string' ? parseInt(testCase.id) : Number(testCase.id)
+          const executionCount = taskTestCaseExecutionCounts.value[testCaseId] || 1
+          const customParams = taskTestCaseCustomParams.value[testCaseId] || []
+          
+          // 过滤掉空的参数项
+          const validParams = customParams
+            .filter(param => param.key && param.key.trim() !== '' && param.value && param.value.length > 0)
+            .map(param => ({
+              key: param.key.trim(),
+              value: Array.isArray(param.value) ? param.value : [param.value],
+            }))
+          
+          testCaseConfigs.push({
+            testCaseId: testCaseId,
+            executionCount: executionCount,
+            customParams: validParams.length > 0 ? validParams : null,
+          })
+        })
+        
         // 构建提交数据
         const submitData = {
           name: basicForm.name,
@@ -1894,6 +1996,8 @@ export default {
             .length > 0 
             ? JSON.stringify(editableCustomParams.value.filter(param => param.key.trim() !== '' && param.value.trim() !== ''))
             : null,
+          // 添加用例配置
+          testCaseConfigs: testCaseConfigs.length > 0 ? JSON.stringify(testCaseConfigs) : null,
         }
         
         await request({
@@ -1946,6 +2050,16 @@ export default {
       availableEnvironments.value = []
       expandedEnvironmentIds.value = []
       
+      // 重置步骤
+      currentStep.value = 0
+      
+      // 重置用例配置
+      activeTestCaseConfigItems.value = []
+      taskTestCaseInfoCollapse.value = []
+      taskTestCaseExecutionCounts.value = {}
+      taskTestCaseCustomParams.value = {}
+      testCaseCustomParamList.value = []
+      
       // 重置表单验证
       if (basicFormRef.value) {
         basicFormRef.value.resetFields()
@@ -1955,6 +2069,207 @@ export default {
       }
       if (environmentFormRef.value) {
         environmentFormRef.value.resetFields()
+      }
+    }
+    
+    // 步骤控制方法
+    const handleNextStep = async () => {
+      if (currentStep.value === 0) {
+        // 验证基本信息
+        try {
+          await basicFormRef.value.validate()
+          currentStep.value = 1
+        } catch (error) {
+          // 验证失败，不切换步骤
+        }
+      } else if (currentStep.value === 1) {
+        // 验证采集策略
+        try {
+          await strategyFormRef.value.validate()
+          currentStep.value = 2
+        } catch (error) {
+          // 验证失败，不切换步骤
+        }
+      } else if (currentStep.value === 2) {
+        // 验证环境编排
+        try {
+          await environmentFormRef.value.validate()
+          if (!validateEnvironmentSelection()) {
+            return
+          }
+          // 初始化用例配置
+          await initializeTestCaseConfig()
+          currentStep.value = 3
+        } catch (error) {
+          // 验证失败，不切换步骤
+        }
+      }
+    }
+    
+    const handlePrevStep = () => {
+      if (currentStep.value > 0) {
+        currentStep.value--
+      }
+    }
+    
+    // 判断是否可以进入下一步
+    const canProceedToNextStep = computed(() => {
+      if (currentStep.value === 0) {
+        return basicForm.name.trim() !== ''
+      } else if (currentStep.value === 1) {
+        return strategyForm.strategyId !== null
+      } else if (currentStep.value === 2) {
+        return environmentForm.regionId !== null && selectedEnvironmentIds.value.length > 0
+      }
+      return true
+    })
+    
+    // 初始化用例配置
+    const initializeTestCaseConfig = async () => {
+      if (!selectedStrategy.value) {
+        return
+      }
+      
+      const testCases = selectedTestCases.value
+      
+      // 初始化执行次数（从策略中获取，如果没有则默认为1）
+      testCases.forEach(testCase => {
+        const testCaseId = typeof testCase.id === 'string' ? parseInt(testCase.id) : Number(testCase.id)
+        
+        // 从策略的执行次数配置中获取
+        let executionCount = 1
+        if (selectedStrategy.value.testCaseExecutionCounts) {
+          let executionCounts = {}
+          if (typeof selectedStrategy.value.testCaseExecutionCounts === 'string') {
+            executionCounts = JSON.parse(selectedStrategy.value.testCaseExecutionCounts)
+          } else if (typeof selectedStrategy.value.testCaseExecutionCounts === 'object') {
+            executionCounts = selectedStrategy.value.testCaseExecutionCounts
+          }
+          executionCount = executionCounts[testCaseId] || 1
+        }
+        taskTestCaseExecutionCounts.value[testCaseId] = executionCount
+        
+        // 初始化自定义参数（从策略中获取）
+        let customParams = []
+        if (selectedStrategy.value.testCaseCustomParams) {
+          let testCaseCustomParams = {}
+          if (typeof selectedStrategy.value.testCaseCustomParams === 'string') {
+            testCaseCustomParams = JSON.parse(selectedStrategy.value.testCaseCustomParams)
+          } else if (typeof selectedStrategy.value.testCaseCustomParams === 'object') {
+            testCaseCustomParams = selectedStrategy.value.testCaseCustomParams
+          }
+          if (testCaseCustomParams[testCaseId] && Array.isArray(testCaseCustomParams[testCaseId])) {
+            customParams = JSON.parse(JSON.stringify(testCaseCustomParams[testCaseId]))
+          }
+        }
+        
+        // 如果没有参数，添加一个空的参数项
+        if (customParams.length === 0) {
+          customParams.push({ key: '', value: [] })
+        }
+        
+        taskTestCaseCustomParams.value[testCaseId] = customParams
+      })
+      
+      // 加载用例自定义参数列表
+      await loadTestCaseCustomParamList()
+    }
+    
+    // 加载用例自定义参数列表
+    const loadTestCaseCustomParamList = async () => {
+      if (!selectedStrategy.value || !selectedStrategy.value.testCaseSetId) {
+        testCaseCustomParamList.value = []
+        return
+      }
+      
+      try {
+        const res = await request({
+          url: `/test-case-set/${selectedStrategy.value.testCaseSetId}/custom-params`,
+          method: 'get',
+        })
+        if (res.data) {
+          testCaseCustomParamList.value = res.data
+        }
+      } catch (error) {
+        console.error('加载用例自定义参数列表失败:', error)
+        testCaseCustomParamList.value = []
+      }
+    }
+    
+    // 获取用例执行次数
+    const getTaskTestCaseExecutionCount = (testCaseId) => {
+      const id = typeof testCaseId === 'string' ? parseInt(testCaseId) : Number(testCaseId)
+      return taskTestCaseExecutionCounts.value[id] || 0
+    }
+    
+    // 获取用例参数数量
+    const getTaskTestCaseParamCount = (testCaseId) => {
+      const id = typeof testCaseId === 'string' ? parseInt(testCaseId) : Number(testCaseId)
+      const params = taskTestCaseCustomParams.value[id]
+      if (!params || !Array.isArray(params)) {
+        return 0
+      }
+      return params.filter(param => param.key && param.key.trim() !== '').length
+    }
+    
+    // 添加用例参数
+    const addTaskTestCaseParam = (testCaseId) => {
+      const id = typeof testCaseId === 'string' ? parseInt(testCaseId) : Number(testCaseId)
+      if (!taskTestCaseCustomParams.value[id]) {
+        taskTestCaseCustomParams.value[id] = []
+      }
+      taskTestCaseCustomParams.value[id].push({ key: '', value: [] })
+    }
+    
+    // 删除用例参数
+    const removeTaskTestCaseParam = (testCaseId, paramIndex) => {
+      const id = typeof testCaseId === 'string' ? parseInt(testCaseId) : Number(testCaseId)
+      if (taskTestCaseCustomParams.value[id] && taskTestCaseCustomParams.value[id].length > paramIndex) {
+        taskTestCaseCustomParams.value[id].splice(paramIndex, 1)
+        // 确保至少有一个参数项
+        if (taskTestCaseCustomParams.value[id].length === 0) {
+          taskTestCaseCustomParams.value[id].push({ key: '', value: [] })
+        }
+      }
+    }
+    
+    // 获取参数键选项
+    const getTaskParamKeyOptions = (testCase) => {
+      return testCaseCustomParamList.value.filter(param => {
+        // 可以根据用例的其他属性进行过滤
+        return true
+      })
+    }
+    
+    // 获取参数值选项
+    const getTaskParamValueOptions = (testCaseId, paramIndex) => {
+      const id = typeof testCaseId === 'string' ? parseInt(testCaseId) : Number(testCaseId)
+      const params = taskTestCaseCustomParams.value[id]
+      if (!params || !params[paramIndex]) {
+        return []
+      }
+      
+      const paramKey = params[paramIndex].key
+      if (!paramKey) {
+        return []
+      }
+      
+      // 从参数列表中查找对应的参数定义
+      const paramDef = testCaseCustomParamList.value.find(p => p.paramName === paramKey)
+      if (paramDef && paramDef.paramValues && Array.isArray(paramDef.paramValues)) {
+        return paramDef.paramValues
+      }
+      
+      return []
+    }
+    
+    // 处理参数键变化
+    const handleTaskParamKeyChange = (testCaseId, paramIndex) => {
+      const id = typeof testCaseId === 'string' ? parseInt(testCaseId) : Number(testCaseId)
+      const params = taskTestCaseCustomParams.value[id]
+      if (params && params[paramIndex]) {
+        // 清空参数值
+        params[paramIndex].value = []
       }
     }
 
@@ -2508,6 +2823,26 @@ export default {
       toggleEnvironmentDetail,
       showFilteredTestCases,
       
+      // 步骤控制
+      currentStep,
+      handleNextStep,
+      handlePrevStep,
+      canProceedToNextStep,
+      
+      // 用例配置相关
+      selectedTestCases,
+      activeTestCaseConfigItems,
+      taskTestCaseInfoCollapse,
+      taskTestCaseExecutionCounts,
+      taskTestCaseCustomParams,
+      getTaskTestCaseExecutionCount,
+      getTaskTestCaseParamCount,
+      addTaskTestCaseParam,
+      removeTaskTestCaseParam,
+      getTaskParamKeyOptions,
+      getTaskParamValueOptions,
+      handleTaskParamKeyChange,
+      
       // 自定义参数相关
       showCustomParamsEditor,
       editableCustomParams,
@@ -2652,6 +2987,90 @@ export default {
 }
 
 /* 步骤内容样式 */
+.step-navigation {
+  margin-bottom: 30px;
+  padding: 20px 0;
+}
+
+/* 用例配置样式 */
+.test-case-config-container {
+  margin-top: 20px;
+}
+
+.test-case-config-item-title {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  font-size: 14px;
+}
+
+.test-case-config-item-content {
+  padding: 16px;
+}
+
+.config-section {
+  margin-bottom: 24px;
+}
+
+.config-section:last-child {
+  margin-bottom: 0;
+}
+
+.config-section-title {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.config-section-title .el-icon {
+  margin-right: 8px;
+  color: #409eff;
+}
+
+.empty-params-inline {
+  padding: 12px;
+  text-align: center;
+  background-color: #f5f7fa;
+  border-radius: 4px;
+}
+
+.params-list-inline {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.param-item-inline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background-color: #f5f7fa;
+  border-radius: 4px;
+}
+
+.param-index-small {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background-color: #409eff;
+  color: #fff;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.no-test-cases {
+  padding: 40px 0;
+  text-align: center;
+}
+
 .step-content {
   min-height: 600px;
 }
