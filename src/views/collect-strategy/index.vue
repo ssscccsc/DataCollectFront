@@ -1339,8 +1339,8 @@ export default {
         currentStep.value = 1
         // 自动展开用例列表
         showTestCaseList.value = true
-        // 如果是编辑模式且有已选择的用例，自动勾选
-        if (form.id && selectedTestCaseIds.value.length > 0) {
+        // 如果有已选择的用例，自动勾选（新增和编辑模式都支持）
+        if (selectedTestCaseIds.value.length > 0) {
           await autoSelectTestCases()
         }
       } else if (currentStep.value === 1) {
@@ -1377,8 +1377,10 @@ export default {
     const handlePrevStep = async () => {
       if (currentStep.value > 0) {
         currentStep.value--
-        // 如果返回到第二步，自动勾选已选择的用例
+        // 如果返回到第二步，自动勾选已选择的用例（新增和编辑模式都支持）
         if (currentStep.value === 1 && selectedTestCaseIds.value.length > 0) {
+          // 确保用例列表已展开
+          showTestCaseList.value = true
           await autoSelectTestCases()
         }
       }
@@ -1692,6 +1694,28 @@ export default {
         // 同步用例信息的展开/折叠状态
         // 当用例展开时，用例信息也展开；当用例折叠时，用例信息也折叠
         testCaseInfoCollapse.value = [...newItems]
+      },
+      { deep: true }
+    )
+
+    // 监听筛选条件变化，当筛选条件被清除后，在步骤切换时自动勾选已选择的用例
+    watch(
+      () => [form.businessCategory, form.app, currentStep.value, showTestCaseList.value],
+      ([category, app, step, showList], [oldCategory, oldApp, oldStep, oldShowList]) => {
+        // 只在第二步且用例列表展开时处理
+        if (step === 1 && showList && selectedTestCaseIds.value.length > 0) {
+          // 如果筛选条件被清除（从有值变为空），且步骤没有变化，延迟自动勾选
+          const filterCleared = (oldCategory && !category) || (oldApp && !app)
+          // 如果步骤从其他变为第二步，也会触发自动勾选
+          const stepChanged = oldStep !== 1 && step === 1
+          
+          if (filterCleared || stepChanged) {
+            // 延迟执行，确保筛选条件已应用
+            setTimeout(() => {
+              autoSelectTestCases()
+            }, 300)
+          }
+        }
       },
       { deep: true }
     )
@@ -2252,6 +2276,7 @@ export default {
       selectedTestCaseIds,
       selectedTestCases,
       testCaseTableRef,
+      testCaseInfoCollapse,
     }
   },
 }
