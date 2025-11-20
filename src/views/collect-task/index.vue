@@ -1720,12 +1720,50 @@ export default {
       return getFilteredTestCases().length
     }
 
-    // 获取筛选后的用例列表
+    // 获取筛选后的用例列表（只显示策略中勾选的测试用例）
     const getFilteredTestCases = () => {
       if (!selectedStrategy.value || !selectedStrategy.value.testCaseList) {
         return []
       }
 
+      // 获取策略中勾选的用例ID列表
+      let selectedTestCaseIds = []
+      try {
+        if (selectedStrategy.value.selectedTestCaseIds) {
+          if (typeof selectedStrategy.value.selectedTestCaseIds === 'string') {
+            selectedTestCaseIds = JSON.parse(selectedStrategy.value.selectedTestCaseIds)
+          } else if (Array.isArray(selectedStrategy.value.selectedTestCaseIds)) {
+            selectedTestCaseIds = selectedStrategy.value.selectedTestCaseIds
+          }
+        }
+        // 如果没有selectedTestCaseIds字段，从testCaseExecutionCounts中获取（兼容旧数据）
+        if (selectedTestCaseIds.length === 0 && selectedStrategy.value.testCaseExecutionCounts) {
+          let executionCounts = {}
+          if (typeof selectedStrategy.value.testCaseExecutionCounts === 'string') {
+            executionCounts = JSON.parse(selectedStrategy.value.testCaseExecutionCounts)
+          } else if (typeof selectedStrategy.value.testCaseExecutionCounts === 'object') {
+            executionCounts = selectedStrategy.value.testCaseExecutionCounts
+          }
+          selectedTestCaseIds = Object.keys(executionCounts)
+            .filter(testCaseId => executionCounts[testCaseId] > 0)
+            .map(id => parseInt(id))
+        }
+        // 确保所有ID都是数字类型
+        selectedTestCaseIds = selectedTestCaseIds.map(id => typeof id === 'string' ? parseInt(id) : Number(id)).filter(id => !isNaN(id))
+      } catch (error) {
+        console.warn('Failed to parse selectedTestCaseIds:', error)
+        selectedTestCaseIds = []
+      }
+
+      // 如果策略中有勾选的用例ID，只返回这些用例
+      if (selectedTestCaseIds.length > 0) {
+        return selectedStrategy.value.testCaseList.filter(testCase => {
+          const testCaseId = typeof testCase.id === 'string' ? parseInt(testCase.id) : Number(testCase.id)
+          return selectedTestCaseIds.includes(testCaseId)
+        })
+      }
+
+      // 如果没有勾选的用例ID（兼容旧数据），使用原来的筛选逻辑
       return selectedStrategy.value.testCaseList.filter(testCase => {
         // 业务大类筛选
         if (selectedStrategy.value.businessCategory && testCase.businessCategory !== selectedStrategy.value.businessCategory) {
