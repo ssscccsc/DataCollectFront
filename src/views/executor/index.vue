@@ -213,9 +213,10 @@ export default {
     const loadMacAddressOptions = async () => {
       try {
         const res = await request({
-          url: '/executor-mac-address/available',
+          url: '/executor-mac-address/list',
           method: 'get',
         })
+        // 从executor_mac_address表获取所有数据（包括已关联和未关联的）
         macAddressOptions.value = res.data || []
       } catch (error) {
         console.error('加载MAC地址列表失败:', error)
