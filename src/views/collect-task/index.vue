@@ -604,14 +604,14 @@
                   :class="{ 'selected': selectedEnvironmentIds.includes(env.id) }"
                 >
                   <div class="environment-header">
-                    <h5 class="environment-name">{{ env.name }}</h5>
+                    <h5 class="environment-name" :title="env.name">{{ env.name }}</h5>
                     <div class="environment-status">
                       <!-- 在线状态显示 -->
                       <el-tag 
                         v-if="env.onlineStatus === 'checking'" 
                         type="info" 
                         size="small"
-                        style="margin-right: 8px;"
+                        style="margin-right: 8px; flex-shrink: 0;"
                       >
                         {{ $t('collectTask.checkingOnline') }}
                       </el-tag>
@@ -619,7 +619,7 @@
                         v-else-if="env.onlineStatus === true" 
                         type="success" 
                         size="small"
-                        style="margin-right: 8px;"
+                        style="margin-right: 8px; flex-shrink: 0;"
                       >
                         {{ $t('collectTask.online') }}
                       </el-tag>
@@ -627,12 +627,16 @@
                         v-else-if="env.onlineStatus === false" 
                         type="danger" 
                         size="small"
-                        style="margin-right: 8px;"
+                        style="margin-right: 8px; flex-shrink: 0;"
                       >
                         {{ $t('collectTask.offline') }}
                       </el-tag>
                       <!-- 环境状态显示 -->
-                      <el-tag :type="env.status === 1 && env.onlineStatus === true ? 'success' : 'danger'" size="small">
+                      <el-tag 
+                        :type="env.status === 1 && env.onlineStatus === true ? 'success' : 'danger'" 
+                        size="small"
+                        style="margin-right: 8px; flex-shrink: 0;"
+                      >
                         {{ (env.status === 1 && env.onlineStatus === true) ? $t('collectTask.available') : $t('collectTask.unavailable') }}
                       </el-tag>
                       <el-checkbox 
@@ -640,7 +644,7 @@
                         :value="env.id"
                         @change="handleEnvironmentSelection"
                         :disabled="env.status !== 1 || env.onlineStatus !== true"
-                        style="margin-left: 8px;"
+                        style="flex-shrink: 0;"
                         @click.stop
                       />
                     </div>
@@ -3509,8 +3513,9 @@ export default {
 .environment-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 12px;
+  gap: 12px;
 }
 
 .environment-actions {
@@ -3550,6 +3555,9 @@ export default {
 .environment-status {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+  gap: 4px;
 }
 
 .environment-name {
@@ -3557,6 +3565,11 @@ export default {
   color: #303133;
   font-size: 16px;
   font-weight: 600;
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.5;
 }
 
 .environment-info {

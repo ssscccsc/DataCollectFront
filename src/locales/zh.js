@@ -659,7 +659,8 @@ export default {
   
   // 执行机管理
   executor: {
-    description: '管理执行机信息，包括IP地址、所属地域等',    executorList: '执行机列表',
+    description: '管理执行机信息，包括IP地址、所属地域等', 
+    executorList: '执行机列表',
     addExecutor: '新增执行机',
     refresh: '刷新',
     executorName: '执行机名称',
