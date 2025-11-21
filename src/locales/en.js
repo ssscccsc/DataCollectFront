@@ -665,6 +665,7 @@ export default {
     refresh: 'Refresh',
     executorName: 'Executor Name',
     ipAddress: 'IP Address',
+    macAddress: 'MAC Address',
     region: 'Region',
     description: 'Description',
     createTime: 'Create Time',

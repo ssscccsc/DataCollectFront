@@ -659,12 +659,12 @@ export default {
   
   // 执行机管理
   executor: {
-    description: '管理执行机信息，包括IP地址、所属地域等',
-    executorList: '执行机列表',
+    description: '管理执行机信息，包括IP地址、所属地域等',    executorList: '执行机列表',
     addExecutor: '新增执行机',
     refresh: '刷新',
     executorName: '执行机名称',
     ipAddress: 'IP地址',
+    macAddress: 'MAC地址',
     region: '所属地域',
     description: '描述',
     createTime: '创建时间',

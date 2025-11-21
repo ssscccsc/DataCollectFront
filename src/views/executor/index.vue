@@ -20,6 +20,7 @@
       <el-table :data="tableData" v-loading="loading" style="width: 100%">
         <el-table-column prop="name" :label="$t('executor.executorName')" />
         <el-table-column prop="ipAddress" :label="$t('executor.ipAddress')" />
+        <el-table-column prop="macAddress" :label="$t('executor.macAddress')" />
         <el-table-column prop="regionName" :label="$t('executor.region')" />
         <el-table-column prop="description" :label="$t('executor.description')" />
         <el-table-column prop="createTime" :label="$t('executor.createTime')" />
