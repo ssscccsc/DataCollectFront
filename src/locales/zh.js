@@ -678,6 +678,8 @@ export default {
     executorNamePlaceholder: '自动生成（城市_IP地址）',
     ipAddressLabel: 'IP地址',
     ipAddressPlaceholder: '请输入IP地址',
+    macAddressLabel: 'MAC地址',
+    macAddressPlaceholder: '请选择MAC地址',
     regionLabel: '所属地域',
     regionPlaceholder: '请选择所属城市',
     city: '城市',

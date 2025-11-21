@@ -678,6 +678,8 @@ export default {
     executorNamePlaceholder: 'Auto-generated （City_IPAddress）',
     ipAddressLabel: 'IP Address',
     ipAddressPlaceholder: 'Please enter IP address',
+    macAddressLabel: 'MAC Address',
+    macAddressPlaceholder: 'Please select MAC address',
     regionLabel: 'Region',
     regionPlaceholder: 'Please select city',
     city: 'City',
