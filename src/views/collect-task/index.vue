@@ -2123,21 +2123,21 @@ export default {
         }
         
         // 构建用例配置数据
-        const testCaseConfigs = []
+        const customParams = []
         selectedTestCases.value.forEach(testCase => {
           const testCaseId = typeof testCase.id === 'string' ? parseInt(testCase.id) : Number(testCase.id)
           const executionCount = taskTestCaseExecutionCounts.value[testCaseId] || 1
-          const customParams = taskTestCaseCustomParams.value[testCaseId] || []
+          const testCaseCustomParams = taskTestCaseCustomParams.value[testCaseId] || []
           
           // 过滤掉空的参数项
-          const validParams = customParams
+          const validParams = testCaseCustomParams
             .filter(param => param.key && param.key.trim() !== '' && param.value && param.value.length > 0)
             .map(param => ({
               key: param.key.trim(),
               value: Array.isArray(param.value) ? param.value : [param.value],
             }))
           
-          testCaseConfigs.push({
+          customParams.push({
             testCaseId: testCaseId,
             executionCount: executionCount,
             customParams: validParams.length > 0 ? validParams : null,
@@ -2155,14 +2155,14 @@ export default {
           provinceId: environmentForm.provinceId,
           cityId: environmentForm.cityId,
           logicEnvironmentIds: selectedEnvironmentIds.value,
-          // 添加自定义参数（过滤掉空的参数项）
-          customParams: editableCustomParams.value
+          // 添加任务级别自定义参数（过滤掉空的参数项）
+          taskCustomParams: editableCustomParams.value
             .filter(param => param.key.trim() !== '' && param.value.trim() !== '')
             .length > 0 
             ? JSON.stringify(editableCustomParams.value.filter(param => param.key.trim() !== '' && param.value.trim() !== ''))
             : null,
           // 添加用例配置
-          testCaseConfigs: testCaseConfigs.length > 0 ? JSON.stringify(testCaseConfigs) : null,
+          customParams: customParams.length > 0 ? JSON.stringify(customParams) : null,
         }
         
         await request({
