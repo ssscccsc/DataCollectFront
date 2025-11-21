@@ -2072,27 +2072,54 @@ export default {
     const handleSubmit = async () => {
       submitLoading.value = true
       try {
-        // 确保 DOM 已更新，表单 ref 已初始化
-        await nextTick()
-        
-        // 检查 ref 是否存在
-        if (!basicFormRef.value || !strategyFormRef.value || !environmentFormRef.value) {
-          ElMessage.error('表单未初始化，请稍后再试')
-          submitLoading.value = false
-          return
-        }
-        
-        // 验证所有表单
-        await Promise.all([
-          basicFormRef.value.validate(),
-          strategyFormRef.value.validate(),
-          environmentFormRef.value.validate()
-        ])
-        
-        // 验证逻辑环境选择
-        if (!validateEnvironmentSelection()) {
-          submitLoading.value = false
-          return
+        // 如果当前在步骤2（用例配置页面），表单ref可能已经被销毁（v-if条件）
+        // 此时不需要再次验证表单，因为已经在步骤1验证过了
+        // 只需要验证数据完整性即可
+        if (currentStep.value === 1) {
+          // 步骤2：直接验证数据完整性，不需要表单ref验证
+          if (!basicForm.name || !basicForm.name.trim()) {
+            ElMessage.error('请填写任务名称')
+            submitLoading.value = false
+            return
+          }
+          if (!strategyForm.strategyId) {
+            ElMessage.error('请选择采集策略')
+            submitLoading.value = false
+            return
+          }
+          if (!environmentForm.regionId) {
+            ElMessage.error('请选择地域')
+            submitLoading.value = false
+            return
+          }
+          if (!selectedEnvironmentIds.value || selectedEnvironmentIds.value.length === 0) {
+            ElMessage.error('请至少选择一个逻辑环境')
+            submitLoading.value = false
+            return
+          }
+        } else {
+          // 步骤1：需要验证表单
+          await nextTick()
+          
+          // 检查 ref 是否存在
+          if (!basicFormRef.value || !strategyFormRef.value || !environmentFormRef.value) {
+            ElMessage.error('表单未初始化，请稍后再试')
+            submitLoading.value = false
+            return
+          }
+          
+          // 验证所有表单
+          await Promise.all([
+            basicFormRef.value.validate(),
+            strategyFormRef.value.validate(),
+            environmentFormRef.value.validate()
+          ])
+          
+          // 验证逻辑环境选择
+          if (!validateEnvironmentSelection()) {
+            submitLoading.value = false
+            return
+          }
         }
         
         // 构建用例配置数据
