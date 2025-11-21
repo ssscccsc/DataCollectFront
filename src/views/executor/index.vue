@@ -63,6 +63,23 @@
         <el-form-item :label="$t('executor.ipAddressLabel')" prop="ipAddress">
           <el-input v-model="form.ipAddress" :placeholder="$t('executor.ipAddressPlaceholder')" />
         </el-form-item>
+        <el-form-item :label="$t('executor.macAddressLabel')" prop="macAddressId">
+          <el-select 
+            v-model="form.macAddressId" 
+            :placeholder="$t('executor.macAddressPlaceholder')" 
+            style="width: 100%"
+            filterable
+            clearable
+            @focus="loadMacAddressOptions"
+          >
+            <el-option
+              v-for="item in macAddressOptions"
+              :key="item.id"
+              :label="`${item.macAddress}${item.ipAddress ? ' (' + item.ipAddress + ')' : ''}`"
+              :value="item.id"
+            />
+          </el-select>
+        </el-form-item>
         <el-form-item :label="$t('executor.regionLabel')" prop="regionId">
           <el-select 
             v-model="form.regionId" 
@@ -119,6 +136,7 @@ export default {
     const dialogTitle = ref('')
     const formRef = ref()
     const regionOptions = ref([])
+    const macAddressOptions = ref([])
 
     const pagination = reactive({
       current: 1,
@@ -130,6 +148,7 @@ export default {
       id: null,
       name: '',
       ipAddress: '',
+      macAddressId: null,
       regionId: null,
       description: '',
     })
@@ -181,13 +200,27 @@ export default {
       }
     }
 
+    const loadMacAddressOptions = async () => {
+      try {
+        const res = await request({
+          url: '/executor-mac-address/available',
+          method: 'get',
+        })
+        macAddressOptions.value = res.data || []
+      } catch (error) {
+        console.error('加载MAC地址列表失败:', error)
+        macAddressOptions.value = []
+      }
+    }
+
     const handleAdd = () => {
       dialogTitle.value = t('executor.addExecutor')
       dialogVisible.value = true
       resetForm()
+      loadMacAddressOptions()
     }
 
-    const handleEdit = (row) => {
+    const handleEdit = async (row) => {
       dialogTitle.value = t('executor.editExecutor')
       // 正确映射字段，确保字段名称一致
       form.id = row.id
@@ -195,7 +228,24 @@ export default {
       form.ipAddress = row.ipAddress
       form.regionId = row.regionId
       form.description = row.description
+      
+      // 加载执行机关联的MAC地址
+      if (row.id) {
+        try {
+          const res = await request({
+            url: `/executor-mac-address/executor/${row.id}`,
+            method: 'get',
+          })
+          if (res.data && res.data.length > 0) {
+            form.macAddressId = res.data[0].id
+          }
+        } catch (error) {
+          console.error('加载执行机MAC地址失败:', error)
+        }
+      }
+      
       dialogVisible.value = true
+      loadMacAddressOptions()
     }
 
     const handleDelete = async (row) => {
@@ -251,6 +301,7 @@ export default {
         id: null,
         name: '',
         ipAddress: '',
+        macAddressId: null,
         regionId: null,
         description: '',
       })
