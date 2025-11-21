@@ -75,10 +75,20 @@
             <el-option
               v-for="item in macAddressOptions"
               :key="item.id"
-              :label="`${item.macAddress}${item.ipAddress ? ' (' + item.ipAddress + ')' : ''}`"
+              :label="getMacAddressLabel(item)"
               :value="item.id"
-            />
+            >
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span>{{ item.macAddress }}</span>
+                <span style="color: #909399; font-size: 12px; margin-left: 8px;">
+                  {{ item.ipAddress || '未关联IP' }}
+                </span>
+              </div>
+            </el-option>
           </el-select>
+          <div v-if="form.macAddressId" style="margin-top: 8px; font-size: 12px; color: #909399;">
+            <span>提示：一个MAC地址可以关联多个IP地址</span>
+          </div>
         </el-form-item>
         <el-form-item :label="$t('executor.regionLabel')" prop="regionId">
           <el-select 
@@ -213,6 +223,13 @@ export default {
       }
     }
 
+    const getMacAddressLabel = (item) => {
+      if (item.ipAddress) {
+        return `${item.macAddress} (${item.ipAddress})`
+      }
+      return item.macAddress
+    }
+
     const handleAdd = () => {
       dialogTitle.value = t('executor.addExecutor')
       dialogVisible.value = true
@@ -335,6 +352,9 @@ export default {
       form,
       rules,
       regionOptions,
+      macAddressOptions,
+      loadMacAddressOptions,
+      getMacAddressLabel,
       loadData,
       handleAdd,
       handleEdit,
