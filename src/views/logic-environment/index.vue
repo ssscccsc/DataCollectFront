@@ -144,7 +144,7 @@
           </div>
         </el-form-item>
         <el-form-item :label="$t('logicEnvironment.networkLabel')" prop="network">
-          <el-select v-model="form.network" :placeholder="$t(logicEnvironment.networkPlaceholder')" style="width: 100%">
+          <el-select v-model="form.network" :placeholder="$t('logicEnvironment.networkPlaceholder')" style="width: 100%">
             <el-option :label="$t('logicEnvironment.networkNormal')" value="normal" />
             <el-option :label="$t('logicEnvironment.networkWeak')" value="weak" />
             <el-option :label="$t('logicEnvironment.networkCongestion')" value="congestion" />
@@ -930,6 +930,7 @@ export default {
       executorOptions,
       ueOptions,
       networkOptions,
+      physicalNetworks,
       ueDialogVisible,
       currentUes,
       availableUes,
