@@ -1188,7 +1188,7 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted, onUnmounted, computed, watch } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, computed, watch, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Refresh, ArrowDown, ArrowUp, Delete, Setting, Clock, ArrowLeft, ArrowRight, InfoFilled } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
@@ -1763,9 +1763,11 @@ export default {
       }
     }
 
-    const handleAdd = () => {
+    const handleAdd = async () => {
       dialogTitle.value = t('collectTask.createTask')
       dialogVisible.value = true
+      // 等待 DOM 更新，确保表单已渲染
+      await nextTick()
       resetForm()
       loadRegionOptions()
     }
@@ -2070,6 +2072,16 @@ export default {
     const handleSubmit = async () => {
       submitLoading.value = true
       try {
+        // 确保 DOM 已更新，表单 ref 已初始化
+        await nextTick()
+        
+        // 检查 ref 是否存在
+        if (!basicFormRef.value || !strategyFormRef.value || !environmentFormRef.value) {
+          ElMessage.error('表单未初始化，请稍后再试')
+          submitLoading.value = false
+          return
+        }
+        
         // 验证所有表单
         await Promise.all([
           basicFormRef.value.validate(),
@@ -2079,6 +2091,7 @@ export default {
         
         // 验证逻辑环境选择
         if (!validateEnvironmentSelection()) {
+          submitLoading.value = false
           return
         }
         
@@ -2202,6 +2215,15 @@ export default {
       if (currentStep.value === 0) {
         // 验证基本信息、采集策略、环境编排
         try {
+          // 确保 DOM 已更新，表单 ref 已初始化
+          await nextTick()
+          
+          // 检查 ref 是否存在
+          if (!basicFormRef.value || !strategyFormRef.value || !environmentFormRef.value) {
+            console.warn('表单 ref 未初始化，请稍后再试')
+            return
+          }
+          
           await Promise.all([
             basicFormRef.value.validate(),
             strategyFormRef.value.validate(),
@@ -2218,6 +2240,7 @@ export default {
           currentStep.value = 1
         } catch (error) {
           // 验证失败，不切换步骤
+          console.error('表单验证失败:', error)
         }
       }
     }
