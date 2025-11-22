@@ -146,6 +146,10 @@
             <span class="stat-label">{{ $t('dashboard.executorCount') }}：</span>
             <span class="stat-value">{{ regionStats.executorCount || 0 }}</span>
           </div>
+          <div class="stat-item">
+            <span class="stat-label">{{ $t('dashboard.ueCount') }}：</span>
+            <span class="stat-value">{{ regionStats.ueCount || 0 }}</span>
+          </div>
         </div>
         
         <!-- APP详细信息列表 -->
@@ -207,6 +211,7 @@ export default {
       appCount: 0,
       collectCount: 0,
       executorCount: 0,
+      ueCount: 0,
       appList: [],
     })
     
@@ -573,6 +578,7 @@ export default {
             appCount: res.data.appCount || 0,
             collectCount: res.data.collectCount || 0,
             executorCount: res.data.executorCount || 0,
+            ueCount: res.data.ueCount || 0,
             appList: res.data.appList || [],
           }
           console.log('处理后的统计数据:', regionStats.value)
