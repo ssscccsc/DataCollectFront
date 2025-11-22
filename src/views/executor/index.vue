@@ -247,21 +247,8 @@ export default {
       form.ipAddress = row.ipAddress
       form.regionId = row.regionId
       form.description = row.description
-      
-      // 加载执行机关联的MAC地址
-      if (row.id) {
-        try {
-          const res = await request({
-            url: `/executor-mac-address/executor/${row.id}`,
-            method: 'get',
-          })
-          if (res.data && res.data.length > 0) {
-            form.macAddressId = res.data[0].id
-          }
-        } catch (error) {
-          console.error('加载执行机MAC地址失败:', error)
-        }
-      }
+      // 直接使用row中的macAddressId进行回填
+      form.macAddressId = row.macAddressId || null
       
       dialogVisible.value = true
       loadMacAddressOptions()
