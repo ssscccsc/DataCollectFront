@@ -601,7 +601,11 @@
                   :key="env.id" 
                   class="environment-card"
                   shadow="hover"
-                  :class="{ 'selected': selectedEnvironmentIds.includes(env.id) }"
+                  :class="{ 
+                    'selected': selectedEnvironmentIds.includes(env.id),
+                    'disabled': env.status !== 1 || env.onlineStatus !== true
+                  }"
+                  @click="toggleEnvironmentSelection(env.id)"
                 >
                   <div class="environment-header">
                     <h5 class="environment-name" :title="env.name">{{ env.name }}</h5>
@@ -3497,9 +3501,10 @@ export default {
 .environment-card {
   border: 1px solid #ebeef5;
   transition: all 0.3s ease;
+  cursor: pointer;
 }
 
-.environment-card:hover {
+.environment-card:hover:not(.disabled) {
   border-color: #409eff;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
 }
@@ -3510,12 +3515,18 @@ export default {
   box-shadow: 0 2px 12px 0 rgba(103, 194, 58, 0.2);
 }
 
+.environment-card.disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .environment-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 12px;
   gap: 12px;
+  min-width: 0;
 }
 
 .environment-actions {
@@ -3555,9 +3566,10 @@ export default {
 .environment-status {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   flex-shrink: 0;
   gap: 4px;
+  white-space: nowrap;
 }
 
 .environment-name {
