@@ -557,6 +557,7 @@
                           size="small"
                           filterable
                           clearable
+                          allow-create
                           style="flex: 1;"
                           @change="handleBatchParamKeyChange(testCase.id, paramIndex)"
                         >
@@ -574,6 +575,7 @@
                           multiple
                           filterable
                           clearable
+                          allow-create
                           style="flex: 1;"
                         >
                           <el-option
@@ -742,6 +744,7 @@
                       size="small"
                       filterable
                       clearable
+                      allow-create
                       style="flex: 1;"
                       @change="handleBatchParamKeyChange(testCase.id, paramIndex)"
                     >
@@ -759,6 +762,7 @@
                       multiple
                       filterable
                       clearable
+                      allow-create
                       style="flex: 1;"
                     >
                       <el-option
@@ -866,6 +870,7 @@
                 class="param-input"
                 filterable
                 clearable
+                allow-create
                 @change="handleParamKeyChange(index)"
               >
                 <el-option
@@ -882,6 +887,7 @@
                 multiple
                 filterable
                 clearable
+                allow-create
               >
                 <el-option
                   v-for="valueOption in getParamValueOptions(index)"
