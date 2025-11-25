@@ -915,6 +915,8 @@ export default {
     category: 'Category',
     description: 'Description',
     version: 'Version',
+    latestVersion: 'Latest Version',
+    historyVersion: 'History Version',
     updateTime: 'Update Time',
     changeRecord: 'Change Record',
     dialVersion: 'Dial Version',

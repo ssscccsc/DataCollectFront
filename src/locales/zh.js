@@ -915,6 +915,8 @@ export default {
     category: '类别',
     description: '简介',
     version: '版本',
+    latestVersion: '最新版本',
+    historyVersion: '历史版本',
     updateTime: '更新时间',
     changeRecord: '变更记录',
     dialVersion: '拨测版本',

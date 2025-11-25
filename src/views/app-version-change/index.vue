@@ -96,55 +96,82 @@
     <el-dialog
       v-model="versionHistoryDialogVisible"
       :title="$t('appVersionChange.changeHistory')"
-      width="800px"
+      width="70%"
       :close-on-click-modal="false"
+      class="version-history-dialog"
     >
       <div v-loading="versionHistoryLoading" class="version-history-content">
         <div v-if="versionHistoryData" class="app-info-section">
-          <div class="app-info-header">
-            <img 
-              v-if="versionHistoryData.icon" 
-              :src="`data:image/png;base64,${versionHistoryData.icon}`" 
-              alt="App Icon" 
-              class="app-icon-large"
-            />
-            <div class="app-info-text">
-              <h3 class="app-name">{{ versionHistoryData.appName || '-' }}</h3>
-              <div class="app-meta">
-                <span class="meta-item">
-                  <strong>{{ $t('appVersionChange.category') }}：</strong>{{ versionHistoryData.appCategory || '-' }}
-                </span>
-                <span class="meta-item">
-                  <strong>{{ $t('appVersionChange.version') }}：</strong>{{ versionHistoryData.appVersion || '-' }}
-                </span>
-                <span class="meta-item">
-                  <strong>{{ $t('appVersionChange.dialVersion') }}：</strong>{{ versionHistoryData.dialVersion || '-' }}
-                </span>
-              </div>
-              <p class="app-description">{{ versionHistoryData.appDescription || '-' }}</p>
+          <div class="app-info-item">
+            <span class="info-label">{{ $t('appVersionChange.appName') }}：</span>
+            <div class="app-name-with-icon">
+              <img 
+                v-if="versionHistoryData.icon" 
+                :src="`data:image/png;base64,${versionHistoryData.icon}`" 
+                alt="App Icon" 
+                class="app-icon-small"
+              />
+              <span class="app-name-text">{{ versionHistoryData.appName || '-' }}</span>
             </div>
+          </div>
+          <div class="app-info-item">
+            <span class="info-label">{{ $t('appVersionChange.category') }}：</span>
+            <span class="info-value">{{ versionHistoryData.appCategory || '-' }}</span>
+          </div>
+          <div class="app-info-item">
+            <span class="info-label">{{ $t('appVersionChange.latestVersion') }}：</span>
+            <span class="info-value">{{ versionHistoryData.appVersion || '-' }}</span>
+          </div>
+          <div class="app-info-item">
+            <span class="info-label">{{ $t('appVersionChange.description') }}：</span>
+            <span class="info-value">{{ versionHistoryData.appDescription || '-' }}</span>
+          </div>
+          <div class="app-info-item">
+            <span class="info-label">{{ $t('appVersionChange.dialVersion') }}：</span>
+            <span class="info-value">{{ versionHistoryData.dialVersion || '-' }}</span>
           </div>
         </div>
 
         <div class="version-list-section">
-          <h4 class="section-title">{{ $t('appVersionChange.version') }} {{ $t('appVersionChange.changeHistory') }}</h4>
-          <el-timeline v-if="versionHistoryData && versionHistoryData.version && versionHistoryData.version.length > 0">
-            <el-timeline-item
-              v-for="(version, index) in versionHistoryData.version"
-              :key="index"
-              :timestamp="version.versionUpdateDate || '-'"
-              placement="top"
+          <h4 class="section-title">{{ $t('appVersionChange.historyVersion') }}</h4>
+          <el-table 
+            v-if="versionHistoryData && versionHistoryData.version && versionHistoryData.version.length > 0"
+            :data="versionHistoryData.version"
+            stripe
+            style="width: 100%"
+            :max-height="400"
+          >
+            <el-table-column 
+              prop="version" 
+              :label="$t('appVersionChange.historyVersion')" 
+              min-width="150"
+              align="center"
             >
-              <div class="version-item">
-                <div class="version-header">
-                  <span class="version-number">{{ version.version || '-' }}</span>
-                </div>
-                <div class="version-content">
-                  <p class="change-log">{{ version.changeLog || '-' }}</p>
-                </div>
-              </div>
-            </el-timeline-item>
-          </el-timeline>
+              <template #default="scope">
+                <span>{{ scope.row.version || '-' }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column 
+              prop="changeLog" 
+              :label="$t('appVersionChange.changeRecord')" 
+              min-width="300"
+              show-overflow-tooltip
+            >
+              <template #default="scope">
+                <span>{{ scope.row.changeLog || '-' }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column 
+              prop="versionUpdateDate" 
+              :label="$t('appVersionChange.updateTime')" 
+              min-width="180"
+              align="center"
+            >
+              <template #default="scope">
+                <span>{{ scope.row.versionUpdateDate || '-' }}</span>
+              </template>
+            </el-table-column>
+          </el-table>
           <el-empty v-else :description="$t('appVersionChange.noVersionHistory')" :image-size="80" />
         </div>
       </div>
@@ -429,102 +456,85 @@ export default {
   justify-content: flex-end;
 }
 
+.version-history-dialog :deep(.el-dialog__body) {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
 .version-history-content {
-  min-height: 200px;
+  height: 70vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .app-info-section {
-  margin-bottom: 30px;
+  margin-bottom: 20px;
   padding-bottom: 20px;
   border-bottom: 1px solid #ebeef5;
-}
-
-.app-info-header {
-  display: flex;
-  gap: 20px;
-  align-items: flex-start;
-}
-
-.app-icon-large {
-  width: 80px;
-  height: 80px;
-  object-fit: contain;
-  border-radius: 8px;
   flex-shrink: 0;
 }
 
-.app-info-text {
-  flex: 1;
-  min-width: 0;
-}
-
-.app-name {
-  font-size: 20px;
-  font-weight: 600;
-  color: #303133;
-  margin: 0 0 12px 0;
-}
-
-.app-meta {
+.app-info-item {
   display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
+  align-items: center;
   margin-bottom: 12px;
+  min-height: 32px;
 }
 
-.meta-item {
+.app-info-item:last-child {
+  margin-bottom: 0;
+}
+
+.info-label {
   font-size: 14px;
-  color: #606266;
-}
-
-.meta-item strong {
+  font-weight: 500;
   color: #303133;
-  margin-right: 4px;
+  min-width: 100px;
+  flex-shrink: 0;
 }
 
-.app-description {
+.info-value {
   font-size: 14px;
   color: #606266;
-  line-height: 1.6;
-  margin: 0;
+  flex: 1;
+}
+
+.app-name-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.app-icon-small {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.app-name-text {
+  font-size: 14px;
+  color: #606266;
+  font-weight: 500;
 }
 
 .version-list-section {
-  margin-top: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
 }
 
 .section-title {
   font-size: 16px;
   font-weight: 600;
   color: #303133;
-  margin: 0 0 20px 0;
-}
-
-.version-item {
-  padding: 12px 0;
-}
-
-.version-header {
-  margin-bottom: 8px;
-}
-
-.version-number {
-  font-size: 16px;
-  font-weight: 600;
-  color: #409eff;
-}
-
-.version-content {
-  margin-top: 8px;
-}
-
-.change-log {
-  font-size: 14px;
-  color: #606266;
-  line-height: 1.6;
-  margin: 0;
-  white-space: pre-wrap;
-  word-break: break-word;
+  margin: 0 0 16px 0;
+  flex-shrink: 0;
 }
 </style>
 
