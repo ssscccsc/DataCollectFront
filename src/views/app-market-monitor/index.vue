@@ -144,6 +144,7 @@ export default {
     const activeTab = ref('appstore')
     const selectedDate = ref('')
     const selectedCategory = ref('app')
+    const periodType = ref('daily') // 周期类型：daily, weekly, monthly, quarterly
 
     const pagination = reactive({
       current: 1,
@@ -185,8 +186,58 @@ export default {
       return formatDate(lastDay)
     }
 
+    // 获取当前周数（ISO周数）
+    const getWeekNumber = (date) => {
+      const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
+      const dayNum = d.getUTCDay() || 7
+      d.setUTCDate(d.getUTCDate() + 4 - dayNum)
+      const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1))
+      return Math.ceil((((d - yearStart) / 86400000) + 1) / 7)
+    }
+
+    // 获取当前周的年和周数（格式：YYYY-WW）
+    const getThisWeekValue = () => {
+      const today = new Date()
+      const year = today.getFullYear()
+      const week = getWeekNumber(today)
+      return `${year}-${String(week).padStart(2, '0')}`
+    }
+
+    // 获取当前月份（格式：YYYY-MM）
+    const getThisMonthValue = () => {
+      const today = new Date()
+      const year = today.getFullYear()
+      const month = String(today.getMonth() + 1).padStart(2, '0')
+      return `${year}-${month}`
+    }
+
+    // 获取当前季度（格式：YYYY-Q）
+    const getThisQuarterValue = () => {
+      const today = new Date()
+      const year = today.getFullYear()
+      const quarter = Math.floor(today.getMonth() / 3) + 1
+      return `${year}-${quarter}`
+    }
+
+    // 根据periodType计算periodValue
+    const getPeriodValue = () => {
+      switch (periodType.value) {
+        case 'daily':
+          return selectedDate.value
+        case 'weekly':
+          return getThisWeekValue()
+        case 'monthly':
+          return getThisMonthValue()
+        case 'quarterly':
+          return getThisQuarterValue()
+        default:
+          return selectedDate.value
+      }
+    }
+
     // 初始化日期为今天
     selectedDate.value = getToday()
+    periodType.value = 'daily'
 
     // 判断是否选择了本周
     const isThisWeek = computed(() => {
@@ -273,8 +324,10 @@ export default {
       try {
         const marketBrand = getMarketBrand(activeTab.value)
         const categoryParam = getCategoryParam(selectedCategory.value)
+        const periodValue = getPeriodValue()
         const response = await request.post('/external/apps/get-daily-rank', {
-          date: selectedDate.value,
+          period_type: periodType.value,
+          period_value: periodValue,
           market_brand: marketBrand,
           category: categoryParam,
         })
@@ -307,23 +360,27 @@ export default {
     }
 
     const handleDateChange = (date) => {
+      periodType.value = 'daily'
       pagination.current = 1
       loadData()
     }
 
     const handleThisWeekClick = () => {
+      periodType.value = 'weekly'
       selectedDate.value = getThisWeek()
       pagination.current = 1
       loadData()
     }
 
     const handleThisMonthClick = () => {
+      periodType.value = 'monthly'
       selectedDate.value = getThisMonth()
       pagination.current = 1
       loadData()
     }
 
     const handleThisQuarterClick = () => {
+      periodType.value = 'quarterly'
       selectedDate.value = getThisQuarter()
       pagination.current = 1
       loadData()
