@@ -219,25 +219,14 @@ export default {
       return `${year}-${quarter}`
     }
 
-    // 根据periodType计算periodValue
+    // 根据periodType计算periodValue（统一使用当前勾选的时间yyyy-MM-dd）
     const getPeriodValue = () => {
-      switch (periodType.value) {
-        case 'daily':
-          return selectedDate.value
-        case 'weekly':
-          return getThisWeekValue()
-        case 'monthly':
-          return getThisMonthValue()
-        case 'quarterly':
-          return getThisQuarterValue()
-        default:
-          return selectedDate.value
-      }
+      return selectedDate.value
     }
 
-    // 初始化日期为今天
-    selectedDate.value = getToday()
-    periodType.value = 'daily'
+    // 初始化日期为本周（默认传本周数据）
+    selectedDate.value = getThisWeek()
+    periodType.value = 'weekly'
 
     // 判断是否选择了本周
     const isThisWeek = computed(() => {
