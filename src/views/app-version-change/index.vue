@@ -91,6 +91,67 @@
         />
       </div>
     </el-card>
+
+    <!-- 版本历史弹窗 -->
+    <el-dialog
+      v-model="versionHistoryDialogVisible"
+      :title="$t('appVersionChange.changeHistory')"
+      width="800px"
+      :close-on-click-modal="false"
+    >
+      <div v-loading="versionHistoryLoading" class="version-history-content">
+        <div v-if="versionHistoryData" class="app-info-section">
+          <div class="app-info-header">
+            <img 
+              v-if="versionHistoryData.icon" 
+              :src="`data:image/png;base64,${versionHistoryData.icon}`" 
+              alt="App Icon" 
+              class="app-icon-large"
+            />
+            <div class="app-info-text">
+              <h3 class="app-name">{{ versionHistoryData.appName || '-' }}</h3>
+              <div class="app-meta">
+                <span class="meta-item">
+                  <strong>{{ $t('appVersionChange.category') }}：</strong>{{ versionHistoryData.appCategory || '-' }}
+                </span>
+                <span class="meta-item">
+                  <strong>{{ $t('appVersionChange.version') }}：</strong>{{ versionHistoryData.appVersion || '-' }}
+                </span>
+                <span class="meta-item">
+                  <strong>{{ $t('appVersionChange.dialVersion') }}：</strong>{{ versionHistoryData.dialVersion || '-' }}
+                </span>
+              </div>
+              <p class="app-description">{{ versionHistoryData.appDescription || '-' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="version-list-section">
+          <h4 class="section-title">{{ $t('appVersionChange.version') }} {{ $t('appVersionChange.changeHistory') }}</h4>
+          <el-timeline v-if="versionHistoryData && versionHistoryData.version && versionHistoryData.version.length > 0">
+            <el-timeline-item
+              v-for="(version, index) in versionHistoryData.version"
+              :key="index"
+              :timestamp="version.versionUpdateDate || '-'"
+              placement="top"
+            >
+              <div class="version-item">
+                <div class="version-header">
+                  <span class="version-number">{{ version.version || '-' }}</span>
+                </div>
+                <div class="version-content">
+                  <p class="change-log">{{ version.changeLog || '-' }}</p>
+                </div>
+              </div>
+            </el-timeline-item>
+          </el-timeline>
+          <el-empty v-else :description="$t('appVersionChange.noVersionHistory')" :image-size="80" />
+        </div>
+      </div>
+      <template #footer>
+        <el-button @click="versionHistoryDialogVisible = false">{{ $t('common.cancel') }}</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -115,6 +176,11 @@ export default {
     const tableData = ref([])
     const searchKeyword = ref('')
     const allData = ref([]) // 保存所有已加载的数据
+    
+    // 版本历史弹窗相关
+    const versionHistoryDialogVisible = ref(false)
+    const versionHistoryLoading = ref(false)
+    const versionHistoryData = ref(null)
 
     const pagination = reactive({
       current: 1,
@@ -277,9 +343,29 @@ export default {
       })
     }
 
-    const handleViewChangeHistory = (row) => {
-      // TODO: 实现查看变更历史功能
-      ElMessage.info(t('appVersionChange.viewChangeHistoryNotImplemented'))
+    const handleViewChangeHistory = async (row) => {
+      versionHistoryDialogVisible.value = true
+      versionHistoryLoading.value = true
+      versionHistoryData.value = null
+      
+      try {
+        const response = await request.post('/external/apps/get_single_app_version_history', {
+          app_name: row.appName || '',
+          is_ios: 'false', // 默认非iOS应用
+        })
+        
+        if (response.message === 'success' && response.data) {
+          versionHistoryData.value = response.data
+        } else {
+          ElMessage.error(response.message || t('appVersionChange.loadDataFailed'))
+          versionHistoryData.value = null
+        }
+      } catch (error) {
+        ElMessage.error(t('appVersionChange.loadDataFailed') || '加载版本历史失败')
+        versionHistoryData.value = null
+      } finally {
+        versionHistoryLoading.value = false
+      }
     }
 
     onMounted(() => {
@@ -292,6 +378,9 @@ export default {
       searchKeyword,
       pagination,
       columnWidths,
+      versionHistoryDialogVisible,
+      versionHistoryLoading,
+      versionHistoryData,
       loadData,
       handleSearch,
       handleSizeChange,
@@ -338,6 +427,104 @@ export default {
   margin-top: 20px;
   display: flex;
   justify-content: flex-end;
+}
+
+.version-history-content {
+  min-height: 200px;
+}
+
+.app-info-section {
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #ebeef5;
+}
+
+.app-info-header {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.app-icon-large {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.app-info-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.app-name {
+  font-size: 20px;
+  font-weight: 600;
+  color: #303133;
+  margin: 0 0 12px 0;
+}
+
+.app-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-bottom: 12px;
+}
+
+.meta-item {
+  font-size: 14px;
+  color: #606266;
+}
+
+.meta-item strong {
+  color: #303133;
+  margin-right: 4px;
+}
+
+.app-description {
+  font-size: 14px;
+  color: #606266;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.version-list-section {
+  margin-top: 20px;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+  margin: 0 0 20px 0;
+}
+
+.version-item {
+  padding: 12px 0;
+}
+
+.version-header {
+  margin-bottom: 8px;
+}
+
+.version-number {
+  font-size: 16px;
+  font-weight: 600;
+  color: #409eff;
+}
+
+.version-content {
+  margin-top: 8px;
+}
+
+.change-log {
+  font-size: 14px;
+  color: #606266;
+  line-height: 1.6;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 </style>
 

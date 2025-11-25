@@ -929,6 +929,7 @@ export default {
     minorUpdate: '次要更新',
     patchUpdate: '补丁更新',
     loadDataFailed: '加载数据失败',
+    noVersionHistory: '暂无版本历史',
     viewDetailNotImplemented: '查看详情功能待实现',
     viewChangeHistoryNotImplemented: '查看变更历史功能待实现',
   },

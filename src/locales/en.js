@@ -929,6 +929,7 @@ export default {
     minorUpdate: 'Minor Update',
     patchUpdate: 'Patch Update',
     loadDataFailed: 'Load data failed',
+    noVersionHistory: 'No version history',
     viewDetailNotImplemented: 'View detail feature not implemented',
     viewChangeHistoryNotImplemented: 'View change history feature not implemented',
   },
