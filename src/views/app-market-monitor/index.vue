@@ -224,23 +224,23 @@ export default {
       return selectedDate.value
     }
 
-    // 初始化日期为本周（默认传本周数据）
-    selectedDate.value = getThisWeek()
+    // 初始化日期为今天，默认传本周数据
+    selectedDate.value = getToday()
     periodType.value = 'weekly'
 
     // 判断是否选择了本周
     const isThisWeek = computed(() => {
-      return selectedDate.value === getThisWeek()
+      return periodType.value === 'weekly'
     })
 
     // 判断是否选择了本月
     const isThisMonth = computed(() => {
-      return selectedDate.value === getThisMonth()
+      return periodType.value === 'monthly'
     })
 
     // 判断是否选择了本季度
     const isThisQuarter = computed(() => {
-      return selectedDate.value === getThisQuarter()
+      return periodType.value === 'quarterly'
     })
 
     const getCollectionStatusType = (status) => {
@@ -356,21 +356,21 @@ export default {
 
     const handleThisWeekClick = () => {
       periodType.value = 'weekly'
-      selectedDate.value = getThisWeek()
+      // 不修改日期选择器的值，periodValue使用日期选择器中的值
       pagination.current = 1
       loadData()
     }
 
     const handleThisMonthClick = () => {
       periodType.value = 'monthly'
-      selectedDate.value = getThisMonth()
+      // 不修改日期选择器的值，periodValue使用日期选择器中的值
       pagination.current = 1
       loadData()
     }
 
     const handleThisQuarterClick = () => {
       periodType.value = 'quarterly'
-      selectedDate.value = getThisQuarter()
+      // 不修改日期选择器的值，periodValue使用日期选择器中的值
       pagination.current = 1
       loadData()
     }
