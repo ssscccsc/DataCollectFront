@@ -917,6 +917,7 @@ export default {
     version: 'Version',
     updateTime: 'Update Time',
     changeRecord: 'Change Record',
+    dialVersion: 'Dial Version',
     changeHistory: 'Change History',
     startDialTest: 'Start Dial Test',
     packageName: 'Package Name',

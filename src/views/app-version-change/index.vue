@@ -61,6 +61,11 @@
             <span v-else style="color: #909399;">-</span>
           </template>
         </el-table-column>
+        <el-table-column prop="dialVersion" :label="$t('appVersionChange.dialVersion')" :min-width="columnWidths.dialVersion">
+          <template #default="scope">
+            <span>{{ scope.row.dialVersion || '-' }}</span>
+          </template>
+        </el-table-column>
         <el-table-column :label="$t('common.operations')" :min-width="columnWidths.operations" fixed="right">
           <template #default="scope">
             <el-button type="primary" size="small" @click="handleStartDialTest(scope.row)">
@@ -118,7 +123,7 @@ export default {
     })
 
     // 根据比例计算列宽（基础单位：12px）
-    // 应用名称15%, 类别10%, 简介25%, 版本15%, 时间10%, 变更记录20%, 操作列10%
+    // 应用名称15%, 类别10%, 简介25%, 版本15%, 时间10%, 变更记录18%, 拨测版本12%, 操作列10%
     const baseUnit = 12
     const columnWidths = reactive({
       appName: 15 * baseUnit,      // 180px (15%)
@@ -126,7 +131,8 @@ export default {
       description: 25 * baseUnit,  // 300px (25%)
       version: 15 * baseUnit,      // 180px (15%)
       updateTime: 10 * baseUnit,   // 120px (10%)
-      changeRecord: 20 * baseUnit, // 240px (20%)
+      changeRecord: 18 * baseUnit, // 216px (18%)
+      dialVersion: 12 * baseUnit,  // 144px (12%)
       operations: 10 * baseUnit,   // 120px (10%)
     })
 

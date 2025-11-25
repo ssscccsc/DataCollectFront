@@ -917,6 +917,7 @@ export default {
     version: '版本',
     updateTime: '更新时间',
     changeRecord: '变更记录',
+    dialVersion: '拨测版本',
     changeHistory: '变更历史',
     startDialTest: '发起拨测',
     packageName: '包名',
