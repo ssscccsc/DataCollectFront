@@ -6,7 +6,7 @@
     </div>
 
     <el-card>
-      <!-- Tab页 -->
+      <!-- Tab�?-->
       <el-tabs v-model="activeTab" @tab-change="handleTabChange">
         <el-tab-pane :label="$t('appMarketMonitor.appStore')" name="appstore">
           <template #label>
@@ -30,10 +30,10 @@
         </el-tab-pane>
       </el-tabs>
 
-      <!-- 数据筛选 -->
+      <!-- 数据筛�?-->
       <div class="filter-section">
         <div class="filter-item">
-          <span class="filter-label">{{ $t('appMarketMonitor.selectDate') }}：</span>
+          <span class="filter-label">{{ $t('appMarketMonitor.selectDate') }}�?/span>
           <el-date-picker
             v-model="selectedDate"
             type="date"
@@ -53,7 +53,7 @@
             {{ $t('appMarketMonitor.thisQuarter') }}
           </el-button>
         </div>
-        <div class="filter-item" style="margin-left: 30px;">
+        <div v-if="showCategorySelector" class="filter-item" style="margin-left: 30px;">
           <span class="filter-label">{{ $t('appMarketMonitor.appCategory') }}：</span>
           <el-button @click="handleCategoryChange('app')" :type="selectedCategory === 'app' ? 'primary' : ''">
             {{ $t('appMarketMonitor.app') }}
@@ -160,25 +160,21 @@ export default {
       return `${year}-${month}-${day}`
     }
 
-    // 获取今天的日期
-    const getToday = () => {
+    // 获取今天的日�?    const getToday = () => {
       return formatDate(new Date())
     }
 
-    // 获取本周最后一天（今天）
-    const getThisWeek = () => {
+    // 获取本周最后一天（今天�?    const getThisWeek = () => {
       return formatDate(new Date())
     }
 
-    // 获取本月最后一天
-    const getThisMonth = () => {
+    // 获取本月最后一�?    const getThisMonth = () => {
       const today = new Date()
       const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0)
       return formatDate(lastDay)
     }
 
-    // 获取本季度最后一天
-    const getThisQuarter = () => {
+    // 获取本季度最后一�?    const getThisQuarter = () => {
       const today = new Date()
       const quarter = Math.floor(today.getMonth() / 3)
       const quarterEndMonth = (quarter + 1) * 3 - 1
@@ -186,8 +182,7 @@ export default {
       return formatDate(lastDay)
     }
 
-    // 获取当前周数（ISO周数）
-    const getWeekNumber = (date) => {
+    // 获取当前周数（ISO周数�?    const getWeekNumber = (date) => {
       const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
       const dayNum = d.getUTCDay() || 7
       d.setUTCDate(d.getUTCDate() + 4 - dayNum)
@@ -195,32 +190,28 @@ export default {
       return Math.ceil((((d - yearStart) / 86400000) + 1) / 7)
     }
 
-    // 获取当前周的年和周数（格式：YYYY-WW）
-    const getThisWeekValue = () => {
+    // 获取当前周的年和周数（格式：YYYY-WW�?    const getThisWeekValue = () => {
       const today = new Date()
       const year = today.getFullYear()
       const week = getWeekNumber(today)
       return `${year}-${String(week).padStart(2, '0')}`
     }
 
-    // 获取当前月份（格式：YYYY-MM）
-    const getThisMonthValue = () => {
+    // 获取当前月份（格式：YYYY-MM�?    const getThisMonthValue = () => {
       const today = new Date()
       const year = today.getFullYear()
       const month = String(today.getMonth() + 1).padStart(2, '0')
       return `${year}-${month}`
     }
 
-    // 获取当前季度（格式：YYYY-Q）
-    const getThisQuarterValue = () => {
+    // 获取当前季度（格式：YYYY-Q�?    const getThisQuarterValue = () => {
       const today = new Date()
       const year = today.getFullYear()
       const quarter = Math.floor(today.getMonth() / 3) + 1
       return `${year}-${quarter}`
     }
 
-    // 根据periodType计算periodValue（统一使用当前勾选的时间yyyy-MM-dd）
-    const getPeriodValue = () => {
+    // 根据periodType计算periodValue（统一使用当前勾选的时间yyyy-MM-dd�?    const getPeriodValue = () => {
       return selectedDate.value
     }
 
@@ -228,19 +219,22 @@ export default {
     selectedDate.value = getToday()
     periodType.value = 'weekly'
 
-    // 判断是否选择了本周
-    const isThisWeek = computed(() => {
+    // 判断是否选择了本�?    const isThisWeek = computed(() => {
       return periodType.value === 'weekly'
     })
 
-    // 判断是否选择了本月
-    const isThisMonth = computed(() => {
+    // 判断是否选择了本�?    const isThisMonth = computed(() => {
       return periodType.value === 'monthly'
     })
 
     // 判断是否选择了本季度
     const isThisQuarter = computed(() => {
       return periodType.value === 'quarterly'
+    })
+
+    // 判断是否显示应用类别选择器（小米应用市场不显示）
+    const showCategorySelector = computed(() => {
+      return activeTab.value !== 'xiaomi'
     })
 
     const getCollectionStatusType = (status) => {
@@ -287,10 +281,8 @@ export default {
           currentVersion: item.app_version || '-',
           updateDate: item.version_update_date || item.date || '-',
           rating: item.score || null,
-          collectionStatus: 'notCollected', // 默认未采集
-          testVersion: item.dial_version || '-',
-          icon: item.icon || null, // base64编码的图标
-        }
+          collectionStatus: 'notCollected', // 默认未采�?          testVersion: item.dial_version || '-',
+          icon: item.icon || null, // base64编码的图�?        }
       })
     }
 
@@ -322,8 +314,7 @@ export default {
         })
         
         if (response.code === 200 && response.data && response.data.data) {
-          // 映射API数据到表格数据
-          const allData = mapApiDataToTableData(response.data.data)
+          // 映射API数据到表格数�?          const allData = mapApiDataToTableData(response.data.data)
           
           // 前端分页处理
           const start = (pagination.current - 1) * pagination.size
@@ -344,6 +335,10 @@ export default {
     }
 
     const handleTabChange = (tabName) => {
+      // 如果切换到小米应用市场，默认使用"应用"类别
+      if (tabName === 'xiaomi') {
+        selectedCategory.value = 'app'
+      }
       pagination.current = 1
       loadData()
     }
@@ -356,22 +351,19 @@ export default {
 
     const handleThisWeekClick = () => {
       periodType.value = 'weekly'
-      // 不修改日期选择器的值，periodValue使用日期选择器中的值
-      pagination.current = 1
+      // 不修改日期选择器的值，periodValue使用日期选择器中的�?      pagination.current = 1
       loadData()
     }
 
     const handleThisMonthClick = () => {
       periodType.value = 'monthly'
-      // 不修改日期选择器的值，periodValue使用日期选择器中的值
-      pagination.current = 1
+      // 不修改日期选择器的值，periodValue使用日期选择器中的�?      pagination.current = 1
       loadData()
     }
 
     const handleThisQuarterClick = () => {
       periodType.value = 'quarterly'
-      // 不修改日期选择器的值，periodValue使用日期选择器中的值
-      pagination.current = 1
+      // 不修改日期选择器的值，periodValue使用日期选择器中的�?      pagination.current = 1
       loadData()
     }
 
@@ -411,6 +403,7 @@ export default {
       isThisWeek,
       isThisMonth,
       isThisQuarter,
+      showCategorySelector,
       loadData,
       handleTabChange,
       handleDateChange,
@@ -425,71 +418,5 @@ export default {
     }
   },
 }
-</script>
 
-<style scoped>
-.app-market-monitor-page {
-  padding: 0;
-}
-
-.page-header {
-  margin-bottom: 20px;
-}
-
-.page-title {
-  font-size: 24px;
-  font-weight: 600;
-  color: #303133;
-  margin: 0 0 8px 0;
-}
-
-.page-description {
-  font-size: 14px;
-  color: #909399;
-  margin: 0;
-}
-
-.filter-section {
-  margin: 20px 0;
-  padding: 15px;
-  background-color: #f5f7fa;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.filter-item {
-  display: flex;
-  align-items: center;
-}
-
-.filter-label {
-  font-size: 14px;
-  color: #606266;
-  margin-right: 10px;
-  white-space: nowrap;
-}
-
-.table-operations {
-  margin: 20px 0;
-  display: flex;
-  align-items: center;
-}
-
-.full-width-table {
-  width: 100%;
-}
-
-.pagination {
-  margin-top: 20px;
-  display: flex;
-  justify-content: flex-end;
-}
-
-.disabled-tab {
-  color: #c0c4cc;
-  cursor: not-allowed;
-}
-</style>
 

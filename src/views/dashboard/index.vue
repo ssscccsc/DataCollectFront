@@ -67,7 +67,18 @@
       <el-col :span="24">
         <el-card>
           <template #header>
-            <span>{{ $t('dashboard.worldMap') }}</span>
+            <el-tabs v-model="activeMapTab" @tab-change="handleMapTabChange">
+              <el-tab-pane :label="$t('dashboard.chinaMap')" name="china">
+                <template #label>
+                  <span>{{ $t('dashboard.chinaMap') }}</span>
+                </template>
+              </el-tab-pane>
+              <el-tab-pane :label="$t('dashboard.worldMap')" name="world" disabled>
+                <template #label>
+                  <span class="disabled-tab">{{ $t('dashboard.worldMap') }}</span>
+                </template>
+              </el-tab-pane>
+            </el-tabs>
           </template>
           <div id="world-map" style="width: 100%; height: 500px;"></div>
         </el-card>
@@ -101,21 +112,21 @@
           </template>
           <div class="system-info">
             <div class="info-item">
-              <span class="label">{{ $t('dashboard.systemVersion') }}：</span>
+              <span class="label">{{ $t('dashboard.systemVersion') }}�?/span>
               <span class="value">v1.0.0</span>
             </div>
             <div class="info-item">
-              <span class="label">{{ $t('dashboard.uptime') }}：</span>
+              <span class="label">{{ $t('dashboard.uptime') }}�?/span>
               <span class="value">{{ uptime }}</span>
             </div>
             <div class="info-item">
-              <span class="label">{{ $t('dashboard.dbStatus') }}：</span>
+              <span class="label">{{ $t('dashboard.dbStatus') }}�?/span>
               <span class="value">
                 <el-tag type="success">{{ $t('dashboard.normal') }}</el-tag>
               </span>
             </div>
             <div class="info-item">
-              <span class="label">{{ $t('dashboard.apiStatus') }}：</span>
+              <span class="label">{{ $t('dashboard.apiStatus') }}�?/span>
               <span class="value">
                 <el-tag type="success">{{ $t('dashboard.normal') }}</el-tag>
               </span>
@@ -125,29 +136,29 @@
       </el-col>
     </el-row>
 
-    <!-- 地域统计信息对话框 -->
+    <!-- 地域统计信息对话�?-->
     <el-dialog
       v-model="regionStatsDialogVisible"
       :title="regionStatsDialogTitle"
       width="600px"
     >
       <div class="region-stats-content">
-        <!-- 汇总统计 -->
+        <!-- 汇总统�?-->
         <div class="summary-stats">
           <div class="stat-item">
-            <span class="stat-label">{{ $t('dashboard.appCount') }}：</span>
+            <span class="stat-label">{{ $t('dashboard.appCount') }}�?/span>
             <span class="stat-value">{{ regionStats.appCount || 0 }}</span>
           </div>
           <div class="stat-item">
-            <span class="stat-label">{{ $t('dashboard.totalCollectCount') }}：</span>
+            <span class="stat-label">{{ $t('dashboard.totalCollectCount') }}�?/span>
             <span class="stat-value">{{ regionStats.collectCount || 0 }}</span>
           </div>
           <div class="stat-item">
-            <span class="stat-label">{{ $t('dashboard.executorCount') }}：</span>
+            <span class="stat-label">{{ $t('dashboard.executorCount') }}�?/span>
             <span class="stat-value">{{ regionStats.executorCount || 0 }}</span>
           </div>
           <div class="stat-item">
-            <span class="stat-label">{{ $t('dashboard.ueCount') }}：</span>
+            <span class="stat-label">{{ $t('dashboard.ueCount') }}�?/span>
             <span class="stat-value">{{ regionStats.ueCount || 0 }}</span>
           </div>
         </div>
@@ -201,10 +212,11 @@ export default {
     })
     
     const recentTasks = ref([])
-    const uptime = ref('0天 0小时 0分钟')
+    const uptime = ref('0�?0小时 0分钟')
     
     // 地图相关
     let worldMapChart = null
+    const activeMapTab = ref('china') // 默认显示中国地图
     const regionStatsDialogVisible = ref(false)
     const regionStatsDialogTitle = ref('')
     const regionStats = ref({
@@ -235,10 +247,10 @@ export default {
       '长沙': [112.9388, 28.2282],
       '郑州': [113.6254, 34.7466],
       '沈阳': [123.4315, 41.8057],
-      '哈尔滨': [126.5358, 45.8021],
+      '哈尔�?: [126.5358, 45.8021],
       '昆明': [102.7146, 25.0492],
       '太原': [112.5489, 37.8570],
-      '石家庄': [114.5149, 38.0428],
+      '石家�?: [114.5149, 38.0428],
       '济南': [117.1210, 36.6512],
       '南昌': [115.8921, 28.6765],
       '合肥': [117.2838, 31.8612],
@@ -261,10 +273,10 @@ export default {
       '英国': [-3.4360, 55.3781],
       '法国': [2.2137, 46.2276],
       '德国': [10.4515, 51.1657],
-      '意大利': [12.5674, 41.8719],
-      '俄罗斯': [105.3188, 61.5240],
+      '意大�?: [12.5674, 41.8719],
+      '俄罗�?: [105.3188, 61.5240],
       '印度': [78.9629, 20.5937],
-      '加拿大': [-106.3468, 56.1304],
+      '加拿�?: [-106.3468, 56.1304],
       '澳大利亚': [133.7751, -25.2744],
       '巴西': [-51.9253, -14.2350],
     }
@@ -309,7 +321,7 @@ export default {
         }
       } catch (error) {
         console.error('加载统计数据失败:', error)
-        // 如果加载失败，保持默认值0
+        // 如果加载失败，保持默认�?
       stats.value = {
           regionCount: 0,
           executorCount: 0,
@@ -351,13 +363,12 @@ export default {
           }))
         }
       } catch (error) {
-        console.error('加载最近任务失败:', error)
+        console.error('加载最近任务失�?', error)
         recentTasks.value = []
       }
     }
 
-    // 获取城市和国家坐标
-    const getCoordinates = (regionName, level) => {
+    // 获取城市和国家坐�?    const getCoordinates = (regionName, level) => {
       if (level === 4) {
         // 城市级别
         return cityCoordinates[regionName] || null
@@ -368,25 +379,21 @@ export default {
       return null
     }
 
-    // 加载地域数据并在地图上标记
-    const loadRegionData = async () => {
+    // 加载地域数据并在地图上标�?    const loadRegionData = async () => {
       try {
-        // 获取所有城市（level=4）
-        const cityRes = await request({
+        // 获取所有城市（level=4�?        const cityRes = await request({
           url: '/region/level/4',
           method: 'get',
         })
         const cities = cityRes.data || []
         
-        // 获取所有国家（level=2）
-        const countryRes = await request({
+        // 获取所有国家（level=2�?        const countryRes = await request({
           url: '/region/level/2',
           method: 'get',
         })
         const countries = countryRes.data || []
         
-        // 准备地图数据点
-        const data = []
+        // 准备地图数据�?        const data = []
         
         // 添加城市标记
         cities.forEach(city => {
@@ -435,10 +442,10 @@ export default {
             },
             backgroundColor: '#fafafa',
             geo: hasMapData ? {
-              map: 'world',
+              map: activeMapTab.value === 'china' ? 'china' : 'world',
               roam: true,
-              zoom: 1.2,
-              center: [105, 36],
+              zoom: activeMapTab.value === 'china' ? 1.5 : 1.2,
+              center: activeMapTab.value === 'china' ? [104.0, 35.0] : [105, 36],
               label: {
                 show: false,
                 emphasis: {
@@ -462,6 +469,37 @@ export default {
               show: false,
             },
             series: [
+              // 省份高亮系列（仅在中国地图时显示）
+              ...(hasMapData && activeMapTab.value === 'china' && provinceMapData.length > 0 ? [{
+                name: '省份',
+                type: 'map',
+                map: 'china',
+                geoIndex: 0,
+                data: provinceMapData,
+                itemStyle: {
+                  areaColor: '#a0d8ef', // 浅蓝色高亮
+                  borderColor: '#409EFF',
+                  borderWidth: 1.5,
+                },
+                emphasis: {
+                  itemStyle: {
+                    areaColor: '#66b1ff', // 更深的蓝色
+                    borderColor: '#409EFF',
+                    borderWidth: 2,
+                  },
+                  label: {
+                    show: true,
+                    fontSize: 14,
+                    fontWeight: 'bold',
+                    color: '#333',
+                  },
+                },
+                label: {
+                  show: false,
+                },
+                silent: true, // 不响应鼠标事件，避免与散点图冲突
+              }] : []),
+              // 城市和国家标记散点图
               {
                 name: '地域',
                 type: 'scatter',
@@ -494,6 +532,7 @@ export default {
                     fontWeight: 'bold',
                   },
                 },
+                z: 10, // 确保散点图在省份高亮之上
               },
             ],
           }
@@ -508,13 +547,10 @@ export default {
               type: 'value',
               show: false,
             }
-            // 转换地理坐标为屏幕坐标
-            option.series[0].data = data.map(item => {
-              // 简单的坐标转换：将经纬度转换为适合显示的坐标
-              const lng = item.value[0]
+            // 转换地理坐标为屏幕坐�?            option.series[0].data = data.map(item => {
+              // 简单的坐标转换：将经纬度转换为适合显示的坐�?              const lng = item.value[0]
               const lat = item.value[1]
-              // 墨卡托投影简化版本
-              const x = (lng + 180) / 360
+              // 墨卡托投影简化版�?              const x = (lng + 180) / 360
               const y = (90 - lat) / 180
               return {
                 ...item,
@@ -530,15 +566,13 @@ export default {
           // 存储数据以便在事件中访问
           worldMapChart._regionData = data
           
-          // 使用echarts的点击事件，检测双击
-          let lastClickTime = 0
+          // 使用echarts的点击事件，检测双�?          let lastClickTime = 0
           let lastClickData = null
           
           worldMapChart.on('click', (params) => {
             const now = Date.now()
             if (params.data && params.data.regionId) {
-              // 检查是否是双击（300ms内连续点击相同数据点）
-              if (now - lastClickTime < 300 && 
+              // 检查是否是双击�?00ms内连续点击相同数据点�?              if (now - lastClickTime < 300 && 
                   lastClickData && 
                   lastClickData.regionId === params.data.regionId) {
                 // 这是双击
@@ -550,8 +584,7 @@ export default {
                 lastClickTime = 0
                 lastClickData = null
               } else {
-                // 这是第一次点击
-                lastClickTime = now
+                // 这是第一次点�?                lastClickTime = now
                 lastClickData = params.data
               }
             }
@@ -592,6 +625,40 @@ export default {
       }
     }
 
+    // 加载中国地图数据
+    const loadChinaMapData = async () => {
+      try {
+        // 从本地public目录加载中国地图JSON数据
+        const response = await fetch('/china.json')
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        const chinaMapData = await response.json()
+        
+        // 检查数据是否有效（features数组不为空）
+        if (chinaMapData && chinaMapData.features && chinaMapData.features.length > 0) {
+          echarts.registerMap('china', chinaMapData)
+          worldMapChart._mapDataLoaded = true
+          console.log('中国地图数据加载成功，包含', chinaMapData.features.length, '个省/市/区')
+          return true
+        } else {
+          throw new Error('地图数据为空')
+        }
+      } catch (error) {
+        console.warn('加载中国地图数据失败，将使用散点图模式显示:', error)
+        console.warn('提示：请将中国地图JSON文件保存到 public/china.json')
+        // 如果本地加载失败，使用一个基本的中国地图结构
+        echarts.registerMap('china', {
+          type: 'FeatureCollection',
+          features: [],
+        })
+        if (worldMapChart) {
+          worldMapChart._mapDataLoaded = false
+        }
+        return false
+      }
+    }
+
     // 加载世界地图数据
     const loadWorldMapData = async () => {
       try {
@@ -606,14 +673,14 @@ export default {
         if (worldMapData && worldMapData.features && worldMapData.features.length > 0) {
           echarts.registerMap('world', worldMapData)
           worldMapChart._mapDataLoaded = true
-          console.log('世界地图数据加载成功，包含', worldMapData.features.length, '个国家/地区')
+          console.log('世界地图数据加载成功，包�?, worldMapData.features.length, '个国�?地区')
           return true
         } else {
           throw new Error('地图数据为空')
         }
       } catch (error) {
-        console.warn('加载世界地图数据失败，将使用散点图模式显示:', error)
-        console.warn('提示：请将世界地图JSON文件保存到 public/world.json，参考 public/世界地图数据下载说明.md')
+        console.warn('加载世界地图数据失败，将使用散点图模式显�?', error)
+        console.warn('提示：请将世界地图JSON文件保存�?public/world.json，参�?public/世界地图数据下载说明.md')
         // 如果本地加载失败，使用一个基本的世界地图结构
         echarts.registerMap('world', {
           type: 'FeatureCollection',
@@ -626,24 +693,25 @@ export default {
       }
     }
 
-    // 初始化地图
-    const initWorldMap = async () => {
+    // 初始化地�?    const initWorldMap = async () => {
       await nextTick()
       const mapDom = document.getElementById('world-map')
       if (mapDom) {
         worldMapChart = echarts.init(mapDom)
         
-        // 初始化地图数据加载标志
-        worldMapChart._mapDataLoaded = false
+        // 初始化地图数据加载标�?        worldMapChart._mapDataLoaded = false
         
-        // 加载世界地图数据
-        await loadWorldMapData()
+        // 根据当前标签页加载对应的地图数据
+        if (activeMapTab.value === 'china') {
+          await loadChinaMapData()
+        } else {
+          await loadWorldMapData()
+        }
         
         // 加载地域数据
         await loadRegionData()
         
-        // 响应式调整
-        window.addEventListener('resize', () => {
+        // 响应式调�?        window.addEventListener('resize', () => {
           if (worldMapChart) {
             worldMapChart.resize()
           }
@@ -663,6 +731,8 @@ export default {
       uptime,
       getStatusType,
       getStatusText,
+      activeMapTab,
+      handleMapTabChange,
       regionStatsDialogVisible,
       regionStatsDialogTitle,
       regionStats,
@@ -791,5 +861,10 @@ export default {
 .empty-tip {
   margin-top: 20px;
   text-align: center;
+}
+
+.disabled-tab {
+  color: #c0c4cc;
+  cursor: not-allowed;
 }
 </style>

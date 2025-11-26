@@ -539,3 +539,205 @@ export default {
 </style>
 
 
+        return dateTime
+      }
+      try {
+        const date = new Date(dateTime)
+        if (isNaN(date.getTime())) {
+          return dateTime
+        }
+        const year = date.getFullYear()
+        const month = String(date.getMonth() + 1).padStart(2, '0')
+        const day = String(date.getDate()).padStart(2, '0')
+        const hours = String(date.getHours()).padStart(2, '0')
+        const minutes = String(date.getMinutes()).padStart(2, '0')
+        const seconds = String(date.getSeconds()).padStart(2, '0')
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+      } catch (e) {
+        return dateTime
+      }
+    }
+
+    const handleStartDialTest = (row) => {
+      // 携带 app 信息跳转到新建采集任务页面
+      router.push({
+        name: 'CollectTask',
+        query: {
+          fromAppVersion: 'true',
+          appName: row.appName || '',
+          appVersion: row.version || '',
+          appCategory: row.category || '',
+          appDescription: row.description || '',
+        },
+      })
+    }
+
+    const handleViewChangeHistory = async (row) => {
+      versionHistoryDialogVisible.value = true
+      versionHistoryLoading.value = true
+      versionHistoryData.value = null
+      
+      try {
+        const response = await request.post('/external/apps/get_single_app_version_history', {
+          app_name: row.appName || '',
+          is_ios: 'false', // 默认非iOS应用
+        })
+        
+        if (response.message === 'success' && response.data) {
+          versionHistoryData.value = response.data
+        } else {
+          ElMessage.error(response.message || t('appVersionChange.loadDataFailed'))
+          versionHistoryData.value = null
+        }
+      } catch (error) {
+        ElMessage.error(t('appVersionChange.loadDataFailed') || '加载版本历史失败')
+        versionHistoryData.value = null
+      } finally {
+        versionHistoryLoading.value = false
+      }
+    }
+
+    onMounted(() => {
+      loadData()
+    })
+
+    return {
+      loading,
+      tableData,
+      searchKeyword,
+      pagination,
+      columnWidths,
+      versionHistoryDialogVisible,
+      versionHistoryLoading,
+      versionHistoryData,
+      loadData,
+      handleSearch,
+      handleSizeChange,
+      handleCurrentChange,
+      handleStartDialTest,
+      handleViewChangeHistory,
+      formatDateTime,
+      getChangeTypeTag,
+      getChangeTypeText,
+    }
+  },
+}
+</script>
+
+<style scoped>
+.app-version-change-page {
+  padding: 0;
+}
+
+.page-header {
+  margin-bottom: 20px;
+}
+
+.page-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #303133;
+  margin: 0 0 8px 0;
+}
+
+.page-description {
+  font-size: 14px;
+  color: #909399;
+  margin: 0;
+}
+
+.table-operations {
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.pagination {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.version-history-dialog :deep(.el-dialog__body) {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.version-history-content {
+  height: 70vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.app-info-section {
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #ebeef5;
+  flex-shrink: 0;
+}
+
+.app-info-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  min-height: 32px;
+}
+
+.app-info-item:last-child {
+  margin-bottom: 0;
+}
+
+.info-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #303133;
+  min-width: 100px;
+  flex-shrink: 0;
+}
+
+.info-value {
+  font-size: 14px;
+  color: #606266;
+  flex: 1;
+}
+
+.app-name-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.app-icon-small {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.app-name-text {
+  font-size: 14px;
+  color: #606266;
+  font-weight: 500;
+}
+
+.version-list-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+  margin: 0 0 16px 0;
+  flex-shrink: 0;
+}
+</style>
+
+
