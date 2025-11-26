@@ -226,6 +226,7 @@ export default {
       ueCount: 0,
       appList: [],
     })
+    const provinceMapData = ref([]) // 省份高亮数据
     
     // 城市名称到经纬度的映射（简化版，包含常见城市）
     const cityCoordinates = {
@@ -395,7 +396,7 @@ export default {
 
         
         // 获取所有省份（level=3，用于中国地图高亮）
-        let provinceMapData = []
+        provinceMapData.value = []
         if (activeMapTab.value === 'china') {
           try {
             const provinceRes = await request({
@@ -404,7 +405,7 @@ export default {
             })
             const provinces = provinceRes.data || []
             // 将省份数据转换为 ECharts map 系列需要的格式
-            provinceMapData = provinces
+            provinceMapData.value = provinces
               .filter(province => province.deleted === 0 && province.status === 1)
               .map(province => ({
                 name: province.name,
@@ -412,27 +413,38 @@ export default {
               }))
           } catch (error) {
             console.warn('获取省份数据失败:', error)
-            provinceMapData = []
+            provinceMapData.value = []
           }
           
           // 如果没有从API获取到省份数据，但从地图数据中可以获取，则让所有省份都高亮
-          if (provinceMapData.length === 0) {
+          if (provinceMapData.value.length === 0) {
             try {
               // 从已注册的地图数据中获取所有省份名称
               const registeredMap = echarts.getMap('china')
               if (registeredMap && registeredMap.features) {
-                provinceMapData = registeredMap.features.map(feature => {
-                  const name = feature.properties?.name || feature.properties?.NAME || feature.properties?.cp || ''
+                provinceMapData.value = registeredMap.features.map(feature => {
+                  // 尝试多种可能的属性名
+                  const name = feature.properties?.name || 
+                               feature.properties?.NAME || 
+                               feature.properties?.cp || 
+                               feature.properties?.CP ||
+                               feature.properties?.省 ||
+                               feature.properties?.province ||
+                               ''
                   return {
                     name: name,
                     value: 1, // 用于高亮显示
                   }
                 }).filter(item => item.name) // 过滤掉空名称
-                console.log('从地图数据获取到', provinceMapData.length, '个省份')
+                console.log('从地图数据获取到', provinceMapData.value.length, '个省份:', provinceMapData.value.map(p => p.name))
+              } else {
+                console.warn('地图数据未注册或features为空')
               }
             } catch (error) {
               console.warn('从地图数据获取省份名称失败:', error)
             }
+          } else {
+            console.log('从API获取到', provinceMapData.value.length, '个省份:', provinceMapData.value.map(p => p.name))
           }
         }
         
@@ -497,7 +509,7 @@ export default {
                 },
               },
               itemStyle: {
-                areaColor: '#e7e7e7',
+                areaColor: activeMapTab.value === 'china' ? '#e7e7e7' : '#e7e7e7', // 默认颜色
                 borderColor: '#d0d0d0',
                 borderWidth: 0.5,
               },
@@ -514,12 +526,12 @@ export default {
             },
             series: [
               // 省份高亮系列（仅在中国地图时显示，所有省份都点亮）
-              ...(hasMapData && activeMapTab.value === 'china' ? [{
+              ...(hasMapData && activeMapTab.value === 'china' && provinceMapData.value && provinceMapData.value.length > 0 ? [{
                 name: '省份',
                 type: 'map',
                 map: 'china',
                 geoIndex: 0,
-                data: provinceMapData && provinceMapData.length > 0 ? provinceMapData : [], // 如果有数据则使用，否则显示所有省份
+                data: provinceMapData.value, // 使用省份数据
                 itemStyle: {
                   areaColor: '#a0d8ef', // 浅蓝色高亮
                   borderColor: '#409EFF',
@@ -542,6 +554,7 @@ export default {
                   show: false,
                 },
                 silent: true, // 不响应鼠标事件，避免与散点图冲突
+                z: 5, // 确保省份高亮在 geo 之上，但在散点图之下
               }] : []),
               // 城市和国家标记散点图
               {
