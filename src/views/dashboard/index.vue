@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="dashboard">
     <div class="page-header">
       <h2 class="page-title">{{ $t('pageTitle.dashboard') }}</h2>
@@ -392,6 +392,30 @@ export default {
           method: 'get',
         })
         const countries = countryRes.data || []
+
+        
+        // 获取所有省份（level=3，用于中国地图高亮）
+        let provinceMapData = []
+        if (activeMapTab.value === 'china') {
+          try {
+            const provinceRes = await request({
+              url: '/region/level/3',
+              method: 'get',
+            })
+            const provinces = provinceRes.data || []
+            // 将省份数据转换为 ECharts map 系列需要的格式
+            provinceMapData = provinces
+              .filter(province => province.deleted === 0 && province.status === 1)
+              .map(province => ({
+                name: province.name,
+                value: 1, // 用于高亮显示
+              }))
+          } catch (error) {
+            console.warn('获取省份数据失败:', error)
+            provinceMapData = []
+          }
+        }
+        
         
         // 准备地图数据�?        const data = []
         
@@ -470,7 +494,7 @@ export default {
             },
             series: [
               // 省份高亮系列（仅在中国地图时显示）
-              ...(hasMapData && activeMapTab.value === 'china' && provinceMapData.length > 0 ? [{
+              ...(hasMapData && activeMapTab.value === 'china' && provinceMapData && provinceMapData.length > 0 ? [{
                 name: '省份',
                 type: 'map',
                 map: 'china',
@@ -868,3 +892,4 @@ export default {
   cursor: not-allowed;
 }
 </style>
+
