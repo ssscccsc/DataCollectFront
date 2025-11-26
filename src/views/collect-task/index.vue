@@ -287,7 +287,7 @@
           </el-form>
         </div>
 
-        <!-- 步骤2：采集策略 -->
+        <!-- 步骤3：采集策略 -->
         <div class="step-panel">
           <h3 class="step-title">{{ $t('collectTask.collectStrategyTitle') }}</h3>
           <div style="display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 10px;">
@@ -489,8 +489,8 @@
             </div>
           </el-form>
         </div>
-
-        <!-- 步骤3：环境编排 -->
+        
+        <!-- 步骤2：环境编排 -->
         <div class="step-panel">
           <h3 class="step-title">{{ $t('collectTask.environmentOrchestration') }}</h3>
           <el-form
@@ -499,6 +499,27 @@
             :rules="environmentRules"
             label-width="120px"
           >
+            <el-form-item :label="$t('collectTask.manufacturer')" prop="manufacturer">
+              <el-select v-model="environmentForm.manufacturer" :placeholder="$t('collectTask.manufacturerPlaceholder')" style="width: 100%" clearable>
+                <el-option label="小米" value="xiaomi" />
+                <el-option label="OPPO" value="oppo" />
+                <el-option label="vivo" value="vivo" />
+                <el-option label="三星" value="samsung" />
+                <el-option label="荣耀" value="honor" />
+                <el-option label="华为" value="huawei" />
+                <el-option label="苹果" value="apple" />
+                <el-option label="华为海思" value="huawei-hisilicon" />
+              </el-select>
+            </el-form-item>
+            <el-form-item :label="$t('collectTask.network')" prop="network">
+              <el-select v-model="environmentForm.network" :placeholder="$t('collectTask.networkPlaceholder')" style="width: 100%" clearable>
+                <el-option label="normal" value="normal" />
+                <el-option label="weak" value="weak" />
+                <el-option label="congestion" value="congestion" />
+                <el-option label="weakcongestion" value="weakcongestion" />
+                <el-option label="sunshang" value="sunshang" />
+              </el-select>
+            </el-form-item>
             <el-form-item :label="$t('collectTask.regionFilter')" prop="regionId">
               <el-select v-model="environmentForm.regionId" :placeholder="$t('collectTask.regionPlaceholder')" style="width: 100%" @change="handleRegionChange">
                 <el-option
@@ -1090,7 +1111,17 @@ export default {
       ],
     }
 
-    // 步骤2：采集策略表单
+    // 步骤2：环境编排表单
+    const environmentForm = reactive({
+      manufacturer: null,
+      network: null,
+      regionId: null,
+      countryId: null,
+      provinceId: null,
+      cityId: null,
+    })
+
+    // 步骤3：采集策略表单
     const strategyForm = reactive({
       strategyId: null,
     })
@@ -1100,14 +1131,6 @@ export default {
         { required: true, message: t('collectTask.collectStrategyRequired'), trigger: 'change' },
       ],
     }
-
-    // 步骤3：环境编排表单
-    const environmentForm = reactive({
-      regionId: null,
-      countryId: null,
-      provinceId: null,
-      cityId: null,
-    })
 
     const environmentRules = {
       regionId: [
