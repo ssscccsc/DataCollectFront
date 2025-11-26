@@ -414,6 +414,26 @@ export default {
             console.warn('获取省份数据失败:', error)
             provinceMapData = []
           }
+          
+          // 如果没有从API获取到省份数据，但从地图数据中可以获取，则让所有省份都高亮
+          if (provinceMapData.length === 0) {
+            try {
+              // 从已注册的地图数据中获取所有省份名称
+              const registeredMap = echarts.getMap('china')
+              if (registeredMap && registeredMap.features) {
+                provinceMapData = registeredMap.features.map(feature => {
+                  const name = feature.properties?.name || feature.properties?.NAME || feature.properties?.cp || ''
+                  return {
+                    name: name,
+                    value: 1, // 用于高亮显示
+                  }
+                }).filter(item => item.name) // 过滤掉空名称
+                console.log('从地图数据获取到', provinceMapData.length, '个省份')
+              }
+            } catch (error) {
+              console.warn('从地图数据获取省份名称失败:', error)
+            }
+          }
         }
         
         
@@ -493,13 +513,13 @@ export default {
               show: false,
             },
             series: [
-              // 省份高亮系列（仅在中国地图时显示）
-              ...(hasMapData && activeMapTab.value === 'china' && provinceMapData && provinceMapData.length > 0 ? [{
+              // 省份高亮系列（仅在中国地图时显示，所有省份都点亮）
+              ...(hasMapData && activeMapTab.value === 'china' ? [{
                 name: '省份',
                 type: 'map',
                 map: 'china',
                 geoIndex: 0,
-                data: provinceMapData,
+                data: provinceMapData && provinceMapData.length > 0 ? provinceMapData : [], // 如果有数据则使用，否则显示所有省份
                 itemStyle: {
                   areaColor: '#a0d8ef', // 浅蓝色高亮
                   borderColor: '#409EFF',
