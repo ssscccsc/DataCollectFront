@@ -287,6 +287,192 @@
           </el-form>
         </div>
 
+        <!-- 步骤2：环境编排 -->
+        <div class="step-panel">
+          <h3 class="step-title">{{ $t('collectTask.environmentOrchestration') }}</h3>
+          <el-form
+            ref="environmentFormRef"
+            :model="environmentForm"
+            :rules="environmentRules"
+            label-width="120px"
+          >
+            <el-form-item :label="$t('collectTask.manufacturer')" prop="manufacturer">
+              <el-select v-model="environmentForm.manufacturer" :placeholder="$t('collectTask.manufacturerPlaceholder')" style="width: 100%" clearable>
+                <el-option label="小米" value="xiaomi" />
+                <el-option label="OPPO" value="oppo" />
+                <el-option label="vivo" value="vivo" />
+                <el-option label="三星" value="samsung" />
+                <el-option label="荣耀" value="honor" />
+                <el-option label="华为" value="huawei" />
+                <el-option label="苹果" value="apple" />
+                <el-option label="华为海思" value="huawei-hisilicon" />
+              </el-select>
+            </el-form-item>
+            <el-form-item :label="$t('collectTask.network')" prop="network">
+              <el-select v-model="environmentForm.network" :placeholder="$t('collectTask.networkPlaceholder')" style="width: 100%" clearable>
+                <el-option label="normal" value="normal" />
+                <el-option label="weak" value="weak" />
+                <el-option label="congestion" value="congestion" />
+                <el-option label="weakcongestion" value="weakcongestion" />
+                <el-option label="sunshang" value="sunshang" />
+              </el-select>
+            </el-form-item>
+            <el-form-item :label="$t('collectTask.regionFilter')" prop="regionId">
+              <el-select v-model="environmentForm.regionId" :placeholder="$t('collectTask.regionPlaceholder')" style="width: 100%" @change="handleRegionChange">
+                <el-option
+                  v-for="item in regionOptions"
+                  :key="item.id"
+                  :label="item.name"
+                  :value="item.id"
+                />
+              </el-select>
+            </el-form-item>
+            <el-form-item :label="$t('collectTask.countryFilter')" prop="countryId">
+              <el-select v-model="environmentForm.countryId" :placeholder="$t('collectTask.countryPlaceholder')" style="width: 100%" @change="handleCountryChange" :disabled="!environmentForm.regionId">
+                <el-option
+                  v-for="item in countryOptions"
+                  :key="item.id"
+                  :label="item.name"
+                  :value="item.id"
+                />
+              </el-select>
+            </el-form-item>
+            <el-form-item :label="$t('collectTask.provinceFilter')" prop="provinceId">
+              <el-select v-model="environmentForm.provinceId" :placeholder="$t('collectTask.provincePlaceholder')" style="width: 100%" @change="handleProvinceChange" :disabled="!environmentForm.countryId">
+                <el-option
+                  v-for="item in provinceOptions"
+                  :key="item.id"
+                  :label="item.name"
+                  :value="item.id"
+                />
+              </el-select>
+            </el-form-item>
+            <el-form-item :label="$t('collectTask.cityFilter')" prop="cityId">
+              <el-select v-model="environmentForm.cityId" :placeholder="$t('collectTask.cityPlaceholder')" style="width: 100%" @change="handleCityChange" :disabled="!environmentForm.provinceId">
+                <el-option
+                  v-for="item in cityOptions"
+                  :key="item.id"
+                  :label="item.name"
+                  :value="item.id"
+                />
+              </el-select>
+            </el-form-item>
+            <div class="environment-summary">
+              <h4>{{ $t('collectTask.environmentConfigSummary') }}</h4>
+              <el-alert
+                :title="environmentSummary"
+                type="info"
+                :closable="false"
+                show-icon
+              />
+            </div>
+          </el-form>
+          
+          <!-- 可用逻辑环境列表 -->
+          <div v-if="environmentForm.regionId || environmentForm.countryId || environmentForm.provinceId || environmentForm.cityId" class="available-environments">
+            <h4>{{ $t('collectTask.availableLogicEnvironments') }}</h4>
+            <div v-loading="environmentsLoading" class="environments-content">
+              <div v-if="availableEnvironments.length === 0" class="no-environments">
+                <el-empty :description="$t('collectTask.noAvailableEnvironments')" />
+              </div>
+              <div v-else class="environments-list">
+                <el-card 
+                  v-for="env in availableEnvironments" 
+                  :key="env.id" 
+                  class="environment-card"
+                  shadow="hover"
+                  :class="{ 'selected': selectedEnvironmentIds.includes(env.id) }"
+                  @click="toggleEnvironmentSelection(env.id)"
+                >
+                  <div class="environment-header">
+                    <h5 class="environment-name">{{ env.name }}</h5>
+                    <div class="environment-status">
+                      <!-- 在线状态显示 -->
+                      <el-tag 
+                        v-if="env.onlineStatus === 'checking'" 
+                        type="info" 
+                        size="small"
+                        style="margin-right: 8px;"
+                      >
+                        {{ $t('collectTask.checkingOnline') }}
+                      </el-tag>
+                      <el-tag 
+                        v-else-if="env.onlineStatus === true" 
+                        type="success" 
+                        size="small"
+                        style="margin-right: 8px;"
+                      >
+                        {{ $t('collectTask.online') }}
+                      </el-tag>
+                      <el-tag 
+                        v-else-if="env.onlineStatus === false" 
+                        type="danger" 
+                        size="small"
+                        style="margin-right: 8px;"
+                      >
+                        {{ $t('collectTask.offline') }}
+                      </el-tag>
+                      <!-- 环境状态显示 -->
+                      <el-tag :type="env.status === 1 && env.onlineStatus === true ? 'success' : 'danger'" size="small">
+                        {{ (env.status === 1 && env.onlineStatus === true) ? $t('collectTask.available') : $t('collectTask.unavailable') }}
+                      </el-tag>
+                      <el-checkbox 
+                        v-model="selectedEnvironmentIds" 
+                        :value="env.id"
+                        @change="handleEnvironmentSelection"
+                        :disabled="env.status !== 1 || env.onlineStatus !== true"
+                        style="margin-left: 8px;"
+                      />
+                    </div>
+                  </div>
+                  <div class="environment-info">
+                    <p><strong>{{ $t('collectTask.executor') }}：</strong>{{ env.executorName }} ({{ env.executorIpAddress }})</p>
+                    <p><strong>{{ $t('collectTask.region') }}：</strong>{{ env.executorRegionName }}</p>
+                    <p v-if="env.description"><strong>{{ $t('collectTask.description') }}：</strong>{{ env.description }}</p>
+                  </div>
+                  <div v-if="env.ueList && env.ueList.length > 0" class="environment-ue">
+                    <p><strong>{{ $t('collectTask.ueDevices') }}：</strong></p>
+                    <div class="ue-list">
+                      <el-tag 
+                        v-for="ue in env.ueList" 
+                        :key="ue.id" 
+                        size="small" 
+                        style="margin-right: 8px; margin-bottom: 4px;"
+                      >
+                        {{ ue.name }} ({{ ue.ueId }})
+                      </el-tag>
+                    </div>
+                  </div>
+                  <div v-if="env.networkList && env.networkList.length > 0" class="environment-networks">
+                    <p><strong>{{ $t('collectTask.environmentNetworking') }}：</strong></p>
+                    <div class="network-list">
+                      <el-tag 
+                        v-for="network in env.networkList" 
+                        :key="network.id" 
+                        type="info" 
+                        size="small" 
+                        style="margin-right: 8px; margin-bottom: 4px;"
+                      >
+                        {{ network.name }}
+                      </el-tag>
+                    </div>
+                  </div>
+                </el-card>
+              </div>
+            </div>
+            
+            <!-- 选择提示 -->
+            <div v-if="availableEnvironments.length > 0" class="selection-tip">
+              <el-alert
+                :title="$t('collectTask.selectedEnvironments', { count: selectedEnvironmentIds.length })"
+                type="info"
+                :closable="false"
+                show-icon
+              />
+            </div>
+          </div>
+        </div>
+
         <!-- 步骤3：采集策略 -->
         <div class="step-panel">
           <h3 class="step-title">{{ $t('collectTask.collectStrategyTitle') }}</h3>
@@ -489,193 +675,6 @@
             </div>
           </el-form>
         </div>
-        
-        <!-- 步骤2：环境编排 -->
-        <div class="step-panel">
-          <h3 class="step-title">{{ $t('collectTask.environmentOrchestration') }}</h3>
-          <el-form
-            ref="environmentFormRef"
-            :model="environmentForm"
-            :rules="environmentRules"
-            label-width="120px"
-          >
-            <el-form-item :label="$t('collectTask.manufacturer')" prop="manufacturer">
-              <el-select v-model="environmentForm.manufacturer" :placeholder="$t('collectTask.manufacturerPlaceholder')" style="width: 100%" clearable>
-                <el-option label="小米" value="xiaomi" />
-                <el-option label="OPPO" value="oppo" />
-                <el-option label="vivo" value="vivo" />
-                <el-option label="三星" value="samsung" />
-                <el-option label="荣耀" value="honor" />
-                <el-option label="华为" value="huawei" />
-                <el-option label="苹果" value="apple" />
-                <el-option label="华为海思" value="huawei-hisilicon" />
-              </el-select>
-            </el-form-item>
-            <el-form-item :label="$t('collectTask.network')" prop="network">
-              <el-select v-model="environmentForm.network" :placeholder="$t('collectTask.networkPlaceholder')" style="width: 100%" clearable>
-                <el-option label="normal" value="normal" />
-                <el-option label="weak" value="weak" />
-                <el-option label="congestion" value="congestion" />
-                <el-option label="weakcongestion" value="weakcongestion" />
-                <el-option label="sunshang" value="sunshang" />
-              </el-select>
-            </el-form-item>
-            <el-form-item :label="$t('collectTask.regionFilter')" prop="regionId">
-              <el-select v-model="environmentForm.regionId" :placeholder="$t('collectTask.regionPlaceholder')" style="width: 100%" @change="handleRegionChange">
-                <el-option
-                  v-for="item in regionOptions"
-                  :key="item.id"
-                  :label="item.name"
-                  :value="item.id"
-                />
-              </el-select>
-            </el-form-item>
-            <el-form-item :label="$t('collectTask.countryFilter')" prop="countryId">
-              <el-select v-model="environmentForm.countryId" :placeholder="$t('collectTask.countryPlaceholder')" style="width: 100%" @change="handleCountryChange" :disabled="!environmentForm.regionId">
-                <el-option
-                  v-for="item in countryOptions"
-                  :key="item.id"
-                  :label="item.name"
-                  :value="item.id"
-                />
-              </el-select>
-            </el-form-item>
-            <el-form-item :label="$t('collectTask.provinceFilter')" prop="provinceId">
-              <el-select v-model="environmentForm.provinceId" :placeholder="$t('collectTask.provincePlaceholder')" style="width: 100%" @change="handleProvinceChange" :disabled="!environmentForm.countryId">
-                <el-option
-                  v-for="item in provinceOptions"
-                  :key="item.id"
-                  :label="item.name"
-                  :value="item.id"
-                />
-              </el-select>
-            </el-form-item>
-            <el-form-item :label="$t('collectTask.cityFilter')" prop="cityId">
-              <el-select v-model="environmentForm.cityId" :placeholder="$t('collectTask.cityPlaceholder')" style="width: 100%" @change="handleCityChange" :disabled="!environmentForm.provinceId">
-                <el-option
-                  v-for="item in cityOptions"
-                  :key="item.id"
-                  :label="item.name"
-                  :value="item.id"
-                />
-              </el-select>
-            </el-form-item>
-            <div class="environment-summary">
-              <h4>{{ $t('collectTask.environmentConfigSummary') }}</h4>
-              <el-alert
-                :title="environmentSummary"
-                type="info"
-                :closable="false"
-                show-icon
-              />
-            </div>
-          </el-form>
-          
-          <!-- 可用逻辑环境列表 -->
-          <div v-if="selectedStrategy && (environmentForm.regionId || environmentForm.countryId || environmentForm.provinceId || environmentForm.cityId)" class="available-environments">
-            <h4>{{ $t('collectTask.availableLogicEnvironments') }}</h4>
-            <div v-loading="environmentsLoading" class="environments-content">
-              <div v-if="availableEnvironments.length === 0" class="no-environments">
-                <el-empty :description="$t('collectTask.noAvailableEnvironments')" />
-              </div>
-              <div v-else class="environments-list">
-                <el-card 
-                  v-for="env in availableEnvironments" 
-                  :key="env.id" 
-                  class="environment-card"
-                  shadow="hover"
-                  :class="{ 'selected': selectedEnvironmentIds.includes(env.id) }"
-                  @click="toggleEnvironmentSelection(env.id)"
-                >
-                  <div class="environment-header">
-                    <h5 class="environment-name">{{ env.name }}</h5>
-                    <div class="environment-status">
-                      <!-- 在线状态显示 -->
-                      <el-tag 
-                        v-if="env.onlineStatus === 'checking'" 
-                        type="info" 
-                        size="small"
-                        style="margin-right: 8px;"
-                      >
-                        {{ $t('collectTask.checkingOnline') }}
-                      </el-tag>
-                      <el-tag 
-                        v-else-if="env.onlineStatus === true" 
-                        type="success" 
-                        size="small"
-                        style="margin-right: 8px;"
-                      >
-                        {{ $t('collectTask.online') }}
-                      </el-tag>
-                      <el-tag 
-                        v-else-if="env.onlineStatus === false" 
-                        type="danger" 
-                        size="small"
-                        style="margin-right: 8px;"
-                      >
-                        {{ $t('collectTask.offline') }}
-                      </el-tag>
-                      <!-- 环境状态显示 -->
-                      <el-tag :type="env.status === 1 && env.onlineStatus === true ? 'success' : 'danger'" size="small">
-                        {{ (env.status === 1 && env.onlineStatus === true) ? $t('collectTask.available') : $t('collectTask.unavailable') }}
-                      </el-tag>
-                      <el-checkbox 
-                        v-model="selectedEnvironmentIds" 
-                        :value="env.id"
-                        @change="handleEnvironmentSelection"
-                        :disabled="env.status !== 1 || env.onlineStatus !== true"
-                        style="margin-left: 8px;"
-                      />
-                    </div>
-                  </div>
-                  <div class="environment-info">
-                    <p><strong>{{ $t('collectTask.executor') }}：</strong>{{ env.executorName }} ({{ env.executorIpAddress }})</p>
-                    <p><strong>{{ $t('collectTask.region') }}：</strong>{{ env.executorRegionName }}</p>
-                    <p v-if="env.description"><strong>{{ $t('collectTask.description') }}：</strong>{{ env.description }}</p>
-                  </div>
-                  <div v-if="env.ueList && env.ueList.length > 0" class="environment-ue">
-                    <p><strong>{{ $t('collectTask.ueDevices') }}：</strong></p>
-                    <div class="ue-list">
-                      <el-tag 
-                        v-for="ue in env.ueList" 
-                        :key="ue.id" 
-                        size="small" 
-                        style="margin-right: 8px; margin-bottom: 4px;"
-                      >
-                        {{ ue.name }} ({{ ue.ueId }})
-                      </el-tag>
-                    </div>
-                  </div>
-                  <div v-if="env.networkList && env.networkList.length > 0" class="environment-networks">
-                    <p><strong>{{ $t('collectTask.environmentNetworking') }}：</strong></p>
-                    <div class="network-list">
-                      <el-tag 
-                        v-for="network in env.networkList" 
-                        :key="network.id" 
-                        type="info" 
-                        size="small" 
-                        style="margin-right: 8px; margin-bottom: 4px;"
-                      >
-                        {{ network.name }}
-                      </el-tag>
-                    </div>
-                  </div>
-                </el-card>
-              </div>
-            </div>
-            
-            <!-- 选择提示 -->
-            <div v-if="availableEnvironments.length > 0" class="selection-tip">
-              <el-alert
-                :title="$t('collectTask.selectedEnvironments', { count: selectedEnvironmentIds.length })"
-                type="info"
-                :closable="false"
-                show-icon
-              />
-            </div>
-          </div>
-        </div>
-
 
       </div>
 
