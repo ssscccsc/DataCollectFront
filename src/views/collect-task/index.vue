@@ -267,13 +267,14 @@
       <div class="step-navigation">
         <el-steps :active="currentStep" align-center>
           <el-step :title="$t('collectTask.step1Title')" :description="$t('collectTask.step1Desc')" />
-          <el-step :title="$t('collectTask.step4Title')" :description="$t('collectTask.step4Desc')" />
+          <el-step :title="$t('collectTask.step2Title')" :description="$t('collectTask.step2Desc')" />
+          <el-step :title="$t('collectTask.step3Title')" :description="$t('collectTask.step3Desc')" />
         </el-steps>
       </div>
       
       <!-- 步骤内容 -->
       <div class="step-content">
-        <!-- 步骤1：基本信息、采集策略、环境编排 -->
+        <!-- 步骤1：基本信息、采集策略 -->
         <div v-if="currentStep === 0" class="step-panel">
           <!-- 基本信息 -->
           <div class="sub-step-section">
@@ -500,16 +501,47 @@
             </div>
           </el-form>
           </div>
+        </div>
 
-          <!-- 环境编排 -->
-          <div class="sub-step-section">
-            <h3 class="step-title">{{ $t('collectTask.environmentOrchestration') }}</h3>
+        <!-- 步骤2：环境编排 -->
+        <div v-if="currentStep === 1" class="step-panel">
+          <h3 class="step-title">{{ $t('collectTask.environmentOrchestration') }}</h3>
           <el-form
             ref="environmentFormRef"
             :model="environmentForm"
             :rules="environmentRules"
             label-width="120px"
           >
+            <el-form-item :label="$t('collectTask.manufacturerLabel')" prop="manufacturer">
+              <el-select 
+                v-model="environmentForm.manufacturer" 
+                :placeholder="$t('collectTask.manufacturerPlaceholder')" 
+                style="width: 100%" 
+                clearable
+              >
+                <el-option
+                  v-for="item in manufacturerOptions"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                />
+              </el-select>
+            </el-form-item>
+            <el-form-item :label="$t('collectTask.networkLabel')" prop="network">
+              <el-select 
+                v-model="environmentForm.network" 
+                :placeholder="$t('collectTask.networkPlaceholder')" 
+                style="width: 100%" 
+                clearable
+              >
+                <el-option
+                  v-for="item in networkOptions"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                />
+              </el-select>
+            </el-form-item>
             <el-form-item :label="$t('collectTask.regionFilter')" prop="regionId">
               <el-select 
                 v-model="environmentForm.regionId" 
@@ -716,11 +748,10 @@
               />
             </div>
           </div>
-          </div>
         </div>
 
-        <!-- 步骤2：用例配置 -->
-        <div v-if="currentStep === 1" class="step-panel">
+        <!-- 步骤3：用例配置 -->
+        <div v-if="currentStep === 2" class="step-panel">
           <h3 class="step-title">{{ $t('collectTask.testCaseConfigTitle') }}</h3>
           <div v-if="selectedStrategy && selectedTestCases.length > 0" class="test-case-config-container">
             <el-alert
@@ -899,7 +930,7 @@
             {{ $t('collectTask.prevStep') }}
           </el-button>
           <el-button 
-            v-if="currentStep < 1" 
+            v-if="currentStep < 2" 
             type="primary" 
             @click="handleNextStep"
             :disabled="!canProceedToNextStep"
@@ -908,7 +939,7 @@
             <el-icon><ArrowRight /></el-icon>
           </el-button>
           <el-button 
-            v-if="currentStep === 1" 
+            v-if="currentStep === 2" 
             type="success" 
             @click="handleSubmit"
             :loading="submitLoading"
@@ -1368,13 +1399,36 @@ export default {
       ],
     }
 
-    // 步骤3：环境编排表单
+    // 步骤2：环境编排表单
     const environmentForm = reactive({
+      manufacturer: null,
+      network: null,
       regionId: null,
       countryId: null,
       provinceId: null,
       cityId: null,
     })
+
+    // 厂商选项
+    const manufacturerOptions = [
+      { label: '小米', value: 'xiaomi' },
+      { label: 'OPPO', value: 'oppo' },
+      { label: 'vivo', value: 'vivo' },
+      { label: '三星', value: 'samsung' },
+      { label: '荣耀', value: 'honor' },
+      { label: '华为', value: 'huawei' },
+      { label: '苹果', value: 'apple' },
+      { label: '华为海思', value: 'hisilicon' },
+    ]
+
+    // 网络选项
+    const networkOptions = [
+      { label: 'normal', value: 'normal' },
+      { label: 'weak', value: 'weak' },
+      { label: 'congestion', value: 'congestion' },
+      { label: 'weakcongestion', value: 'weakcongestion' },
+      { label: 'sunshang', value: 'sunshang' },
+    ]
 
     const environmentRules = {
       regionId: [
@@ -2080,11 +2134,11 @@ export default {
     const handleSubmit = async () => {
       submitLoading.value = true
       try {
-        // 如果当前在步骤2（用例配置页面），表单ref可能已经被销毁（v-if条件）
-        // 此时不需要再次验证表单，因为已经在步骤1验证过了
+        // 如果当前在步骤3（用例配置页面），表单ref可能已经被销毁（v-if条件）
+        // 此时不需要再次验证表单，因为已经在前面步骤验证过了
         // 只需要验证数据完整性即可
-        if (currentStep.value === 1) {
-          // 步骤2：直接验证数据完整性，不需要表单ref验证
+        if (currentStep.value === 2) {
+          // 步骤3：直接验证数据完整性，不需要表单ref验证
           if (!basicForm.name || !basicForm.name.trim()) {
             ElMessage.error('请填写任务名称')
             submitLoading.value = false
@@ -2106,7 +2160,7 @@ export default {
             return
           }
         } else {
-          // 步骤1：需要验证表单
+          // 其他步骤：需要验证表单
           await nextTick()
           
           // 检查 ref 是否存在
@@ -2158,6 +2212,8 @@ export default {
           description: basicForm.description,
           collectStrategyId: strategyForm.strategyId,
           collectCount: selectedStrategy.value ? selectedStrategy.value.collectCount : 1,
+          manufacturer: environmentForm.manufacturer,
+          network: environmentForm.network,
           regionId: environmentForm.regionId,
           countryId: environmentForm.countryId,
           provinceId: environmentForm.provinceId,
@@ -2206,6 +2262,8 @@ export default {
       })
       
       Object.assign(environmentForm, {
+        manufacturer: null,
+        network: null,
         regionId: null,
         countryId: null,
         provinceId: null,
@@ -2248,13 +2306,13 @@ export default {
     // 步骤控制方法
     const handleNextStep = async () => {
       if (currentStep.value === 0) {
-        // 验证基本信息、采集策略、环境编排
+        // 验证基本信息、采集策略
         try {
           // 确保 DOM 已更新，表单 ref 已初始化
           await nextTick()
           
           // 检查 ref 是否存在
-          if (!basicFormRef.value || !strategyFormRef.value || !environmentFormRef.value) {
+          if (!basicFormRef.value || !strategyFormRef.value) {
             console.warn('表单 ref 未初始化，请稍后再试')
             return
           }
@@ -2262,8 +2320,26 @@ export default {
           await Promise.all([
             basicFormRef.value.validate(),
             strategyFormRef.value.validate(),
-            environmentFormRef.value.validate()
           ])
+          
+          currentStep.value = 1
+        } catch (error) {
+          // 验证失败，不切换步骤
+          console.error('表单验证失败:', error)
+        }
+      } else if (currentStep.value === 1) {
+        // 验证环境编排
+        try {
+          // 确保 DOM 已更新，表单 ref 已初始化
+          await nextTick()
+          
+          // 检查 ref 是否存在
+          if (!environmentFormRef.value) {
+            console.warn('表单 ref 未初始化，请稍后再试')
+            return
+          }
+          
+          await environmentFormRef.value.validate()
           
           // 验证逻辑环境选择
           if (!validateEnvironmentSelection()) {
@@ -2272,7 +2348,7 @@ export default {
           
           // 初始化用例配置
           await initializeTestCaseConfig()
-          currentStep.value = 1
+          currentStep.value = 2
         } catch (error) {
           // 验证失败，不切换步骤
           console.error('表单验证失败:', error)
@@ -2289,10 +2365,12 @@ export default {
     // 判断是否可以进入下一步
     const canProceedToNextStep = computed(() => {
       if (currentStep.value === 0) {
-        // 步骤1：需要基本信息、采集策略、环境编排都完成
+        // 步骤1：需要基本信息、采集策略都完成
         return basicForm.name.trim() !== '' && 
-               strategyForm.strategyId !== null && 
-               environmentForm.regionId !== null && 
+               strategyForm.strategyId !== null
+      } else if (currentStep.value === 1) {
+        // 步骤2：需要环境编排都完成
+        return environmentForm.regionId !== null && 
                selectedEnvironmentIds.value.length > 0
       }
       return true
@@ -3148,6 +3226,8 @@ export default {
       countryOptions,
       provinceOptions,
       cityOptions,
+      manufacturerOptions,
+      networkOptions,
       selectedStrategy,
       selectedStrategyAppEn,
       selectedStrategyAppLabel,
