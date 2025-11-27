@@ -540,14 +540,29 @@ export default {
         form.selectedNetworkIds = []
       }
       
+      // 处理物理组网回显：从数据库加载的physicalNetwork（JSON字符串）解析为数组
+      if (row.physicalNetwork) {
+        try {
+          physicalNetworks.value = JSON.parse(row.physicalNetwork)
+        } catch (error) {
+          console.error('解析物理组网数据失败:', error)
+          physicalNetworks.value = []
+        }
+      } else {
+        physicalNetworks.value = []
+      }
+      
       dialogVisible.value = true
       loadExecutorOptions()
       loadUeOptions()
       loadNetworkOptions()
 
-      // 等待数据加载后生成物理组网和逻辑环境名称
-      setTimeout(() =>{
-        generatePhysicalNetworks()
+      // 等待数据加载后，如果数据库中没有物理组网数据，则自动生成
+      setTimeout(() => {
+        // 如果数据库中没有物理组网数据，则根据当前选择自动生成
+        if (!row.physicalNetwork || physicalNetworks.value.length === 0) {
+          generatePhysicalNetworks()
+        }
         generateLogicEnvironmentName()
       }, 100)
     }
@@ -577,6 +592,11 @@ export default {
       try {
         await formRef.value.validate()
         
+        // 将物理组网数组转换为JSON字符串
+        const physicalNetworkJson = physicalNetworks.value && physicalNetworks.value.length > 0 
+          ? JSON.stringify(physicalNetworks.value) 
+          : null
+
         if (form.id) {
           // 编辑逻辑环境，同时更新UE和逻辑组网关联
           const requestData = {
@@ -585,6 +605,7 @@ export default {
               executorId: form.executorId,
               description: form.description,
               network: form.network,
+              physicalNetwork: physicalNetworkJson,
               status: form.status,
             },
             ueIds: form.selectedUeIds,
@@ -605,6 +626,7 @@ export default {
               executorId: form.executorId,
               description: form.description,
               network: form.network,
+              physicalNetwork: physicalNetworkJson,
               status: form.status,
             },
             ueIds: form.selectedUeIds,
@@ -638,6 +660,7 @@ export default {
         description: '',
         status: 1,
       })
+      physicalNetworks.value = []
       if (formRef.value) {
         formRef.value.resetFields()
       }
@@ -855,7 +878,7 @@ export default {
 
       // 获取选中的逻辑组网名称列表
       const logicNetworkNames = form.selectedNetworkIds.map(id => {
-        const network = networkOption.value.find(n => n.id ===id)
+        const network = networkOptions.value.find(n => n.id === id)
         return network ? network.name : null
       }).filter(name => name)
 
