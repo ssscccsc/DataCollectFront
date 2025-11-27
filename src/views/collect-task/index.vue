@@ -517,7 +517,10 @@
                 v-model="environmentForm.manufacturer" 
                 :placeholder="$t('collectTask.manufacturerPlaceholder')" 
                 style="width: 100%" 
+                multiple
                 clearable
+                collapse-tags
+                collapse-tags-tooltip
               >
                 <el-option
                   v-for="item in manufacturerOptions"
@@ -1401,7 +1404,7 @@ export default {
 
     // 步骤2：环境编排表单
     const environmentForm = reactive({
-      manufacturer: null,
+      manufacturer: [],
       network: null,
       regionId: null,
       countryId: null,
@@ -2262,7 +2265,7 @@ export default {
       })
       
       Object.assign(environmentForm, {
-        manufacturer: null,
+        manufacturer: [],
         network: null,
         regionId: null,
         countryId: null,
