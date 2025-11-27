@@ -519,8 +519,6 @@
                 style="width: 100%" 
                 multiple
                 clearable
-                collapse-tags
-                collapse-tags-tooltip
               >
                 <el-option
                   v-for="item in manufacturerOptions"
@@ -1746,6 +1744,12 @@ export default {
           countryId: environmentForm.countryId,
           provinceId: environmentForm.provinceId,
           cityId: environmentForm.cityId,
+          network: environmentForm.network,
+        }
+        
+        // 如果选择了厂商，将数组转换为逗号分隔的字符串
+        if (environmentForm.manufacturer && environmentForm.manufacturer.length > 0) {
+          params.manufacturer = environmentForm.manufacturer.join(',')
         }
         
         const res = await request({
@@ -2000,6 +2004,13 @@ export default {
     const handleCityChange = async () => {
       await loadAvailableEnvironments()
     }
+    
+    // 监听厂商和网络变化，重新加载可用逻辑环境
+    watch(() => [environmentForm.manufacturer, environmentForm.network], () => {
+      if (selectedStrategy.value && (environmentForm.regionId || environmentForm.countryId || environmentForm.provinceId || environmentForm.cityId)) {
+        loadAvailableEnvironments()
+      }
+    }, { deep: true })
     
     // 切换逻辑环境选择
     const toggleEnvironmentSelection = (environmentId) => {
