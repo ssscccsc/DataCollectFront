@@ -259,14 +259,25 @@
     <el-dialog
       v-model="dialogVisible"
       :title="dialogTitle"
-      width="800px"
+      width="60%"
+      top="5vh"
       @close="resetForm"
     >
+      <!-- 步骤导航 -->
+      <div class="step-navigation">
+        <el-steps :active="currentStep" align-center>
+          <el-step :title="$t('collectTask.step1Title')" :description="$t('collectTask.step1Desc')" />
+          <el-step :title="$t('collectTask.step4Title')" :description="$t('collectTask.step4Desc')" />
+        </el-steps>
+      </div>
+      
       <!-- 步骤内容 -->
       <div class="step-content">
-        <!-- 步骤1：基本信息 -->
-        <div class="step-panel">
-          <h3 class="step-title">{{ $t('collectTask.basicInfoTitle') }}</h3>
+        <!-- 步骤1：基本信息、采集策略、环境编排 -->
+        <div v-if="currentStep === 0" class="step-panel">
+          <!-- 基本信息 -->
+          <div class="sub-step-section">
+            <h3 class="step-title">{{ $t('collectTask.basicInfoTitle') }}</h3>
           <el-form
             ref="basicFormRef"
             :model="basicForm"
@@ -285,197 +296,11 @@
               />
             </el-form-item>
           </el-form>
-        </div>
-
-        <!-- 步骤2：环境编排 -->
-        <div class="step-panel">
-          <h3 class="step-title">{{ $t('collectTask.environmentOrchestration') }}</h3>
-          <el-form
-            ref="environmentFormRef"
-            :model="environmentForm"
-            :rules="environmentRules"
-            label-width="120px"
-          >
-            <el-form-item :label="$t('collectTask.manufacturer')" prop="manufacturer">
-              <el-select v-model="environmentForm.manufacturer" :placeholder="$t('collectTask.manufacturerPlaceholder')" style="width: 100%" clearable>
-                <el-option label="小米" value="xiaomi" />
-                <el-option label="OPPO" value="oppo" />
-                <el-option label="vivo" value="vivo" />
-                <el-option label="三星" value="samsung" />
-                <el-option label="荣耀" value="honor" />
-                <el-option label="华为" value="huawei" />
-                <el-option label="苹果" value="apple" />
-                <el-option label="华为海思" value="huawei-hisilicon" />
-              </el-select>
-            </el-form-item>
-            <el-form-item :label="$t('collectTask.network')" prop="network">
-              <el-select v-model="environmentForm.network" :placeholder="$t('collectTask.networkPlaceholder')" style="width: 100%" clearable>
-                <el-option label="normal" value="normal" />
-                <el-option label="weak" value="weak" />
-                <el-option label="congestion" value="congestion" />
-                <el-option label="weakcongestion" value="weakcongestion" />
-                <el-option label="sunshang" value="sunshang" />
-              </el-select>
-            </el-form-item>
-            <el-form-item :label="$t('collectTask.regionFilter')" prop="regionId">
-              <el-select v-model="environmentForm.regionId" :placeholder="$t('collectTask.regionPlaceholder')" style="width: 100%" @change="handleRegionChange">
-                <el-option
-                  v-for="item in regionOptions"
-                  :key="item.id"
-                  :label="item.name"
-                  :value="item.id"
-                />
-              </el-select>
-            </el-form-item>
-            <el-form-item :label="$t('collectTask.countryFilter')" prop="countryId">
-              <el-select v-model="environmentForm.countryId" :placeholder="$t('collectTask.countryPlaceholder')" style="width: 100%" @change="handleCountryChange" :disabled="!environmentForm.regionId">
-                <el-option
-                  v-for="item in countryOptions"
-                  :key="item.id"
-                  :label="item.name"
-                  :value="item.id"
-                />
-              </el-select>
-            </el-form-item>
-            <el-form-item :label="$t('collectTask.provinceFilter')" prop="provinceId">
-              <el-select v-model="environmentForm.provinceId" :placeholder="$t('collectTask.provincePlaceholder')" style="width: 100%" @change="handleProvinceChange" :disabled="!environmentForm.countryId">
-                <el-option
-                  v-for="item in provinceOptions"
-                  :key="item.id"
-                  :label="item.name"
-                  :value="item.id"
-                />
-              </el-select>
-            </el-form-item>
-            <el-form-item :label="$t('collectTask.cityFilter')" prop="cityId">
-              <el-select v-model="environmentForm.cityId" :placeholder="$t('collectTask.cityPlaceholder')" style="width: 100%" @change="handleCityChange" :disabled="!environmentForm.provinceId">
-                <el-option
-                  v-for="item in cityOptions"
-                  :key="item.id"
-                  :label="item.name"
-                  :value="item.id"
-                />
-              </el-select>
-            </el-form-item>
-            <div class="environment-summary">
-              <h4>{{ $t('collectTask.environmentConfigSummary') }}</h4>
-              <el-alert
-                :title="environmentSummary"
-                type="info"
-                :closable="false"
-                show-icon
-              />
-            </div>
-          </el-form>
-          
-          <!-- 可用逻辑环境列表 -->
-          <div v-if="environmentForm.regionId || environmentForm.countryId || environmentForm.provinceId || environmentForm.cityId" class="available-environments">
-            <h4>{{ $t('collectTask.availableLogicEnvironments') }}</h4>
-            <div v-loading="environmentsLoading" class="environments-content">
-              <div v-if="availableEnvironments.length === 0" class="no-environments">
-                <el-empty :description="$t('collectTask.noAvailableEnvironments')" />
-              </div>
-              <div v-else class="environments-list">
-                <el-card 
-                  v-for="env in availableEnvironments" 
-                  :key="env.id" 
-                  class="environment-card"
-                  shadow="hover"
-                  :class="{ 'selected': selectedEnvironmentIds.includes(env.id) }"
-                  @click="toggleEnvironmentSelection(env.id)"
-                >
-                  <div class="environment-header">
-                    <h5 class="environment-name">{{ env.name }}</h5>
-                    <div class="environment-status">
-                      <!-- 在线状态显示 -->
-                      <el-tag 
-                        v-if="env.onlineStatus === 'checking'" 
-                        type="info" 
-                        size="small"
-                        style="margin-right: 8px;"
-                      >
-                        {{ $t('collectTask.checkingOnline') }}
-                      </el-tag>
-                      <el-tag 
-                        v-else-if="env.onlineStatus === true" 
-                        type="success" 
-                        size="small"
-                        style="margin-right: 8px;"
-                      >
-                        {{ $t('collectTask.online') }}
-                      </el-tag>
-                      <el-tag 
-                        v-else-if="env.onlineStatus === false" 
-                        type="danger" 
-                        size="small"
-                        style="margin-right: 8px;"
-                      >
-                        {{ $t('collectTask.offline') }}
-                      </el-tag>
-                      <!-- 环境状态显示 -->
-                      <el-tag :type="env.status === 1 && env.onlineStatus === true ? 'success' : 'danger'" size="small">
-                        {{ (env.status === 1 && env.onlineStatus === true) ? $t('collectTask.available') : $t('collectTask.unavailable') }}
-                      </el-tag>
-                      <el-checkbox 
-                        v-model="selectedEnvironmentIds" 
-                        :value="env.id"
-                        @change="handleEnvironmentSelection"
-                        :disabled="env.status !== 1 || env.onlineStatus !== true"
-                        style="margin-left: 8px;"
-                      />
-                    </div>
-                  </div>
-                  <div class="environment-info">
-                    <p><strong>{{ $t('collectTask.executor') }}：</strong>{{ env.executorName }} ({{ env.executorIpAddress }})</p>
-                    <p><strong>{{ $t('collectTask.region') }}：</strong>{{ env.executorRegionName }}</p>
-                    <p v-if="env.description"><strong>{{ $t('collectTask.description') }}：</strong>{{ env.description }}</p>
-                  </div>
-                  <div v-if="env.ueList && env.ueList.length > 0" class="environment-ue">
-                    <p><strong>{{ $t('collectTask.ueDevices') }}：</strong></p>
-                    <div class="ue-list">
-                      <el-tag 
-                        v-for="ue in env.ueList" 
-                        :key="ue.id" 
-                        size="small" 
-                        style="margin-right: 8px; margin-bottom: 4px;"
-                      >
-                        {{ ue.name }} ({{ ue.ueId }})
-                      </el-tag>
-                    </div>
-                  </div>
-                  <div v-if="env.networkList && env.networkList.length > 0" class="environment-networks">
-                    <p><strong>{{ $t('collectTask.environmentNetworking') }}：</strong></p>
-                    <div class="network-list">
-                      <el-tag 
-                        v-for="network in env.networkList" 
-                        :key="network.id" 
-                        type="info" 
-                        size="small" 
-                        style="margin-right: 8px; margin-bottom: 4px;"
-                      >
-                        {{ network.name }}
-                      </el-tag>
-                    </div>
-                  </div>
-                </el-card>
-              </div>
-            </div>
-            
-            <!-- 选择提示 -->
-            <div v-if="availableEnvironments.length > 0" class="selection-tip">
-              <el-alert
-                :title="$t('collectTask.selectedEnvironments', { count: selectedEnvironmentIds.length })"
-                type="info"
-                :closable="false"
-                show-icon
-              />
-            </div>
           </div>
-        </div>
 
-        <!-- 步骤3：采集策略 -->
-        <div class="step-panel">
-          <h3 class="step-title">{{ $t('collectTask.collectStrategyTitle') }}</h3>
+          <!-- 采集策略 -->
+          <div class="sub-step-section">
+            <h3 class="step-title">{{ $t('collectTask.collectStrategyTitle') }}</h3>
           <div style="display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 10px;">
                 <el-button @click="handleRefreshStrategy" :loading="strategyLoading" size="default">
                   <el-icon><Refresh /></el-icon>
@@ -674,6 +499,393 @@
               </div>
             </div>
           </el-form>
+          </div>
+
+          <!-- 环境编排 -->
+          <div class="sub-step-section">
+            <h3 class="step-title">{{ $t('collectTask.environmentOrchestration') }}</h3>
+          <el-form
+            ref="environmentFormRef"
+            :model="environmentForm"
+            :rules="environmentRules"
+            label-width="120px"
+          >
+            <el-form-item :label="$t('collectTask.regionFilter')" prop="regionId">
+              <el-select 
+                v-model="environmentForm.regionId" 
+                :placeholder="$t('collectTask.regionPlaceholder')" 
+                style="width: 100%" 
+                clearable
+                @change="handleRegionChange"
+              >
+                <el-option
+                  v-for="item in regionOptions"
+                  :key="item.id"
+                  :label="item.name"
+                  :value="item.id"
+                />
+              </el-select>
+            </el-form-item>
+            <el-form-item :label="$t('collectTask.countryFilter')" prop="countryId">
+              <el-select 
+                v-model="environmentForm.countryId" 
+                :placeholder="$t('collectTask.countryPlaceholder')" 
+                style="width: 100%" 
+                clearable
+                @change="handleCountryChange" 
+                :disabled="!environmentForm.regionId"
+              >
+                <el-option
+                  v-for="item in countryOptions"
+                  :key="item.id"
+                  :label="item.name"
+                  :value="item.id"
+                />
+              </el-select>
+            </el-form-item>
+            <el-form-item :label="$t('collectTask.provinceFilter')" prop="provinceId">
+              <el-select 
+                v-model="environmentForm.provinceId" 
+                :placeholder="$t('collectTask.provincePlaceholder')" 
+                style="width: 100%" 
+                clearable
+                @change="handleProvinceChange" 
+                :disabled="!environmentForm.countryId"
+              >
+                <el-option
+                  v-for="item in provinceOptions"
+                  :key="item.id"
+                  :label="item.name"
+                  :value="item.id"
+                />
+              </el-select>
+            </el-form-item>
+            <el-form-item :label="$t('collectTask.cityFilter')" prop="cityId">
+              <el-select 
+                v-model="environmentForm.cityId" 
+                :placeholder="$t('collectTask.cityPlaceholder')" 
+                style="width: 100%" 
+                clearable
+                @change="handleCityChange" 
+                :disabled="!environmentForm.provinceId"
+              >
+                <el-option
+                  v-for="item in cityOptions"
+                  :key="item.id"
+                  :label="item.name"
+                  :value="item.id"
+                />
+              </el-select>
+            </el-form-item>
+            <div class="environment-summary">
+              <h4>{{ $t('collectTask.environmentConfigSummary') }}</h4>
+              <el-alert
+                :title="environmentSummary"
+                type="info"
+                :closable="false"
+                show-icon
+              />
+            </div>
+          </el-form>
+          
+          <!-- 可用逻辑环境列表 -->
+          <div v-if="selectedStrategy && (environmentForm.regionId || environmentForm.countryId || environmentForm.provinceId || environmentForm.cityId)" class="available-environments">
+            <h4>{{ $t('collectTask.availableLogicEnvironments') }}</h4>
+            <div v-loading="environmentsLoading" class="environments-content">
+              <div v-if="availableEnvironments.length === 0" class="no-environments">
+                <el-empty :description="$t('collectTask.noAvailableEnvironments')" />
+              </div>
+              <div v-else class="environments-list">
+                <el-card 
+                  v-for="env in availableEnvironments" 
+                  :key="env.id" 
+                  class="environment-card"
+                  shadow="hover"
+                  :class="{ 
+                    'selected': selectedEnvironmentIds.includes(env.id),
+                    'disabled': env.status !== 1 || env.onlineStatus !== true
+                  }"
+                  @click="toggleEnvironmentSelection(env.id)"
+                >
+                  <div class="environment-header">
+                    <h5 class="environment-name" :title="env.name">{{ env.name }}</h5>
+                    <div class="environment-status">
+                      <!-- 在线状态显示 -->
+                      <el-tag 
+                        v-if="env.onlineStatus === 'checking'" 
+                        type="info" 
+                        size="small"
+                        style="margin-right: 8px; flex-shrink: 0;"
+                      >
+                        {{ $t('collectTask.checkingOnline') }}
+                      </el-tag>
+                      <el-tag 
+                        v-else-if="env.onlineStatus === true" 
+                        type="success" 
+                        size="small"
+                        style="margin-right: 8px; flex-shrink: 0;"
+                      >
+                        {{ $t('collectTask.online') }}
+                      </el-tag>
+                      <el-tag 
+                        v-else-if="env.onlineStatus === false" 
+                        type="danger" 
+                        size="small"
+                        style="margin-right: 8px; flex-shrink: 0;"
+                      >
+                        {{ $t('collectTask.offline') }}
+                      </el-tag>
+                      <!-- 环境状态显示 -->
+                      <el-tag 
+                        :type="env.status === 1 && env.onlineStatus === true ? 'success' : 'danger'" 
+                        size="small"
+                        style="margin-right: 8px; flex-shrink: 0;"
+                      >
+                        {{ (env.status === 1 && env.onlineStatus === true) ? $t('collectTask.available') : $t('collectTask.unavailable') }}
+                      </el-tag>
+                      <el-checkbox 
+                        v-model="selectedEnvironmentIds" 
+                        :value="env.id"
+                        @change="handleEnvironmentSelection"
+                        :disabled="env.status !== 1 || env.onlineStatus !== true"
+                        style="flex-shrink: 0;"
+                        @click.stop
+                      />
+                    </div>
+                  </div>
+                  <div class="environment-actions">
+                    <el-button 
+                      type="text" 
+                      size="small" 
+                      @click.stop="toggleEnvironmentDetail(env.id)"
+                      style="padding: 0;"
+                    >
+                      {{ expandedEnvironmentIds.includes(env.id) ? $t('collectTask.hideDetail') : $t('collectTask.showDetail') }}
+                      <el-icon style="margin-left: 4px;">
+                        <ArrowDown v-if="!expandedEnvironmentIds.includes(env.id)" />
+                        <ArrowUp v-else />
+                      </el-icon>
+                    </el-button>
+                  </div>
+                  <!-- 环境详情（可展开） -->
+                  <div v-if="expandedEnvironmentIds.includes(env.id)" class="environment-detail">
+                    <div class="environment-info">
+                      <p><strong>{{ $t('collectTask.executor') }}：</strong>{{ env.executorName }} ({{ env.executorIpAddress }})</p>
+                      <p><strong>{{ $t('collectTask.region') }}：</strong>{{ env.executorRegionName }}</p>
+                      <p v-if="env.description"><strong>{{ $t('collectTask.description') }}：</strong>{{ env.description }}</p>
+                    </div>
+                    <div v-if="env.ueList && env.ueList.length > 0" class="environment-ue">
+                      <p><strong>{{ $t('collectTask.ueDevices') }}：</strong></p>
+                      <div class="ue-list">
+                        <el-tag 
+                          v-for="ue in env.ueList" 
+                          :key="ue.id" 
+                          size="small" 
+                          style="margin-right: 8px; margin-bottom: 4px;"
+                        >
+                          {{ ue.name }} ({{ ue.ueId }})
+                        </el-tag>
+                      </div>
+                    </div>
+                    <div v-if="env.networkList && env.networkList.length > 0" class="environment-networks">
+                      <p><strong>{{ $t('collectTask.environmentNetworking') }}：</strong></p>
+                      <div class="network-list">
+                        <el-tag 
+                          v-for="network in env.networkList" 
+                          :key="network.id" 
+                          type="info" 
+                          size="small" 
+                          style="margin-right: 8px; margin-bottom: 4px;"
+                        >
+                          {{ network.name }}
+                        </el-tag>
+                      </div>
+                    </div>
+                  </div>
+                </el-card>
+              </div>
+            </div>
+            
+            <!-- 选择提示 -->
+            <div v-if="availableEnvironments.length > 0" class="selection-tip">
+              <el-alert
+                :title="$t('collectTask.selectedEnvironments', { count: selectedEnvironmentIds.length })"
+                type="info"
+                :closable="false"
+                show-icon
+              />
+            </div>
+          </div>
+          </div>
+        </div>
+
+        <!-- 步骤2：用例配置 -->
+        <div v-if="currentStep === 1" class="step-panel">
+          <h3 class="step-title">{{ $t('collectTask.testCaseConfigTitle') }}</h3>
+          <div v-if="selectedStrategy && selectedTestCases.length > 0" class="test-case-config-container">
+            <el-alert
+              :title="$t('collectTask.testCaseConfigTip')"
+              type="info"
+              :closable="false"
+              show-icon
+              style="margin-bottom: 16px;"
+            >
+              <template #default>
+                {{ $t('collectTask.testCaseConfigDescription', { count: selectedTestCases.length }) }}
+              </template>
+            </el-alert>
+
+            <el-collapse v-model="activeTestCaseConfigItems" accordion>
+              <el-collapse-item 
+                v-for="(testCase, index) in selectedTestCases" 
+                :key="testCase.id"
+                :name="testCase.id"
+              >
+                <template #title>
+                  <div class="test-case-config-item-title">
+                    <el-tag type="primary" size="small" style="margin-right: 8px;">{{ index + 1 }}</el-tag>
+                    <strong style="margin-right: 12px;">{{ testCase.name }}</strong>
+                    <el-tag size="small" type="info">{{ testCase.number }}</el-tag>
+                    <span style="margin-left: auto; margin-right: 12px; font-size: 12px; color: #909399;">
+                      <el-icon v-if="getTaskTestCaseExecutionCount(testCase.id) > 0" style="color: #e6a23c;"><Clock /></el-icon>
+                      {{ getTaskTestCaseExecutionCount(testCase.id) > 0 ? `${getTaskTestCaseExecutionCount(testCase.id)} 次` : $t('collectTask.notConfigured') }}
+                      <el-divider direction="vertical" />
+                      <el-icon v-if="getTaskTestCaseParamCount(testCase.id) > 0" style="color: #67c23a;"><Setting /></el-icon>
+                      {{ getTaskTestCaseParamCount(testCase.id) > 0 ? `${getTaskTestCaseParamCount(testCase.id)} 个参数` : $t('collectTask.noParams') }}
+                    </span>
+                  </div>
+                </template>
+                
+                <div class="test-case-config-item-content">
+                  <!-- 用例基本信息（直接显示） -->
+                  <div class="test-case-info-section" style="margin-bottom: 16px;">
+                    <div class="test-case-info-title" style="font-size: 14px; color: #606266; margin-bottom: 12px; font-weight: 600;">
+                      <el-icon><InfoFilled /></el-icon>
+                      <span style="margin-left: 4px;">{{ $t('collectTask.testCaseInfo') }}</span>
+                    </div>
+                    <el-descriptions :column="3" border size="small">
+                      <el-descriptions-item :label="$t('collectTask.businessCategory')">
+                        {{ testCase.businessCategory || $t('collectTask.notConfigured') }}
+                      </el-descriptions-item>
+                      <el-descriptions-item :label="$t('collectTask.app')">
+                        {{ testCase.app || $t('collectTask.notConfigured') }}
+                      </el-descriptions-item>
+                      <el-descriptions-item :label="$t('collectTask.appen')">
+                        {{ testCase.appEn || testCase.appen || $t('collectTask.notConfigured') }}
+                      </el-descriptions-item>
+                      <el-descriptions-item :label="$t('collectTask.logicNetwork')">
+                        <div v-if="testCase.logicNetwork">
+                          <el-tag 
+                            v-for="network in testCase.logicNetwork.split(';')" 
+                            :key="network"
+                            size="small"
+                            style="margin-right: 4px;"
+                          >
+                            {{ network }}
+                          </el-tag>
+                        </div>
+                        <span v-else>{{ $t('collectTask.notConfigured') }}</span>
+                      </el-descriptions-item>
+                    </el-descriptions>
+                  </div>
+
+                  <!-- 执行次数配置 -->
+                  <div class="config-section">
+                    <div class="config-section-title">
+                      <el-icon><Clock /></el-icon>
+                      <span>{{ $t('collectTask.executionConfig') }}</span>
+                    </div>
+                    <el-input-number
+                      v-model="taskTestCaseExecutionCounts[testCase.id]"
+                      :min="1"
+                      :max="100"
+                      :placeholder="$t('collectTask.executionCountPlaceholder')"
+                      style="width: 200px;"
+                    />
+                    <span style="margin-left: 12px; color: #909399; font-size: 12px;">
+                      {{ $t('collectTask.executionCountTip') }}
+                    </span>
+                  </div>
+
+                  <!-- 自定义参数配置 -->
+                  <div class="config-section">
+                    <div class="config-section-title">
+                      <el-icon><Setting /></el-icon>
+                      <span>{{ $t('collectTask.testCaseParamsLabel') }}</span>
+                      <el-button 
+                        type="primary" 
+                        size="small" 
+                        @click="addTaskTestCaseParam(testCase.id)"
+                        :icon="Plus"
+                        style="margin-left: auto;"
+                      >
+                        {{ $t('collectTask.addParam') }}
+                      </el-button>
+                    </div>
+                    
+                    <div v-if="!taskTestCaseCustomParams[testCase.id] || taskTestCaseCustomParams[testCase.id].length === 0" class="empty-params-inline">
+                      <span style="color: #909399; font-size: 12px;">{{ $t('collectTask.noTestCaseParams') }}</span>
+                    </div>
+                    
+                    <div v-else class="params-list-inline">
+                      <div 
+                        v-for="(param, paramIndex) in taskTestCaseCustomParams[testCase.id]" 
+                        :key="paramIndex" 
+                        class="param-item-inline"
+                      >
+                        <div class="param-index-small">{{ paramIndex + 1 }}</div>
+                        <el-select 
+                          v-model="param.key" 
+                          :placeholder="$t('collectTask.paramKey')" 
+                          size="small"
+                          filterable
+                          allow-create
+                          default-first-option
+                          clearable
+                          style="flex: 1;"
+                          @change="handleTaskParamKeyChange(testCase.id, paramIndex)"
+                        >
+                          <el-option
+                            v-for="paramOption in getTaskParamKeyOptions(testCase)"
+                            :key="paramOption.paramName"
+                            :label="paramOption.paramName"
+                            :value="paramOption.paramName"
+                          />
+                        </el-select>
+                        <el-select 
+                          v-model="param.value" 
+                          :placeholder="$t('collectTask.paramValue')" 
+                          size="small"
+                          multiple
+                          filterable
+                          allow-create
+                          default-first-option
+                          clearable
+                          style="flex: 1;"
+                        >
+                          <el-option
+                            v-for="valueOption in getTaskParamValueOptions(testCase.id, paramIndex)"
+                            :key="valueOption"
+                            :label="valueOption"
+                            :value="valueOption"
+                          />
+                        </el-select>
+                        <el-button 
+                          type="danger" 
+                          size="small" 
+                          @click="removeTaskTestCaseParam(testCase.id, paramIndex)"
+                          :icon="Delete"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </el-collapse-item>
+            </el-collapse>
+          </div>
+          <div v-else class="no-test-cases">
+            <el-empty :description="$t('collectTask.noTestCasesSelected')" />
+          </div>
         </div>
 
       </div>
@@ -682,7 +894,21 @@
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="dialogVisible = false">{{ $t('collectTask.cancel') }}</el-button>
+          <el-button v-if="currentStep > 0" @click="handlePrevStep">
+            <el-icon><ArrowLeft /></el-icon>
+            {{ $t('collectTask.prevStep') }}
+          </el-button>
           <el-button 
+            v-if="currentStep < 1" 
+            type="primary" 
+            @click="handleNextStep"
+            :disabled="!canProceedToNextStep"
+          >
+            {{ $t('collectTask.nextStep') }}
+            <el-icon><ArrowRight /></el-icon>
+          </el-button>
+          <el-button 
+            v-if="currentStep === 1" 
             type="success" 
             @click="handleSubmit"
             :loading="submitLoading"
@@ -970,9 +1196,9 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted, onUnmounted, computed, watch } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, computed, watch, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Refresh } from '@element-plus/icons-vue'
+import { Plus, Refresh, ArrowDown, ArrowUp, Delete, Setting, Clock, ArrowLeft, ArrowRight, InfoFilled } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import request from '@/utils/request'
@@ -982,6 +1208,14 @@ export default {
   components: {
     Plus,
     Refresh,
+    ArrowDown,
+    ArrowUp,
+    Delete,
+    Setting,
+    Clock,
+    ArrowLeft,
+    ArrowRight,
+    InfoFilled,
   },
   setup() {
     const { t } = useI18n()
@@ -1049,6 +1283,19 @@ export default {
     // 选中的逻辑环境ID列表
     const selectedEnvironmentIds = ref([])
     
+    // 展开详情的环境ID列表
+    const expandedEnvironmentIds = ref([])
+    
+    // 步骤控制
+    const currentStep = ref(0)
+    
+    // 用例配置相关
+    const activeTestCaseConfigItems = ref(null) // 用例配置展开项（accordion模式，只展开一个）
+    const taskTestCaseExecutionCounts = ref({}) // 用例执行次数 { testCaseId: count }
+    const taskTestCaseCustomParams = ref({}) // 用例自定义参数 { testCaseId: [{ key: '', value: [] }] }
+    const testCaseCustomParamList = ref([]) // 用例自定义参数列表
+    const testCaseParamOptions = ref({}) // 每个用例的参数选项 { testCaseId: [paramOptions] }
+    
     // 筛选用例相关
     const showFilteredTestCases = ref(false)
     
@@ -1110,17 +1357,7 @@ export default {
       ],
     }
 
-    // 步骤2：环境编排表单
-    const environmentForm = reactive({
-      manufacturer: null,
-      network: null,
-      regionId: null,
-      countryId: null,
-      provinceId: null,
-      cityId: null,
-    })
-
-    // 步骤3：采集策略表单
+    // 步骤2：采集策略表单
     const strategyForm = reactive({
       strategyId: null,
     })
@@ -1130,6 +1367,14 @@ export default {
         { required: true, message: t('collectTask.collectStrategyRequired'), trigger: 'change' },
       ],
     }
+
+    // 步骤3：环境编排表单
+    const environmentForm = reactive({
+      regionId: null,
+      countryId: null,
+      provinceId: null,
+      cityId: null,
+    })
 
     const environmentRules = {
       regionId: [
@@ -1526,9 +1771,11 @@ export default {
       }
     }
 
-    const handleAdd = () => {
+    const handleAdd = async () => {
       dialogTitle.value = t('collectTask.createTask')
       dialogVisible.value = true
+      // 等待 DOM 更新，确保表单已渲染
+      await nextTick()
       resetForm()
       loadRegionOptions()
     }
@@ -1640,36 +1887,54 @@ export default {
 
     // 环境选择事件处理
     const handleRegionChange = async (regionId) => {
-      environmentForm.countryId = null
-      environmentForm.provinceId = null
-      environmentForm.cityId = null
-      countryOptions.value = []
-      provinceOptions.value = []
-      cityOptions.value = []
-      
-      if (regionId) {
+      // 如果清除了区域选择，清空下级选项
+      if (!regionId) {
+        environmentForm.countryId = null
+        environmentForm.provinceId = null
+        environmentForm.cityId = null
+        countryOptions.value = []
+        provinceOptions.value = []
+        cityOptions.value = []
+      } else {
+        // 如果选择了区域，清空下级选项并加载国家选项
+        environmentForm.countryId = null
+        environmentForm.provinceId = null
+        environmentForm.cityId = null
+        countryOptions.value = []
+        provinceOptions.value = []
+        cityOptions.value = []
         await loadCountryOptions(regionId)
       }
       await loadAvailableEnvironments()
     }
 
     const handleCountryChange = async (countryId) => {
-      environmentForm.provinceId = null
-      environmentForm.cityId = null
-      provinceOptions.value = []
-      cityOptions.value = []
-      
-      if (countryId) {
+      // 如果清除了国家选择，清空下级选项
+      if (!countryId) {
+        environmentForm.provinceId = null
+        environmentForm.cityId = null
+        provinceOptions.value = []
+        cityOptions.value = []
+      } else {
+        // 如果选择了国家，清空下级选项并加载省份选项
+        environmentForm.provinceId = null
+        environmentForm.cityId = null
+        provinceOptions.value = []
+        cityOptions.value = []
         await loadProvinceOptions(countryId)
       }
       await loadAvailableEnvironments()
     }
 
     const handleProvinceChange = async (provinceId) => {
-      environmentForm.cityId = null
-      cityOptions.value = []
-      
-      if (provinceId) {
+      // 如果清除了省份选择，清空下级选项
+      if (!provinceId) {
+        environmentForm.cityId = null
+        cityOptions.value = []
+      } else {
+        // 如果选择了省份，清空下级选项并加载城市选项
+        environmentForm.cityId = null
+        cityOptions.value = []
         await loadCityOptions(provinceId)
       }
       await loadAvailableEnvironments()
@@ -1696,41 +1961,84 @@ export default {
       }
     }
     
+    // 切换环境详情展开/收起
+    const toggleEnvironmentDetail = (environmentId) => {
+      const index = expandedEnvironmentIds.value.indexOf(environmentId)
+      if (index > -1) {
+        expandedEnvironmentIds.value.splice(index, 1)
+      } else {
+        expandedEnvironmentIds.value.push(environmentId)
+      }
+    }
+    
     // 处理逻辑环境选择变化
     const handleEnvironmentSelection = () => {
       // 这里可以添加选择变化时的逻辑
     }
 
-    // 获取筛选后的用例数量
-    const getFilteredTestCaseCount = () => {
-      if (!selectedStrategy.value || !selectedStrategy.value.testCaseList) {
-        return 0
+    // 获取策略中勾选的用例ID列表
+    const getSelectedTestCaseIds = () => {
+      if (!selectedStrategy.value) {
+        return []
       }
-
-      return getFilteredTestCases().length
+      
+      let selectedTestCaseIds = []
+      try {
+        if (selectedStrategy.value.selectedTestCaseIds) {
+          if (typeof selectedStrategy.value.selectedTestCaseIds === 'string') {
+            selectedTestCaseIds = JSON.parse(selectedStrategy.value.selectedTestCaseIds)
+          } else if (Array.isArray(selectedStrategy.value.selectedTestCaseIds)) {
+            selectedTestCaseIds = selectedStrategy.value.selectedTestCaseIds
+          }
+        }
+        // 如果没有selectedTestCaseIds字段，从testCaseExecutionCounts中获取（兼容旧数据）
+        if (selectedTestCaseIds.length === 0 && selectedStrategy.value.testCaseExecutionCounts) {
+          let executionCounts = {}
+          if (typeof selectedStrategy.value.testCaseExecutionCounts === 'string') {
+            executionCounts = JSON.parse(selectedStrategy.value.testCaseExecutionCounts)
+          } else if (typeof selectedStrategy.value.testCaseExecutionCounts === 'object') {
+            executionCounts = selectedStrategy.value.testCaseExecutionCounts
+          }
+          selectedTestCaseIds = Object.keys(executionCounts)
+            .filter(testCaseId => executionCounts[testCaseId] > 0)
+            .map(id => parseInt(id))
+        }
+        // 确保所有ID都是数字类型
+        selectedTestCaseIds = selectedTestCaseIds.map(id => typeof id === 'string' ? parseInt(id) : Number(id)).filter(id => !isNaN(id))
+      } catch (error) {
+        console.warn('Failed to parse selectedTestCaseIds:', error)
+        selectedTestCaseIds = []
+      }
+      
+      return selectedTestCaseIds
     }
-
-    // 获取筛选后的用例列表
-    const getFilteredTestCases = () => {
+    
+    // 获取策略中勾选的用例列表
+    const selectedTestCases = computed(() => {
       if (!selectedStrategy.value || !selectedStrategy.value.testCaseList) {
         return []
       }
+      
+      const selectedTestCaseIds = getSelectedTestCaseIds()
+      
+      if (selectedTestCaseIds.length > 0) {
+        return selectedStrategy.value.testCaseList.filter(testCase => {
+          const testCaseId = typeof testCase.id === 'string' ? parseInt(testCase.id) : Number(testCase.id)
+          return selectedTestCaseIds.includes(testCaseId)
+        })
+      }
+      
+      return []
+    })
+    
+    // 获取筛选后的用例数量
+    const getFilteredTestCaseCount = () => {
+      return selectedTestCases.value.length
+    }
 
-      return selectedStrategy.value.testCaseList.filter(testCase => {
-        // 业务大类筛选
-        if (selectedStrategy.value.businessCategory && testCase.businessCategory !== selectedStrategy.value.businessCategory) {
-          return false
-        }
-        
-        // App筛选（直接使用 app 字段匹配）
-        if (selectedStrategy.value.app) {
-          if (testCase.app !== selectedStrategy.value.app) {
-            return false
-          }
-        }
-        
-        return true
-      })
+    // 获取筛选后的用例列表（只显示策略中勾选的测试用例）
+    const getFilteredTestCases = () => {
+      return selectedTestCases.value
     }
 
 
@@ -1772,17 +2080,77 @@ export default {
     const handleSubmit = async () => {
       submitLoading.value = true
       try {
-        // 验证所有表单
-        await Promise.all([
-          basicFormRef.value.validate(),
-          strategyFormRef.value.validate(),
-          environmentFormRef.value.validate()
-        ])
-        
-        // 验证逻辑环境选择
-        if (!validateEnvironmentSelection()) {
-          return
+        // 如果当前在步骤2（用例配置页面），表单ref可能已经被销毁（v-if条件）
+        // 此时不需要再次验证表单，因为已经在步骤1验证过了
+        // 只需要验证数据完整性即可
+        if (currentStep.value === 1) {
+          // 步骤2：直接验证数据完整性，不需要表单ref验证
+          if (!basicForm.name || !basicForm.name.trim()) {
+            ElMessage.error('请填写任务名称')
+            submitLoading.value = false
+            return
+          }
+          if (!strategyForm.strategyId) {
+            ElMessage.error('请选择采集策略')
+            submitLoading.value = false
+            return
+          }
+          if (!environmentForm.regionId) {
+            ElMessage.error('请选择地域')
+            submitLoading.value = false
+            return
+          }
+          if (!selectedEnvironmentIds.value || selectedEnvironmentIds.value.length === 0) {
+            ElMessage.error('请至少选择一个逻辑环境')
+            submitLoading.value = false
+            return
+          }
+        } else {
+          // 步骤1：需要验证表单
+          await nextTick()
+          
+          // 检查 ref 是否存在
+          if (!basicFormRef.value || !strategyFormRef.value || !environmentFormRef.value) {
+            ElMessage.error('表单未初始化，请稍后再试')
+            submitLoading.value = false
+            return
+          }
+          
+          // 验证所有表单
+          await Promise.all([
+            basicFormRef.value.validate(),
+            strategyFormRef.value.validate(),
+            environmentFormRef.value.validate()
+          ])
+          
+          // 验证逻辑环境选择
+          if (!validateEnvironmentSelection()) {
+            submitLoading.value = false
+            return
+          }
         }
+        
+        // 构建用例配置数据
+        const customParams = []
+        selectedTestCases.value.forEach(testCase => {
+          const testCaseId = typeof testCase.id === 'string' ? parseInt(testCase.id) : Number(testCase.id)
+          const executionCount = taskTestCaseExecutionCounts.value[testCaseId] || 1
+          const testCaseCustomParams = taskTestCaseCustomParams.value[testCaseId] || []
+          
+          // 过滤掉空的参数项
+          const validParams = testCaseCustomParams
+            .filter(param => param.key && param.key.trim() !== '' && param.value && param.value.length > 0)
+            .map(param => ({
+              key: param.key.trim(),
+              value: Array.isArray(param.value) ? param.value : [param.value],
+            }))
+          
+          customParams.push({
+            testCaseId: testCaseId,
+            executionCount: executionCount,
+            customParams: validParams.length > 0 ? validParams : null,
+          })
+        })
         
         // 构建提交数据
         const submitData = {
@@ -1795,12 +2163,14 @@ export default {
           provinceId: environmentForm.provinceId,
           cityId: environmentForm.cityId,
           logicEnvironmentIds: selectedEnvironmentIds.value,
-          // 添加自定义参数（过滤掉空的参数项）
-          customParams: editableCustomParams.value
+          // 添加任务级别自定义参数（过滤掉空的参数项）
+          taskCustomParams: editableCustomParams.value
             .filter(param => param.key.trim() !== '' && param.value.trim() !== '')
             .length > 0 
             ? JSON.stringify(editableCustomParams.value.filter(param => param.key.trim() !== '' && param.value.trim() !== ''))
             : null,
+          // 添加用例配置
+          customParams: customParams.length > 0 ? JSON.stringify(customParams) : null,
         }
         
         await request({
@@ -1851,6 +2221,17 @@ export default {
       // 重置逻辑环境选择
       selectedEnvironmentIds.value = []
       availableEnvironments.value = []
+      expandedEnvironmentIds.value = []
+      
+      // 重置步骤
+      currentStep.value = 0
+      
+      // 重置用例配置
+      activeTestCaseConfigItems.value = null
+      taskTestCaseExecutionCounts.value = {}
+      taskTestCaseCustomParams.value = {}
+      testCaseCustomParamList.value = []
+      testCaseParamOptions.value = {}
       
       // 重置表单验证
       if (basicFormRef.value) {
@@ -1861,6 +2242,369 @@ export default {
       }
       if (environmentFormRef.value) {
         environmentFormRef.value.resetFields()
+      }
+    }
+    
+    // 步骤控制方法
+    const handleNextStep = async () => {
+      if (currentStep.value === 0) {
+        // 验证基本信息、采集策略、环境编排
+        try {
+          // 确保 DOM 已更新，表单 ref 已初始化
+          await nextTick()
+          
+          // 检查 ref 是否存在
+          if (!basicFormRef.value || !strategyFormRef.value || !environmentFormRef.value) {
+            console.warn('表单 ref 未初始化，请稍后再试')
+            return
+          }
+          
+          await Promise.all([
+            basicFormRef.value.validate(),
+            strategyFormRef.value.validate(),
+            environmentFormRef.value.validate()
+          ])
+          
+          // 验证逻辑环境选择
+          if (!validateEnvironmentSelection()) {
+            return
+          }
+          
+          // 初始化用例配置
+          await initializeTestCaseConfig()
+          currentStep.value = 1
+        } catch (error) {
+          // 验证失败，不切换步骤
+          console.error('表单验证失败:', error)
+        }
+      }
+    }
+    
+    const handlePrevStep = () => {
+      if (currentStep.value > 0) {
+        currentStep.value--
+      }
+    }
+    
+    // 判断是否可以进入下一步
+    const canProceedToNextStep = computed(() => {
+      if (currentStep.value === 0) {
+        // 步骤1：需要基本信息、采集策略、环境编排都完成
+        return basicForm.name.trim() !== '' && 
+               strategyForm.strategyId !== null && 
+               environmentForm.regionId !== null && 
+               selectedEnvironmentIds.value.length > 0
+      }
+      return true
+    })
+    
+    // 初始化用例配置
+    const initializeTestCaseConfig = async () => {
+      if (!selectedStrategy.value) {
+        return
+      }
+      
+      const testCases = selectedTestCases.value
+      
+      // 初始化执行次数（从策略中获取，如果没有则默认为1）
+      testCases.forEach(testCase => {
+        const testCaseId = typeof testCase.id === 'string' ? parseInt(testCase.id) : Number(testCase.id)
+        
+        // 从策略的执行次数配置中获取
+        let executionCount = 1
+        if (selectedStrategy.value.testCaseExecutionCounts) {
+          let executionCounts = {}
+          if (typeof selectedStrategy.value.testCaseExecutionCounts === 'string') {
+            executionCounts = JSON.parse(selectedStrategy.value.testCaseExecutionCounts)
+          } else if (typeof selectedStrategy.value.testCaseExecutionCounts === 'object') {
+            executionCounts = selectedStrategy.value.testCaseExecutionCounts
+          }
+          executionCount = executionCounts[testCaseId] || 1
+        }
+        taskTestCaseExecutionCounts.value[testCaseId] = executionCount
+        
+        // 初始化自定义参数（从策略中获取，每个用例独立）
+        let customParams = []
+        if (selectedStrategy.value.testCaseCustomParams) {
+          let testCaseCustomParams = {}
+          try {
+            if (typeof selectedStrategy.value.testCaseCustomParams === 'string') {
+              testCaseCustomParams = JSON.parse(selectedStrategy.value.testCaseCustomParams)
+            } else if (typeof selectedStrategy.value.testCaseCustomParams === 'object') {
+              testCaseCustomParams = selectedStrategy.value.testCaseCustomParams
+            }
+          } catch (error) {
+            console.warn('Failed to parse testCaseCustomParams:', error)
+            testCaseCustomParams = {}
+          }
+          
+          // 尝试多种ID格式匹配（字符串ID、数字ID）
+          let matchedParams = null
+          if (testCaseCustomParams[testCaseId] && Array.isArray(testCaseCustomParams[testCaseId])) {
+            matchedParams = testCaseCustomParams[testCaseId]
+          } else if (testCaseCustomParams[String(testCaseId)] && Array.isArray(testCaseCustomParams[String(testCaseId)])) {
+            matchedParams = testCaseCustomParams[String(testCaseId)]
+          }
+          
+          if (matchedParams && Array.isArray(matchedParams)) {
+            // 深拷贝，确保每个用例的参数完全独立
+            customParams = JSON.parse(JSON.stringify(matchedParams))
+            
+            // 确保参数值的格式正确（value应该是数组）
+            customParams = customParams.map(param => {
+              let valueArray = []
+              if (Array.isArray(param.value)) {
+                // 如果已经是数组，直接使用
+                valueArray = param.value
+              } else if (param.value !== null && param.value !== undefined) {
+                // 如果是字符串，尝试解析或转换为数组
+                if (typeof param.value === 'string') {
+                  try {
+                    // 尝试解析JSON数组
+                    const parsed = JSON.parse(param.value)
+                    if (Array.isArray(parsed)) {
+                      valueArray = parsed
+                    } else {
+                      // 如果不是数组，尝试按逗号分隔
+                      valueArray = param.value.split(',').map(v => v.trim()).filter(v => v)
+                    }
+                  } catch {
+                    // 解析失败，按逗号分隔
+                    valueArray = param.value.split(',').map(v => v.trim()).filter(v => v)
+                  }
+                } else {
+                  // 其他类型，转换为数组
+                  valueArray = [String(param.value)]
+                }
+              }
+              
+              return {
+                key: param.key || '',
+                value: valueArray
+              }
+            })
+          }
+        }
+        
+        // 确保每个用例都有独立的参数数组（即使为空）
+        // 如果策略中有参数，自动回填；如果没有，初始化为空数组
+        taskTestCaseCustomParams.value[testCaseId] = customParams
+      })
+      
+      // 加载用例自定义参数列表（加载完成后会自动为每个用例组装参数选项）
+      await loadTestCaseCustomParamList()
+      
+      // 确保在加载完参数列表后，重新组装参数选项（以防用例列表变化）
+      buildTestCaseParamOptions()
+    }
+    
+    // 加载用例自定义参数列表
+    const loadTestCaseCustomParamList = async () => {
+      try {
+        const res = await request({
+          url: '/test-case-custom-param/list',
+          method: 'get',
+        })
+        if (res.data) {
+          testCaseCustomParamList.value = res.data || []
+        } else {
+          testCaseCustomParamList.value = []
+        }
+        
+        // 加载完参数列表后，为每个用例组装参数选项
+        buildTestCaseParamOptions()
+      } catch (error) {
+        console.error('加载用例自定义参数列表失败:', error)
+        testCaseCustomParamList.value = []
+        testCaseParamOptions.value = {}
+      }
+    }
+    
+    // 根据每个用例的业务大类和appEn组装参数选项
+    const buildTestCaseParamOptions = () => {
+      if (!testCaseCustomParamList.value || testCaseCustomParamList.value.length === 0) {
+        testCaseParamOptions.value = {}
+        return
+      }
+      
+      const options = {}
+      
+      // 为每个用例计算可用的参数选项
+      selectedTestCases.value.forEach(testCase => {
+        const testCaseId = typeof testCase.id === 'string' ? parseInt(testCase.id) : Number(testCase.id)
+        const businessCategory = testCase.businessCategory
+        const appEn = testCase.appEn || testCase.app || ''
+        
+        // 根据业务大类和appEn过滤参数选项
+        const matchedParams = testCaseCustomParamList.value.filter(param => {
+          // 如果参数没有业务大类限制，则所有用例都可以使用
+          if (!param.businessCategory && !param.app) {
+            return true
+          }
+          
+          // 匹配业务大类
+          const businessCategoryMatch = !param.businessCategory || param.businessCategory === businessCategory
+          
+          // 匹配appEn（参数中的app字段对应用例的appEn）
+          const appMatch = !param.app || param.app === appEn
+          
+          // 如果参数有业务大类或app限制，需要同时匹配
+          if (param.businessCategory || param.app) {
+            return businessCategoryMatch && appMatch
+          }
+          
+          return true
+        })
+        
+        // 根据 paramName 去重
+        const uniqueParams = []
+        const seenParamNames = new Set()
+        matchedParams.forEach(param => {
+          if (param.paramName && !seenParamNames.has(param.paramName)) {
+            seenParamNames.add(param.paramName)
+            uniqueParams.push(param)
+          }
+        })
+        
+        options[testCaseId] = uniqueParams
+      })
+      
+      testCaseParamOptions.value = options
+    }
+    
+    // 获取用例执行次数
+    const getTaskTestCaseExecutionCount = (testCaseId) => {
+      const id = typeof testCaseId === 'string' ? parseInt(testCaseId) : Number(testCaseId)
+      return taskTestCaseExecutionCounts.value[id] || 0
+    }
+    
+    // 获取用例参数数量
+    const getTaskTestCaseParamCount = (testCaseId) => {
+      const id = typeof testCaseId === 'string' ? parseInt(testCaseId) : Number(testCaseId)
+      const params = taskTestCaseCustomParams.value[id]
+      if (!params || !Array.isArray(params)) {
+        return 0
+      }
+      return params.filter(param => param.key && param.key.trim() !== '').length
+    }
+    
+    // 添加用例参数
+    const addTaskTestCaseParam = (testCaseId) => {
+      const id = typeof testCaseId === 'string' ? parseInt(testCaseId) : Number(testCaseId)
+      if (!taskTestCaseCustomParams.value[id]) {
+        taskTestCaseCustomParams.value[id] = []
+      }
+      taskTestCaseCustomParams.value[id].push({ key: '', value: [] })
+    }
+    
+    // 删除用例参数
+    const removeTaskTestCaseParam = (testCaseId, paramIndex) => {
+      const id = typeof testCaseId === 'string' ? parseInt(testCaseId) : Number(testCaseId)
+      if (taskTestCaseCustomParams.value[id] && taskTestCaseCustomParams.value[id].length > paramIndex) {
+        taskTestCaseCustomParams.value[id].splice(paramIndex, 1)
+        // 如果删除后数组为空，确保数组存在但为空数组（不强制添加空项）
+        if (!taskTestCaseCustomParams.value[id]) {
+          taskTestCaseCustomParams.value[id] = []
+        }
+      }
+    }
+    
+    // 获取当前展开的用例
+    const currentExpandedTestCase = computed(() => {
+      if (!activeTestCaseConfigItems.value) {
+        return null
+      }
+      const expandedId = typeof activeTestCaseConfigItems.value === 'string' 
+        ? parseInt(activeTestCaseConfigItems.value) 
+        : Number(activeTestCaseConfigItems.value)
+      return selectedTestCases.value.find(tc => {
+        const tcId = typeof tc.id === 'string' ? parseInt(tc.id) : Number(tc.id)
+        return tcId === expandedId
+      }) || null
+    })
+    
+    // 获取参数键选项（使用预组装的参数选项）
+    const getTaskParamKeyOptions = (testCase) => {
+      // 如果传入了testCase，使用传入的testCase；否则使用当前展开的用例
+      const targetTestCase = testCase || currentExpandedTestCase.value
+      
+      if (!targetTestCase) {
+        return []
+      }
+      
+      const testCaseId = typeof targetTestCase.id === 'string' ? parseInt(targetTestCase.id) : Number(targetTestCase.id)
+      
+      // 使用预组装的参数选项
+      if (testCaseParamOptions.value[testCaseId] && Array.isArray(testCaseParamOptions.value[testCaseId])) {
+        return testCaseParamOptions.value[testCaseId]
+      }
+      
+      return []
+    }
+    
+    // 获取参数值选项（根据当前展开用例的业务大类和appEn匹配）
+    const getTaskParamValueOptions = (testCaseId, paramIndex) => {
+      const id = typeof testCaseId === 'string' ? parseInt(testCaseId) : Number(testCaseId)
+      const params = taskTestCaseCustomParams.value[id]
+      if (!params || !params[paramIndex]) {
+        return []
+      }
+      
+      const paramKey = params[paramIndex].key
+      if (!paramKey) {
+        return []
+      }
+      
+      // 优先使用当前展开的用例，如果没有展开则使用传入的testCaseId对应的用例
+      let testCase = currentExpandedTestCase.value
+      if (!testCase) {
+        testCase = selectedTestCases.value.find(tc => {
+          const tcId = typeof tc.id === 'string' ? parseInt(tc.id) : Number(tc.id)
+          return tcId === id
+        })
+      }
+      
+      if (!testCase) {
+        return []
+      }
+      
+      // 从预组装的参数选项中查找对应的参数定义
+      const testCaseNumber = typeof testCase.id === 'string' ? parseInt(testCase.id) : Number(testCase.id)
+      const availableParams = testCaseParamOptions.value[testCaseNumber] || []
+      
+      // 从可用参数中查找匹配的参数名
+      const matchedParams = availableParams.filter(p => {
+        // 参数名必须匹配
+        return p.paramName === paramKey
+      })
+      
+      // 合并所有匹配参数的参数值列表，并去重
+      const allParamValues = []
+      const seenValues = new Set()
+      
+      matchedParams.forEach(paramDef => {
+        if (paramDef.paramValues && Array.isArray(paramDef.paramValues)) {
+          paramDef.paramValues.forEach(value => {
+            // 确保值是字符串类型，并去重
+            const valueStr = String(value).trim()
+            if (valueStr && !seenValues.has(valueStr)) {
+              seenValues.add(valueStr)
+              allParamValues.push(valueStr)
+            }
+          })
+        }
+      })
+      
+      return allParamValues
+    }
+    
+    // 处理参数键变化
+    const handleTaskParamKeyChange = (testCaseId, paramIndex) => {
+      const id = typeof testCaseId === 'string' ? parseInt(testCaseId) : Number(testCaseId)
+      const params = taskTestCaseCustomParams.value[id]
+      if (params && params[paramIndex]) {
+        // 清空参数值
+        params[paramIndex].value = []
       }
     }
 
@@ -2410,7 +3154,29 @@ export default {
       availableEnvironments,
       environmentsLoading,
       selectedEnvironmentIds,
+      expandedEnvironmentIds,
+      toggleEnvironmentDetail,
       showFilteredTestCases,
+      
+      // 步骤控制
+      currentStep,
+      handleNextStep,
+      handlePrevStep,
+      canProceedToNextStep,
+      
+      // 用例配置相关
+      selectedTestCases,
+      activeTestCaseConfigItems,
+      currentExpandedTestCase,
+      taskTestCaseExecutionCounts,
+      taskTestCaseCustomParams,
+      getTaskTestCaseExecutionCount,
+      getTaskTestCaseParamCount,
+      addTaskTestCaseParam,
+      removeTaskTestCaseParam,
+      getTaskParamKeyOptions,
+      getTaskParamValueOptions,
+      handleTaskParamKeyChange,
       
       // 自定义参数相关
       showCustomParamsEditor,
@@ -2556,6 +3322,90 @@ export default {
 }
 
 /* 步骤内容样式 */
+.step-navigation {
+  margin-bottom: 30px;
+  padding: 20px 0;
+}
+
+/* 用例配置样式 */
+.test-case-config-container {
+  margin-top: 20px;
+}
+
+.test-case-config-item-title {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  font-size: 14px;
+}
+
+.test-case-config-item-content {
+  padding: 16px;
+}
+
+.config-section {
+  margin-bottom: 24px;
+}
+
+.config-section:last-child {
+  margin-bottom: 0;
+}
+
+.config-section-title {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.config-section-title .el-icon {
+  margin-right: 8px;
+  color: #409eff;
+}
+
+.empty-params-inline {
+  padding: 12px;
+  text-align: center;
+  background-color: #f5f7fa;
+  border-radius: 4px;
+}
+
+.params-list-inline {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.param-item-inline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background-color: #f5f7fa;
+  border-radius: 4px;
+}
+
+.param-index-small {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background-color: #409eff;
+  color: #fff;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.no-test-cases {
+  padding: 40px 0;
+  text-align: center;
+}
+
 .step-content {
   min-height: 600px;
 }
@@ -2576,6 +3426,17 @@ export default {
   font-weight: 600;
   padding-bottom: 10px;
   border-bottom: 2px solid #409eff;
+}
+
+.sub-step-section {
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #ebeef5;
+}
+
+.sub-step-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
 }
 
 /* 策略信息样式 */
@@ -2621,6 +3482,9 @@ export default {
 
 .environments-content {
   min-height: 200px;
+  max-height: 500px;
+  overflow-y: auto;
+  padding-right: 8px;
 }
 
 .no-environments {
@@ -2640,7 +3504,7 @@ export default {
   cursor: pointer;
 }
 
-.environment-card:hover {
+.environment-card:hover:not(.disabled) {
   border-color: #409eff;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
 }
@@ -2651,16 +3515,61 @@ export default {
   box-shadow: 0 2px 12px 0 rgba(103, 194, 58, 0.2);
 }
 
+.environment-card.disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .environment-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 12px;
+  gap: 12px;
+  min-width: 0;
+}
+
+.environment-actions {
+  margin-top: 8px;
+  margin-bottom: 0;
+  padding-top: 8px;
+  border-top: 1px solid #ebeef5;
+}
+
+.environment-actions .el-button {
+  color: #409eff;
+  font-size: 13px;
+}
+
+.environment-actions .el-button:hover {
+  color: #66b1ff;
+}
+
+.environment-detail {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #ebeef5;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 1000px;
+  }
 }
 
 .environment-status {
   display: flex;
   align-items: center;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+  gap: 4px;
+  white-space: nowrap;
 }
 
 .environment-name {
@@ -2668,6 +3577,11 @@ export default {
   color: #303133;
   font-size: 16px;
   font-weight: 600;
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.5;
 }
 
 .environment-info {

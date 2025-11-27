@@ -52,3 +52,4 @@ with open('src/views/dashboard/index.vue', 'w', encoding='utf-8') as f:
 
 print('编码修复完成')
 
+
