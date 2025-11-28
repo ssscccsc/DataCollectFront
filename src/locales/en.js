@@ -912,7 +912,9 @@ export default {
     testVersion: 'Test Version',
     collected: 'Collected',
     notCollected: 'Not Collected',
+    currentVersionNotCollected: 'Current Version Not Collected',
     collecting: 'Collecting',
+    searchPlaceholder: 'Please enter app name',
   },
   
   // APP Version Change
@@ -929,6 +931,9 @@ export default {
     changeRecord: 'Change Record',
     dialVersion: 'Dial Version',
     dialVersionLatest: 'Is Dial Version Latest',
+    platformType: 'Platform Type',
+    android: 'Android',
+    ios: 'iOS',
     all: 'All',
     isLatest: 'Is Latest',
     notLatest: 'Not Latest',
@@ -1019,7 +1024,9 @@ export default {
     testVersion: 'Test Version',
     collected: 'Collected',
     notCollected: 'Not Collected',
+    currentVersionNotCollected: 'Current Version Not Collected',
     collecting: 'Collecting',
+    searchPlaceholder: 'Please enter app name',
   },
   
   // APP Version Change
@@ -1036,6 +1043,9 @@ export default {
     changeRecord: 'Change Record',
     dialVersion: 'Dial Version',
     dialVersionLatest: 'Is Dial Version Latest',
+    platformType: 'Platform Type',
+    android: 'Android',
+    ios: 'iOS',
     all: 'All',
     isLatest: 'Is Latest',
     notLatest: 'Not Latest',

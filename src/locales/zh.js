@@ -913,7 +913,9 @@ export default {
     testVersion: '拨测版本',
     collected: '已采集',
     notCollected: '未采集',
+    currentVersionNotCollected: '当前版本未采集',
     collecting: '采集中',
+    searchPlaceholder: '请输入应用名称',
   },
   
   // APP版本变更
@@ -930,6 +932,9 @@ export default {
     changeRecord: '变更记录',
     dialVersion: '拨测版本',
     dialVersionLatest: '拨测版本是否最新',
+    platformType: '平台类型',
+    android: '安卓',
+    ios: 'iOS',
     all: '全部',
     isLatest: '是最新',
     notLatest: '不是最新',

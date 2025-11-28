@@ -66,6 +66,22 @@
 
       <!-- 操作按钮 -->
       <div class="table-operations">
+        <el-input
+          v-model="searchKeyword"
+          :placeholder="$t('appMarketMonitor.searchPlaceholder')"
+          style="width: 300px; margin-right: 10px;"
+          clearable
+          @clear="handleSearch"
+          @keyup.enter="handleSearch"
+        >
+          <template #prefix>
+            <el-icon><Search /></el-icon>
+          </template>
+        </el-input>
+        <el-button type="primary" @click="handleSearch">
+          <el-icon><Search /></el-icon>
+          {{ $t('common.search') }}
+        </el-button>
         <el-button @click="loadData">
           <el-icon><Refresh /></el-icon>
           {{ $t('common.refresh') }}
@@ -129,18 +145,21 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
-import { Refresh } from '@element-plus/icons-vue'
+import { Refresh, Search } from '@element-plus/icons-vue'
 import request from '@/utils/request'
 
 export default {
   name: 'AppMarketMonitor',
   components: {
     Refresh,
+    Search,
   },
   setup() {
     const { t } = useI18n()
     const loading = ref(false)
     const tableData = ref([])
+    const allData = ref([]) // 保存所有已加载的数据，用于前端搜索
+    const searchKeyword = ref('') // 搜索关键词
     const activeTab = ref('appstore')
     const selectedDate = ref('')
     const selectedCategory = ref('app')
@@ -237,10 +256,27 @@ export default {
       return activeTab.value !== 'xiaomi'
     })
 
+    // 根据拨测版本和当前版本计算采集状态
+    const calculateCollectionStatus = (testVersion, currentVersion) => {
+      // 如果拨测版本不存在或为空
+      if (!testVersion || testVersion === '-' || testVersion.trim() === '') {
+        return 'notCollected' // 未采集
+      }
+      
+      // 如果拨测版本和当前版本一致
+      if (testVersion === currentVersion) {
+        return 'collected' // 已采集
+      }
+      
+      // 如果拨测版本和当前版本不一致
+      return 'currentVersionNotCollected' // 当前版本未采集
+    }
+
     const getCollectionStatusType = (status) => {
       const typeMap = {
-        collected: 'success',
-        notCollected: 'info',
+        collected: 'success', // 绿色
+        notCollected: 'danger', // 红色
+        currentVersionNotCollected: 'warning', // 黄色
         collecting: 'warning',
       }
       return typeMap[status] || 'info'
@@ -250,6 +286,7 @@ export default {
       const textMap = {
         collected: t('appMarketMonitor.collected'),
         notCollected: t('appMarketMonitor.notCollected'),
+        currentVersionNotCollected: t('appMarketMonitor.currentVersionNotCollected'),
         collecting: t('appMarketMonitor.collecting'),
       }
       return textMap[status] || status
@@ -281,7 +318,7 @@ export default {
           currentVersion: item.app_version || '-',
           updateDate: item.version_update_date || item.date || '-',
           rating: item.score || null,
-          collectionStatus: 'notCollected', // 默认未采�?          testVersion: item.dial_version || '-',
+          collectionStatus: calculateCollectionStatus(item.dial_version || '-', item.app_version || '-'), // 默认未采�?          testVersion: item.dial_version || '-',
           icon: item.icon || null, // base64编码的图�?        }
       })
     }
@@ -314,24 +351,48 @@ export default {
         })
         
         if (response.code === 200 && response.data && response.data.data) {
-          // 映射API数据到表格数�?          const allData = mapApiDataToTableData(response.data.data)
+          // 映射API数据到表格数�?          allData.value = mapApiDataToTableData(response.data.data)
           
-          // 前端分页处理
-          const start = (pagination.current - 1) * pagination.size
-          const end = start + pagination.size
-          tableData.value = allData.slice(start, end)
-          pagination.total = allData.length
+          // 应用搜索过滤
+          updateTableData()
         } else {
+          allData.value = []
           tableData.value = []
           pagination.total = 0
         }
       } catch (error) {
         ElMessage.error(t('appMarketMonitor.loadDataFailed'))
+        allData.value = []
         tableData.value = []
         pagination.total = 0
       } finally {
         loading.value = false
       }
+    }
+
+    // 根据搜索关键词和分页信息更新表格数据
+    const updateTableData = () => {
+      let filteredData = allData.value
+      
+      // 如果有搜索关键词，从应用名称中查找
+      if (searchKeyword.value && searchKeyword.value.trim()) {
+        const keyword = searchKeyword.value.trim().toLowerCase()
+        filteredData = filteredData.filter((item) => {
+          return item.appName && item.appName.toLowerCase().includes(keyword)
+        })
+      }
+      
+      // 前端分页处理
+      const start = (pagination.current - 1) * pagination.size
+      const end = start + pagination.size
+      tableData.value = filteredData.slice(start, end)
+      pagination.total = filteredData.length
+    }
+
+    // 处理搜索
+    const handleSearch = () => {
+      pagination.current = 1
+      updateTableData()
     }
 
     const handleTabChange = (tabName) => {
@@ -376,12 +437,12 @@ export default {
     const handleSizeChange = (size) => {
       pagination.size = size
       pagination.current = 1
-      loadData()
+      updateTableData()
     }
 
     const handleCurrentChange = (current) => {
       pagination.current = current
-      loadData()
+      updateTableData()
     }
 
     const handleViewDetail = (row) => {
@@ -396,6 +457,7 @@ export default {
     return {
       loading,
       tableData,
+      searchKeyword,
       pagination,
       activeTab,
       selectedDate,
@@ -405,6 +467,7 @@ export default {
       isThisQuarter,
       showCategorySelector,
       loadData,
+      handleSearch,
       handleTabChange,
       handleDateChange,
       handleThisWeekClick,

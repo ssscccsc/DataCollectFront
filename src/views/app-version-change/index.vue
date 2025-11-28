@@ -20,6 +20,15 @@
           </template>
         </el-input>
         <el-select
+          v-model="platformType"
+          :placeholder="$t('appVersionChange.platformType')"
+          style="width: 120px; margin-right: 10px;"
+          @change="handlePlatformChange"
+        >
+          <el-option :label="$t('appVersionChange.android')" :value="false" />
+          <el-option :label="$t('appVersionChange.ios')" :value="true" />
+        </el-select>
+        <el-select
           v-model="dialVersionLatest"
           :placeholder="$t('appVersionChange.dialVersionLatest')"
           style="width: 180px; margin-right: 10px;"
@@ -64,11 +73,13 @@
             {{ formatDateTime(scope.row.updateTime) }}
           </template>
         </el-table-column>
-        <el-table-column prop="changeRecord" :label="$t('appVersionChange.changeRecord')" :min-width="columnWidths.changeRecord" show-overflow-tooltip>
+        <el-table-column prop="changeRecord" :label="$t('appVersionChange.changeRecord')" :min-width="columnWidths.changeRecord">
           <template #default="scope">
-            <el-tag v-if="scope.row.changeRecord" type="info" size="small">
-              {{ scope.row.changeRecord }}
-            </el-tag>
+            <div v-if="scope.row.changeRecord" class="change-record-cell">
+              <el-tag type="info" size="small" class="change-record-tag">
+                {{ scope.row.changeRecord }}
+              </el-tag>
+            </div>
             <span v-else style="color: #909399;">-</span>
           </template>
         </el-table-column>
@@ -84,14 +95,16 @@
             </span>
           </template>
         </el-table-column>
-        <el-table-column :label="$t('common.operations')" :min-width="columnWidths.operations" fixed="right">
+        <el-table-column :label="$t('common.operations')" width="200" fixed="right" align="center">
           <template #default="scope">
-            <el-button type="primary" size="small" @click="handleStartDialTest(scope.row)">
-              {{ $t('appVersionChange.startDialTest') }}
-            </el-button>
-            <el-button type="info" size="small" @click="handleViewChangeHistory(scope.row)">
-              {{ $t('appVersionChange.changeHistory') }}
-            </el-button>
+            <div class="operations-cell">
+              <el-button type="primary" size="small" @click="handleStartDialTest(scope.row)">
+                {{ $t('appVersionChange.startDialTest') }}
+              </el-button>
+              <el-button type="info" size="small" @click="handleViewChangeHistory(scope.row)">
+                {{ $t('appVersionChange.changeHistory') }}
+              </el-button>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -220,6 +233,7 @@ export default {
     const loading = ref(false)
     const tableData = ref([])
     const searchKeyword = ref('')
+    const platformType = ref(false) // 平台类型：false=安卓, true=iOS，默认安卓
     const dialVersionLatest = ref('') // 拨测版本是否最新：''全部, 'true'是最新, 'false'不是最新
     const allData = ref([]) // 保存所有已加载的数据
     
@@ -318,7 +332,7 @@ export default {
       loading.value = true
       try {
         const response = await request.post('/external/apps/get_version_history', {
-          is_ios: false,
+          is_ios: platformType.value,
         })
         
         if (response.code === 200 && response.message === 'success' && response.data) {
@@ -341,6 +355,11 @@ export default {
       } finally {
         loading.value = false
       }
+    }
+
+    const handlePlatformChange = () => {
+      // 平台切换时重新加载数据
+      loadData()
     }
 
     const handleSearch = () => {
@@ -406,7 +425,7 @@ export default {
       try {
         const response = await request.post('/external/apps/get_single_app_version_history', {
           app_name: row.appName || '',
-          is_ios: 'false', // 默认非iOS应用
+          is_ios: platformType.value,
         })
         
         if (response.message === 'success' && response.data) {
@@ -431,8 +450,10 @@ export default {
       loading,
       tableData,
       searchKeyword,
+      platformType,
       dialVersionLatest,
       pagination,
+      handlePlatformChange,
       columnWidths,
       versionHistoryDialogVisible,
       versionHistoryLoading,
@@ -564,6 +585,55 @@ export default {
   color: #303133;
   margin: 0 0 16px 0;
   flex-shrink: 0;
+}
+
+.operations-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.operations-cell .el-button {
+  flex-shrink: 0;
+}
+
+.change-record-cell {
+  height: 72px; /* 固定3行的高度 (24px * 3) */
+  overflow-y: auto;
+  overflow-x: hidden;
+  word-wrap: break-word;
+  word-break: break-all;
+  padding: 2px 0;
+}
+
+.change-record-tag {
+  display: block;
+  white-space: normal;
+  line-height: 24px;
+  word-break: break-word;
+  margin: 0;
+}
+
+/* 自定义滚动条样式 */
+.change-record-cell::-webkit-scrollbar {
+  width: 6px;
+}
+
+.change-record-cell::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.change-record-cell::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.change-record-cell::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }
 </style>
 
