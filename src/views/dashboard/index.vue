@@ -228,6 +228,51 @@ export default {
     })
     const provinceMapData = ref([]) // 省份高亮数据
     
+    // 省份名称映射函数：将API返回的省份名称转换为地图数据中的名称
+    const mapProvinceName = (apiName, mapProvinceNames) => {
+      // 首先尝试直接匹配
+      if (mapProvinceNames.includes(apiName)) {
+        return apiName
+      }
+      
+      // 尝试添加常见后缀
+      const suffixes = ['省', '市', '自治区', '特别行政区']
+      for (const suffix of suffixes) {
+        const nameWithSuffix = apiName + suffix
+        if (mapProvinceNames.includes(nameWithSuffix)) {
+          return nameWithSuffix
+        }
+      }
+      
+      // 尝试移除后缀后匹配
+      for (const suffix of suffixes) {
+        if (apiName.endsWith(suffix)) {
+          const nameWithoutSuffix = apiName.slice(0, -suffix.length)
+          if (mapProvinceNames.includes(nameWithoutSuffix)) {
+            return nameWithoutSuffix
+          }
+        }
+      }
+      
+      // 特殊映射（处理特殊情况）
+      const specialMappings = {
+        '内蒙古': '内蒙古自治区',
+        '新疆': '新疆维吾尔自治区',
+        '西藏': '西藏自治区',
+        '广西': '广西壮族自治区',
+        '宁夏': '宁夏回族自治区',
+        '香港': '香港特别行政区',
+        '澳门': '澳门特别行政区',
+      }
+      
+      if (specialMappings[apiName] && mapProvinceNames.includes(specialMappings[apiName])) {
+        return specialMappings[apiName]
+      }
+      
+      // 如果都匹配不上，返回原名称（让ECharts尝试匹配）
+      return apiName
+    }
+    
     // 城市名称到经纬度的映射（简化版，包含常见城市）
     const cityCoordinates = {
       '北京': [116.4074, 39.9042],
@@ -404,13 +449,43 @@ export default {
               method: 'get',
             })
             const provinces = provinceRes.data || []
-            // 将省份数据转换为 ECharts map 系列需要的格式
+            
+            // 获取地图中的省份名称列表（用于名称映射）
+            let mapProvinceNames = []
+            if (worldMapChart && worldMapChart._mapDataLoaded) {
+              try {
+                const registeredMap = echarts.getMap('china')
+                if (registeredMap && registeredMap.features) {
+                  mapProvinceNames = registeredMap.features.map(feature => {
+                    return feature.properties?.name || 
+                           feature.properties?.NAME || 
+                           feature.properties?.cp || 
+                           feature.properties?.CP ||
+                           feature.properties?.省 ||
+                           feature.properties?.province ||
+                           ''
+                  }).filter(name => name)
+                }
+              } catch (error) {
+                console.warn('获取地图省份名称失败:', error)
+              }
+            }
+            
+            // 将省份数据转换为 ECharts map 系列需要的格式，并进行名称映射
             provinceMapData.value = provinces
               .filter(province => province.deleted === 0 && province.status === 1)
-              .map(province => ({
-                name: province.name,
-                value: 1, // 用于高亮显示
-              }))
+              .map(province => {
+                // 如果地图数据已加载，尝试映射省份名称
+                const mappedName = mapProvinceNames.length > 0 
+                  ? mapProvinceName(province.name, mapProvinceNames)
+                  : province.name
+                
+                return {
+                  name: mappedName,
+                  value: 1, // 用于高亮显示
+                  originalName: province.name, // 保存原始名称用于调试
+                }
+              })
           } catch (error) {
             console.warn('获取省份数据失败:', error)
             provinceMapData.value = []
@@ -445,37 +520,53 @@ export default {
             }
           }
           
+          // 如果地图数据已加载，重新进行名称映射以确保匹配
+          if (provinceMapData.value.length > 0 && worldMapChart && worldMapChart._mapDataLoaded) {
+            try {
+              const registeredMap = echarts.getMap('china')
+              if (registeredMap && registeredMap.features) {
+                const mapProvinceNames = registeredMap.features.map(feature => {
+                  return feature.properties?.name || 
+                         feature.properties?.NAME || 
+                         feature.properties?.cp || 
+                         feature.properties?.CP ||
+                         feature.properties?.省 ||
+                         feature.properties?.province ||
+                         ''
+                }).filter(name => name)
+                
+                // 重新映射省份名称（使用原始名称）
+                provinceMapData.value = provinceMapData.value.map(province => {
+                  const originalName = province.originalName || province.name
+                  const mappedName = mapProvinceName(originalName, mapProvinceNames)
+                  return {
+                    name: mappedName,
+                    value: province.value || 1,
+                    originalName: originalName,
+                  }
+                })
+                
+                // 检查映射后的名称是否匹配
+                const mappedProvinceNames = provinceMapData.value.map(p => p.name)
+                const unmatchedProvinces = mappedProvinceNames.filter(name => !mapProvinceNames.includes(name))
+                if (unmatchedProvinces.length > 0) {
+                  console.warn('以下省份名称在地图中未找到，可能无法高亮显示:', unmatchedProvinces)
+                  console.log('原始省份名称:', provinceMapData.value.map(p => ({ original: p.originalName, mapped: p.name })))
+                } else {
+                  console.log('所有省份名称都匹配，应该可以正常高亮显示')
+                  if (provinceMapData.value.some(p => p.originalName && p.originalName !== p.name)) {
+                    console.log('省份名称映射信息:', provinceMapData.value.map(p => ({ original: p.originalName, mapped: p.name })))
+                  }
+                }
+              }
+            } catch (error) {
+              console.warn('重新映射省份名称时出错:', error)
+            }
+          }
+          
           // 统一输出日志
           if (provinceMapData.value.length > 0) {
             console.log('省份数据准备完成，共', provinceMapData.value.length, '个省份:', provinceMapData.value.map(p => p.name))
-            
-            // 如果地图数据已加载，检查省份名称是否匹配
-            if (worldMapChart && worldMapChart._mapDataLoaded) {
-              try {
-                const registeredMap = echarts.getMap('china')
-                if (registeredMap && registeredMap.features) {
-                  const mapProvinceNames = registeredMap.features.map(feature => {
-                    return feature.properties?.name || 
-                           feature.properties?.NAME || 
-                           feature.properties?.cp || 
-                           feature.properties?.CP ||
-                           feature.properties?.省 ||
-                           feature.properties?.province ||
-                           ''
-                  }).filter(name => name)
-                  
-                  const apiProvinceNames = provinceMapData.value.map(p => p.name)
-                  const unmatchedProvinces = apiProvinceNames.filter(name => !mapProvinceNames.includes(name))
-                  if (unmatchedProvinces.length > 0) {
-                    console.warn('以下省份名称在地图中未找到，可能无法高亮显示:', unmatchedProvinces)
-                  } else {
-                    console.log('所有省份名称都匹配，应该可以正常高亮显示')
-                  }
-                }
-              } catch (error) {
-                console.warn('检查省份名称匹配时出错:', error)
-              }
-            }
           } else {
             console.warn('未获取到省份数据，省份高亮将不会显示')
           }
@@ -527,7 +618,14 @@ export default {
           
           console.log('地图更新 - hasMapData:', hasMapData, 'activeMapTab:', activeMapTab.value, 'provinceMapData.length:', provinceMapData.value?.length)
           if (shouldShowProvinceHighlight) {
+            // 准备给ECharts的数据（只保留name和value）
+            const mapSeriesData = provinceMapData.value.map(p => ({
+              name: p.name,
+              value: p.value || 1,
+            }))
             console.log('省份高亮将显示，省份数据:', provinceMapData.value)
+            console.log('准备传递给ECharts map系列的数据:', mapSeriesData)
+            console.log('省份名称列表:', mapSeriesData.map(p => p.name))
           } else {
             console.warn('省份高亮不会显示 - hasMapData:', hasMapData, 'activeMapTab:', activeMapTab.value, 'provinceMapData.length:', provinceMapData.value?.length)
           }
@@ -543,6 +641,7 @@ export default {
               },
             },
             backgroundColor: '#fafafa',
+            // geo组件作为基础地图，map系列通过geoIndex关联
             geo: hasMapData ? {
               map: activeMapTab.value === 'china' ? 'china' : 'world',
               roam: true,
@@ -555,7 +654,7 @@ export default {
                 },
               },
               itemStyle: {
-                areaColor: activeMapTab.value === 'china' ? '#e7e7e7' : '#e7e7e7', // 默认颜色
+                areaColor: activeMapTab.value === 'china' ? '#e7e7e7' : '#e7e7e7', // 默认颜色（会被map系列覆盖）
                 borderColor: '#d0d0d0',
                 borderWidth: 0.5,
               },
@@ -567,18 +666,27 @@ export default {
                   show: true,
                 },
               },
+              z: 1, // geo组件在最底层
             } : {
               show: false,
             },
             series: [
               // 省份高亮系列（仅在中国地图时显示，所有省份都点亮）
+              // 使用map系列，通过geoIndex关联geo组件
               ...(shouldShowProvinceHighlight ? [{
                 name: '省份',
                 type: 'map',
                 map: 'china',
-                geoIndex: 0,
-                data: provinceMapData.value, // 使用省份数据
-                roam: false, // 不响应缩放和平移
+                geoIndex: 0, // 关联geo组件
+                data: provinceMapData.value.map(p => {
+                  // 确保数据格式正确，只保留name和value
+                  const item = {
+                    name: String(p.name || '').trim(), // 确保是字符串且去除空格
+                    value: p.value || 1,
+                  }
+                  return item
+                }).filter(p => p.name), // 过滤掉空名称
+                roam: false, // 由geo组件控制缩放和平移
                 itemStyle: {
                   areaColor: '#a0d8ef', // 浅蓝色高亮
                   borderColor: '#409EFF',
@@ -601,13 +709,14 @@ export default {
                   show: false,
                 },
                 silent: true, // 不响应鼠标事件，避免与散点图冲突
-                z: 5, // 确保省份高亮在 geo 之上，但在散点图之下
+                z: 2, // 确保省份高亮在geo之上
               }] : []),
               // 城市和国家标记散点图
               {
                 name: '地域',
                 type: 'scatter',
                 coordinateSystem: hasMapData ? 'geo' : null,
+                geoIndex: hasMapData ? 0 : undefined,
                 data: data,
                 symbolSize: 12,
                 label: {
@@ -666,6 +775,27 @@ export default {
           }
           
           worldMapChart.setOption(option, true)
+          
+          // 调试：检查map系列是否正确添加
+          if (shouldShowProvinceHighlight) {
+            setTimeout(() => {
+              const chartOption = worldMapChart.getOption()
+              console.log('ECharts配置中的series数量:', chartOption.series?.length)
+              const mapSeries = chartOption.series?.find(s => s && s.name === '省份')
+              if (mapSeries) {
+                console.log('找到省份map系列，数据数量:', mapSeries.data?.length)
+                console.log('省份map系列数据:', mapSeries.data)
+                console.log('省份map系列配置:', {
+                  type: mapSeries.type,
+                  map: mapSeries.map,
+                  geoIndex: mapSeries.geoIndex,
+                })
+              } else {
+                console.warn('未找到省份map系列！')
+                console.log('所有series:', chartOption.series?.map(s => ({ name: s?.name, type: s?.type })))
+              }
+            }, 100)
+          }
           
           // 存储数据以便在事件中访问
           worldMapChart._regionData = data
