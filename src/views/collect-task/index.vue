@@ -1747,9 +1747,9 @@ export default {
           network: environmentForm.network,
         }
         
-        // 如果选择了厂商，将数组转换为逗号分隔的字符串
+        // 如果选择了厂商，直接传递数组
         if (environmentForm.manufacturer && environmentForm.manufacturer.length > 0) {
-          params.manufacturer = environmentForm.manufacturer.join(',')
+          params.manufacturer = environmentForm.manufacturer
         }
         
         const res = await request({

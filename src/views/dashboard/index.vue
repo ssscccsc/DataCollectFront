@@ -443,8 +443,41 @@ export default {
             } catch (error) {
               console.warn('从地图数据获取省份名称失败:', error)
             }
+          }
+          
+          // 统一输出日志
+          if (provinceMapData.value.length > 0) {
+            console.log('省份数据准备完成，共', provinceMapData.value.length, '个省份:', provinceMapData.value.map(p => p.name))
+            
+            // 如果地图数据已加载，检查省份名称是否匹配
+            if (worldMapChart && worldMapChart._mapDataLoaded) {
+              try {
+                const registeredMap = echarts.getMap('china')
+                if (registeredMap && registeredMap.features) {
+                  const mapProvinceNames = registeredMap.features.map(feature => {
+                    return feature.properties?.name || 
+                           feature.properties?.NAME || 
+                           feature.properties?.cp || 
+                           feature.properties?.CP ||
+                           feature.properties?.省 ||
+                           feature.properties?.province ||
+                           ''
+                  }).filter(name => name)
+                  
+                  const apiProvinceNames = provinceMapData.value.map(p => p.name)
+                  const unmatchedProvinces = apiProvinceNames.filter(name => !mapProvinceNames.includes(name))
+                  if (unmatchedProvinces.length > 0) {
+                    console.warn('以下省份名称在地图中未找到，可能无法高亮显示:', unmatchedProvinces)
+                  } else {
+                    console.log('所有省份名称都匹配，应该可以正常高亮显示')
+                  }
+                }
+              } catch (error) {
+                console.warn('检查省份名称匹配时出错:', error)
+              }
+            }
           } else {
-            console.log('从API获取到', provinceMapData.value.length, '个省份:', provinceMapData.value.map(p => p.name))
+            console.warn('未获取到省份数据，省份高亮将不会显示')
           }
         }
         
@@ -486,6 +519,19 @@ export default {
           // 检查是否有地图数据（features数组不为空）
           const hasMapData = worldMapChart._mapDataLoaded || false
           
+          // 检查是否应该显示省份高亮
+          const shouldShowProvinceHighlight = hasMapData && 
+                                              activeMapTab.value === 'china' && 
+                                              provinceMapData.value && 
+                                              provinceMapData.value.length > 0
+          
+          console.log('地图更新 - hasMapData:', hasMapData, 'activeMapTab:', activeMapTab.value, 'provinceMapData.length:', provinceMapData.value?.length)
+          if (shouldShowProvinceHighlight) {
+            console.log('省份高亮将显示，省份数据:', provinceMapData.value)
+          } else {
+            console.warn('省份高亮不会显示 - hasMapData:', hasMapData, 'activeMapTab:', activeMapTab.value, 'provinceMapData.length:', provinceMapData.value?.length)
+          }
+          
           const option = {
             tooltip: {
               trigger: 'item',
@@ -526,12 +572,13 @@ export default {
             },
             series: [
               // 省份高亮系列（仅在中国地图时显示，所有省份都点亮）
-              ...(hasMapData && activeMapTab.value === 'china' && provinceMapData.value && provinceMapData.value.length > 0 ? [{
+              ...(shouldShowProvinceHighlight ? [{
                 name: '省份',
                 type: 'map',
                 map: 'china',
                 geoIndex: 0,
                 data: provinceMapData.value, // 使用省份数据
+                roam: false, // 不响应缩放和平移
                 itemStyle: {
                   areaColor: '#a0d8ef', // 浅蓝色高亮
                   borderColor: '#409EFF',
@@ -697,6 +744,19 @@ export default {
           echarts.registerMap('china', chinaMapData)
           worldMapChart._mapDataLoaded = true
           console.log('中国地图数据加载成功，包含', chinaMapData.features.length, '个省/市/区')
+          
+          // 输出地图中的省份名称（用于调试）
+          const mapProvinceNames = chinaMapData.features.map(feature => {
+            return feature.properties?.name || 
+                   feature.properties?.NAME || 
+                   feature.properties?.cp || 
+                   feature.properties?.CP ||
+                   feature.properties?.省 ||
+                   feature.properties?.province ||
+                   ''
+          }).filter(name => name)
+          console.log('地图中的省份名称列表:', mapProvinceNames)
+          
           return true
         } else {
           throw new Error('地图数据为空')
@@ -747,6 +807,21 @@ export default {
           worldMapChart._mapDataLoaded = false
         }
         return false
+      }
+    }
+
+    // 处理地图标签页切换
+    const handleMapTabChange = async (tabName) => {
+      if (worldMapChart) {
+        // 根据新的标签页加载对应的地图数据
+        if (tabName === 'china') {
+          await loadChinaMapData()
+        } else {
+          await loadWorldMapData()
+        }
+        
+        // 重新加载地域数据（包括省份数据）
+        await loadRegionData()
       }
     }
 
