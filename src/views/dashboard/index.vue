@@ -618,14 +618,7 @@ export default {
           
           console.log('地图更新 - hasMapData:', hasMapData, 'activeMapTab:', activeMapTab.value, 'provinceMapData.length:', provinceMapData.value?.length)
           if (shouldShowProvinceHighlight) {
-            // 准备给ECharts的数据（只保留name和value）
-            const mapSeriesData = provinceMapData.value.map(p => ({
-              name: p.name,
-              value: p.value || 1,
-            }))
             console.log('省份高亮将显示，省份数据:', provinceMapData.value)
-            console.log('准备传递给ECharts map系列的数据:', mapSeriesData)
-            console.log('省份名称列表:', mapSeriesData.map(p => p.name))
           } else {
             console.warn('省份高亮不会显示 - hasMapData:', hasMapData, 'activeMapTab:', activeMapTab.value, 'provinceMapData.length:', provinceMapData.value?.length)
           }
@@ -641,8 +634,6 @@ export default {
               },
             },
             backgroundColor: '#fafafa',
-            // geo组件作为基础地图，map系列通过geoIndex关联
-            // 注意：当使用map系列时，geo组件只提供坐标系，样式由map系列控制
             geo: hasMapData ? {
               map: activeMapTab.value === 'china' ? 'china' : 'world',
               roam: true,
@@ -655,10 +646,9 @@ export default {
                 },
               },
               itemStyle: {
-                // 当有map系列时，geo组件只提供坐标系，不显示样式
-                areaColor: shouldShowProvinceHighlight ? 'rgba(0,0,0,0)' : (activeMapTab.value === 'china' ? '#e7e7e7' : '#e7e7e7'),
-                borderColor: shouldShowProvinceHighlight ? 'rgba(0,0,0,0)' : '#d0d0d0',
-                borderWidth: shouldShowProvinceHighlight ? 0 : 0.5,
+                areaColor: activeMapTab.value === 'china' ? '#e7e7e7' : '#e7e7e7', // 默认颜色
+                borderColor: '#d0d0d0',
+                borderWidth: 0.5,
               },
               emphasis: {
                 itemStyle: {
@@ -668,28 +658,18 @@ export default {
                   show: true,
                 },
               },
-              z: 0, // geo组件在最底层
-              silent: shouldShowProvinceHighlight, // 如果有map系列，geo组件不响应事件
             } : {
               show: false,
             },
             series: [
               // 省份高亮系列（仅在中国地图时显示，所有省份都点亮）
-              // 使用map系列，通过geoIndex关联geo组件
               ...(shouldShowProvinceHighlight ? [{
                 name: '省份',
                 type: 'map',
                 map: 'china',
-                geoIndex: 0, // 关联geo组件
-                data: provinceMapData.value.map(p => {
-                  // 确保数据格式正确，只保留name和value
-                  const item = {
-                    name: String(p.name || '').trim(), // 确保是字符串且去除空格
-                    value: p.value || 1,
-                  }
-                  return item
-                }).filter(p => p.name), // 过滤掉空名称
-                roam: false, // 由geo组件控制缩放和平移
+                geoIndex: 0,
+                data: provinceMapData.value, // 使用省份数据
+                roam: false, // 不响应缩放和平移
                 itemStyle: {
                   areaColor: '#a0d8ef', // 浅蓝色高亮
                   borderColor: '#409EFF',
@@ -712,16 +692,13 @@ export default {
                   show: false,
                 },
                 silent: true, // 不响应鼠标事件，避免与散点图冲突
-                z: 1, // 确保省份高亮在geo之上，但在散点图之下
-                // 确保map系列可见
-                show: true,
+                z: 5, // 确保省份高亮在 geo 之上，但在散点图之下
               }] : []),
               // 城市和国家标记散点图
               {
                 name: '地域',
                 type: 'scatter',
                 coordinateSystem: hasMapData ? 'geo' : null,
-                geoIndex: hasMapData ? 0 : undefined,
                 data: data,
                 symbolSize: 12,
                 label: {
@@ -780,48 +757,6 @@ export default {
           }
           
           worldMapChart.setOption(option, true)
-          
-          // 调试：检查map系列是否正确添加和渲染
-          if (shouldShowProvinceHighlight) {
-            setTimeout(() => {
-              const chartOption = worldMapChart.getOption()
-              console.log('ECharts配置中的series数量:', chartOption.series?.length)
-              const mapSeries = chartOption.series?.find(s => s && s.name === '省份')
-              if (mapSeries) {
-                console.log('找到省份map系列，数据数量:', mapSeries.data?.length)
-                console.log('省份map系列数据（前5个）:', mapSeries.data?.slice(0, 5))
-                console.log('省份map系列配置:', {
-                  type: mapSeries.type,
-                  map: mapSeries.map,
-                  geoIndex: mapSeries.geoIndex,
-                  z: mapSeries.z,
-                  show: mapSeries.show,
-                  itemStyle: mapSeries.itemStyle,
-                })
-                
-                // 检查geo组件配置
-                const geoOption = chartOption.geo?.[0]
-                if (geoOption) {
-                  console.log('Geo组件配置:', {
-                    map: geoOption.map,
-                    z: geoOption.z,
-                    itemStyle: geoOption.itemStyle,
-                    silent: geoOption.silent,
-                  })
-                }
-                
-                // 尝试获取渲染后的图形元素
-                const chartInstance = worldMapChart
-                const graphicComponents = chartInstance.getModel().getComponent('series', '省份')
-                if (graphicComponents) {
-                  console.log('省份map系列图形组件:', graphicComponents)
-                }
-              } else {
-                console.warn('未找到省份map系列！')
-                console.log('所有series:', chartOption.series?.map(s => ({ name: s?.name, type: s?.type })))
-              }
-            }, 100)
-          }
           
           // 存储数据以便在事件中访问
           worldMapChart._regionData = data
