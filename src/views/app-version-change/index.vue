@@ -155,7 +155,9 @@
           </div>
           <div class="app-info-item">
             <span class="info-label">{{ $t('appVersionChange.description') }}：</span>
-            <span class="info-value">{{ versionHistoryData.appDescription || '-' }}</span>
+            <div class="info-value-description">
+              <span class="info-value">{{ versionHistoryData.appDescription || '-' }}</span>
+            </div>
           </div>
           <div class="app-info-item">
             <span class="info-label">{{ $t('appVersionChange.dialVersion') }}：</span>
@@ -527,7 +529,7 @@ export default {
 
 .app-info-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 12px;
   min-height: 32px;
 }
@@ -548,6 +550,24 @@ export default {
   font-size: 14px;
   color: #606266;
   flex: 1;
+}
+
+.info-value-description {
+  flex: 1;
+  max-height: 72px; /* 固定3行的高度 (24px * 3) */
+  overflow-y: auto;
+  overflow-x: hidden;
+  word-wrap: break-word;
+  word-break: break-all;
+  padding: 2px 0;
+}
+
+.info-value-description .info-value {
+  display: block;
+  white-space: normal;
+  line-height: 24px;
+  word-break: break-word;
+  margin: 0;
 }
 
 .app-name-with-icon {
@@ -633,6 +653,25 @@ export default {
 }
 
 .change-record-cell::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* 简介滚动条样式 */
+.info-value-description::-webkit-scrollbar {
+  width: 6px;
+}
+
+.info-value-description::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.info-value-description::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.info-value-description::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
 }
 </style>
