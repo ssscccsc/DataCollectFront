@@ -43,7 +43,7 @@ export default {
     clientData: '端侧数据管理',
     networkData: '网络侧数据管理',
     dataComparison: '端网数据对比',
-    networkSettings: '网络信息设置',
+    networkSettings: '体验测试设置',
   },
   
   // 页面标题
@@ -63,7 +63,7 @@ export default {
     clientData: '端侧数据管理',
     networkData: '网络侧数据管理',
     dataComparison: '端网数据对比',
-    networkSettings: '网络信息设置',
+    networkSettings: '体验测试设置',
   },
   
   // 系统信息
@@ -979,7 +979,7 @@ export default {
       deleteConfirm: '确定要删除该对比记录吗？',
     },
     networkSettings: {
-      description: '网络信息设置，包括网络参数配置等',
+      description: '体验测试设置，包括网络参数配置等',
       name: '名称',
       addNotImplemented: '添加功能待实现',
       editNotImplemented: '编辑功能待实现',

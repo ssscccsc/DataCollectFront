@@ -43,7 +43,7 @@ export default {
     clientData: 'Client Data Management',
     networkData: 'Network Data Management',
     dataComparison: 'Client-Network Data Comparison',
-    networkSettings: 'Network Settings',
+    networkSettings: 'Experience Test Settings',
   },
   
   // Page Titles
@@ -63,7 +63,7 @@ export default {
     clientData: 'Client Data Management',
     networkData: 'Network Data Management',
     dataComparison: 'Client-Network Data Comparison',
-    networkSettings: 'Network Settings',
+    networkSettings: 'Experience Test Settings',
   },
   
   // System Info
@@ -978,7 +978,7 @@ export default {
       deleteConfirm: 'Are you sure to delete this comparison record?',
     },
     networkSettings: {
-      description: 'Network information settings, including network parameter configuration, etc.',
+      description: 'Experience Test Settings, including network parameter configuration, etc.',
       name: 'Name',
       addNotImplemented: 'Add feature not implemented',
       editNotImplemented: 'Edit feature not implemented',
@@ -1090,7 +1090,7 @@ export default {
       deleteConfirm: 'Are you sure to delete this comparison record?',
     },
     networkSettings: {
-      description: 'Network information settings, including network parameter configuration, etc.',
+      description: 'Experience Test Settings, including network parameter configuration, etc.',
       name: 'Name',
       addNotImplemented: 'Add feature not implemented',
       editNotImplemented: 'Edit feature not implemented',
