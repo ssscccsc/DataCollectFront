@@ -912,6 +912,7 @@ export default {
     updateDate: '更新日期',
     rating: '评分',
     collectionStatus: '采集现状',
+    collectionStatusFilter: '拨测现状',
     testVersion: '拨测版本',
     collected: '已采集',
     notCollected: '未采集',

@@ -78,6 +78,22 @@
             <el-icon><Search /></el-icon>
           </template>
         </el-input>
+        <el-select
+          v-model="selectedCollectionStatus"
+          :placeholder="$t('appMarketMonitor.collectionStatusFilter')"
+          clearable
+          style="width: 150px; margin-right: 10px;"
+          @change="handleSearch"
+        >
+          <el-option
+            :label="$t('appMarketMonitor.collected')"
+            value="collected"
+          />
+          <el-option
+            :label="$t('appMarketMonitor.notCollected')"
+            value="notCollected"
+          />
+        </el-select>
         <el-button type="primary" @click="handleSearch">
           <el-icon><Search /></el-icon>
           {{ $t('common.search') }}
@@ -122,7 +138,6 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="testVersion" :label="$t('appMarketMonitor.testVersion')" min-width="120" />
       </el-table>
 
       <div class="pagination">
@@ -160,6 +175,7 @@ export default {
     const tableData = ref([])
     const allData = ref([]) // 保存所有已加载的数据，用于前端搜索
     const searchKeyword = ref('') // 搜索关键词
+    const selectedCollectionStatus = ref('') // 拨测现状过滤
     const activeTab = ref('appstore')
     const selectedDate = ref('')
     const selectedCategory = ref('app')
@@ -256,28 +272,21 @@ export default {
       return activeTab.value !== 'xiaomi'
     })
 
-    // 根据拨测版本和当前版本计算采集状态
-    const calculateCollectionStatus = (testVersion, currentVersion) => {
-      // 如果拨测版本不存在或为空
-      if (!testVersion || testVersion === '-' || testVersion.trim() === '') {
-        return 'notCollected' // 未采集
-      }
-      
-      // 如果拨测版本和当前版本一致
-      if (testVersion === currentVersion) {
+    // 根据拨测版本计算采集状态（有拨测版本数据则已采集，没有则未采集）
+    const calculateCollectionStatus = (testVersion) => {
+      // 如果拨测版本存在且不为空
+      if (testVersion && testVersion !== '-' && testVersion.trim() !== '') {
         return 'collected' // 已采集
       }
       
-      // 如果拨测版本和当前版本不一致
-      return 'currentVersionNotCollected' // 当前版本未采集
+      // 如果拨测版本不存在或为空
+      return 'notCollected' // 未采集
     }
 
     const getCollectionStatusType = (status) => {
       const typeMap = {
         collected: 'success', // 绿色
         notCollected: 'danger', // 红色
-        currentVersionNotCollected: 'warning', // 黄色
-        collecting: 'warning',
       }
       return typeMap[status] || 'info'
     }
@@ -286,8 +295,6 @@ export default {
       const textMap = {
         collected: t('appMarketMonitor.collected'),
         notCollected: t('appMarketMonitor.notCollected'),
-        currentVersionNotCollected: t('appMarketMonitor.currentVersionNotCollected'),
-        collecting: t('appMarketMonitor.collecting'),
       }
       return textMap[status] || status
     }
@@ -370,7 +377,7 @@ export default {
       }
     }
 
-    // 根据搜索关键词和分页信息更新表格数据
+    // 根据搜索关键词、拨测现状过滤和分页信息更新表格数据
     const updateTableData = () => {
       let filteredData = allData.value
       
@@ -379,6 +386,13 @@ export default {
         const keyword = searchKeyword.value.trim().toLowerCase()
         filteredData = filteredData.filter((item) => {
           return item.appName && item.appName.toLowerCase().includes(keyword)
+        })
+      }
+      
+      // 如果有拨测现状过滤
+      if (selectedCollectionStatus.value) {
+        filteredData = filteredData.filter((item) => {
+          return item.collectionStatus === selectedCollectionStatus.value
         })
       }
       
@@ -391,6 +405,12 @@ export default {
 
     // 处理搜索
     const handleSearch = () => {
+      pagination.current = 1
+      updateTableData()
+    }
+
+    // 处理拨测现状过滤变化
+    const handleCollectionStatusChange = () => {
       pagination.current = 1
       updateTableData()
     }
@@ -458,6 +478,7 @@ export default {
       loading,
       tableData,
       searchKeyword,
+      selectedCollectionStatus,
       pagination,
       activeTab,
       selectedDate,
