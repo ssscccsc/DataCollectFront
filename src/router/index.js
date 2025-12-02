@@ -210,6 +210,18 @@ const routes = [
       },
     ],
   },
+  {
+    path: '/experience-test/test-settings',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        name: 'TestSettings',
+        component: () => import('@/views/experience-test/test-settings/index.vue'),
+        meta: { title: 'pageTitle.testSettings', icon: 'Setting' },
+      },
+    ],
+  },
 ]
 
 const router = createRouter({

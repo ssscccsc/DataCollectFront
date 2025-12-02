@@ -44,6 +44,7 @@ export default {
     networkData: '网络侧数据管理',
     dataComparison: '端网数据对比',
     networkSettings: '体验测试设置',
+    testSettings: '体验测试设置',
   },
   
   // 页面标题
@@ -64,6 +65,7 @@ export default {
     networkData: '网络侧数据管理',
     dataComparison: '端网数据对比',
     networkSettings: '体验测试设置',
+    testSettings: '体验测试设置',
   },
   
   // 系统信息
@@ -984,6 +986,31 @@ export default {
       addNotImplemented: '添加功能待实现',
       editNotImplemented: '编辑功能待实现',
       deleteConfirm: '确定要删除该设置吗？',
+    },
+    testSettings: {
+      description: '体验测试设置，包括端侧FTP服务器、网络侧FTP服务器和deviceid与IMSI对应关系配置',
+      clientFtpServer: '端侧FTP服务器信息',
+      networkFtpServer: '网络侧FTP服务器信息',
+      deviceIdImsiMapping: 'deviceid和IMSI对应关系',
+      serverAddress: '服务器地址',
+      serverAddressPlaceholder: '请输入服务器地址',
+      account: '账户',
+      accountPlaceholder: '请输入账户',
+      password: '密码',
+      passwordPlaceholder: '请输入密码',
+      checkMd5: '是否检验MD5值',
+      deviceId: 'deviceid',
+      deviceIdPlaceholder: '请输入deviceid',
+      imsi: 'IMSI',
+      imsiPlaceholder: '请输入IMSI',
+      addMapping: '添加对应关系',
+      editMapping: '编辑对应关系',
+      deleteMappingConfirm: '确定要删除该对应关系吗？',
+      serverAddressRequired: '请输入服务器地址',
+      accountRequired: '请输入账户',
+      passwordRequired: '请输入密码',
+      deviceIdRequired: '请输入deviceid',
+      imsiRequired: '请输入IMSI',
     },
   },
 }
