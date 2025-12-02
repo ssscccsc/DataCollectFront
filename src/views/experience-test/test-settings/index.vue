@@ -187,6 +187,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { Plus, Refresh } from '@element-plus/icons-vue'
+import * as testSettingsApi from '@/api/test-settings'
 
 export default {
   name: 'TestSettings',
@@ -279,26 +280,36 @@ export default {
     // 加载端侧FTP服务器数据
     const loadClientFtpData = async () => {
       try {
-        // TODO: 实现数据加载逻辑
-        // const response = await api.getClientFtpServer()
-        // if (response.data) {
-        //   Object.assign(clientFtpForm, response.data)
-        // }
+        const response = await testSettingsApi.getClientFtpConfig()
+        if (response.data) {
+          clientFtpForm.serverAddress = response.data.serverAddress || ''
+          clientFtpForm.account = response.data.account || ''
+          clientFtpForm.password = response.data.password || ''
+          clientFtpForm.checkMd5 = response.data.checkMd5 === 1
+        }
       } catch (error) {
-        ElMessage.error(t('common.error'))
+        // 如果没有数据，不显示错误，保持表单为空
+        if (error.response && error.response.status !== 404) {
+          ElMessage.error(t('common.error'))
+        }
       }
     }
 
     // 加载网络侧FTP服务器数据
     const loadNetworkFtpData = async () => {
       try {
-        // TODO: 实现数据加载逻辑
-        // const response = await api.getNetworkFtpServer()
-        // if (response.data) {
-        //   Object.assign(networkFtpForm, response.data)
-        // }
+        const response = await testSettingsApi.getNetworkFtpConfig()
+        if (response.data) {
+          networkFtpForm.serverAddress = response.data.serverAddress || ''
+          networkFtpForm.account = response.data.account || ''
+          networkFtpForm.password = response.data.password || ''
+          networkFtpForm.checkMd5 = response.data.checkMd5 === 1
+        }
       } catch (error) {
-        ElMessage.error(t('common.error'))
+        // 如果没有数据，不显示错误，保持表单为空
+        if (error.response && error.response.status !== 404) {
+          ElMessage.error(t('common.error'))
+        }
       }
     }
 
@@ -307,11 +318,16 @@ export default {
       if (!clientFtpFormRef.value) {
         return
       }
-      await clientFtpFormRef.value.validate((valid) => {
+      await clientFtpFormRef.value.validate(async (valid) => {
         if (valid) {
           try {
-            // TODO: 实现保存逻辑
-            // await api.saveClientFtpServer(clientFtpForm)
+            const data = {
+              serverAddress: clientFtpForm.serverAddress,
+              account: clientFtpForm.account,
+              password: clientFtpForm.password,
+              checkMd5: clientFtpForm.checkMd5 ? 1 : 0,
+            }
+            await testSettingsApi.saveOrUpdateClientFtpConfig(data)
             ElMessage.success(t('common.success'))
           } catch (error) {
             ElMessage.error(t('common.error'))
@@ -333,11 +349,16 @@ export default {
       if (!networkFtpFormRef.value) {
         return
       }
-      await networkFtpFormRef.value.validate((valid) => {
+      await networkFtpFormRef.value.validate(async (valid) => {
         if (valid) {
           try {
-            // TODO: 实现保存逻辑
-            // await api.saveNetworkFtpServer(networkFtpForm)
+            const data = {
+              serverAddress: networkFtpForm.serverAddress,
+              account: networkFtpForm.account,
+              password: networkFtpForm.password,
+              checkMd5: networkFtpForm.checkMd5 ? 1 : 0,
+            }
+            await testSettingsApi.saveOrUpdateNetworkFtpConfig(data)
             ElMessage.success(t('common.success'))
           } catch (error) {
             ElMessage.error(t('common.error'))
@@ -358,12 +379,11 @@ export default {
     const loadMappingData = async () => {
       mappingLoading.value = true
       try {
-        // TODO: 实现数据加载逻辑
-        // const response = await api.getDeviceIdImsiMappings()
-        // mappingData.value = response.data || []
-        mappingData.value = []
+        const response = await testSettingsApi.getDeviceImsiMappings()
+        mappingData.value = response.data || []
       } catch (error) {
         ElMessage.error(t('common.error'))
+        mappingData.value = []
       } finally {
         mappingLoading.value = false
       }
@@ -401,8 +421,7 @@ export default {
             type: 'warning',
           }
         )
-        // TODO: 实现删除逻辑
-        // await api.deleteDeviceIdImsiMapping(row.id)
+        await testSettingsApi.deleteDeviceImsiMapping(row.id)
         ElMessage.success(t('common.success'))
         loadMappingData()
       } catch (error) {
@@ -420,12 +439,14 @@ export default {
       await mappingFormRef.value.validate(async (valid) => {
         if (valid) {
           try {
+            const data = {
+              deviceId: mappingForm.deviceId,
+              imsi: mappingForm.imsi,
+            }
             if (isEditMapping.value) {
-              // TODO: 实现更新逻辑
-              // await api.updateDeviceIdImsiMapping(currentMappingId.value, mappingForm)
+              await testSettingsApi.updateDeviceImsiMapping(currentMappingId.value, data)
             } else {
-              // TODO: 实现创建逻辑
-              // await api.createDeviceIdImsiMapping(mappingForm)
+              await testSettingsApi.createDeviceImsiMapping(data)
             }
             ElMessage.success(t('common.success'))
             mappingDialogVisible.value = false
