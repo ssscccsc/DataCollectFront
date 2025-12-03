@@ -180,6 +180,46 @@
                 </div>
               </el-card>
 
+              <!-- 质检结果 -->
+              <el-card class="detail-card">
+                <template #header>
+                  <div class="card-header">
+                    <span>{{ $t('collectTask.qcResult') }}</span>
+                    <el-button size="small" @click="refreshExecutionInstances">{{ $t('collectTask.refresh') }}</el-button>
+                  </div>
+                </template>
+                <div class="qc-result-section">
+                  <el-row :gutter="20">
+                    <el-col :span="12">
+                      <div class="qc-result-list">
+                        <div v-if="qcResultSummary.length === 0" class="no-qc-data">
+                          {{ $t('collectTask.noQcData') }}
+                        </div>
+                        <div v-else class="qc-result-items">
+                          <div 
+                            v-for="(item, index) in qcResultSummary" 
+                            :key="index"
+                            class="qc-result-item"
+                          >
+                            <div class="qc-error-name">{{ item.name }}</div>
+                            <div class="qc-error-count">{{ item.count }}</div>
+                          </div>
+                        </div>
+                      </div>
+                    </el-col>
+                    <el-col :span="12">
+                      <div class="qc-chart-container">
+                        <div 
+                          ref="qcChartRef" 
+                          class="qc-chart"
+                          v-loading="qcChartLoading"
+                        ></div>
+                      </div>
+                    </el-col>
+                  </el-row>
+                </div>
+              </el-card>
+
               <!-- 用例例次执行信息 -->
               <el-card class="detail-card">
                 <template #header>
@@ -1274,6 +1314,7 @@ import { Plus, Refresh, ArrowDown, ArrowUp, Delete, Setting, Clock, ArrowLeft, A
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import request from '@/utils/request'
+import * as echarts from 'echarts'
 
 export default {
   name: 'CollectTask',
@@ -1310,6 +1351,11 @@ export default {
     const taskProgress = ref({})
     const executionInstances = ref([])
     const instancesLoading = ref(false)
+    
+    // 质检结果相关
+    const qcChartRef = ref(null)
+    const qcChartLoading = ref(false)
+    let qcChart = null
     
     // 表单引用
     const basicFormRef = ref()
@@ -2827,12 +2873,129 @@ export default {
           method: 'get',
         })
         executionInstances.value = res.data
+        // 更新质检结果图表
+        nextTick(() => {
+          updateQcResultChart()
+        })
       } catch (error) {
         console.error('加载执行例次失败:', error)
         executionInstances.value = []
       } finally {
         instancesLoading.value = false
       }
+    }
+    
+    // 解析并汇总质检结果
+    const parseQcResults = () => {
+      const errorMap = new Map()
+      
+      executionInstances.value.forEach(instance => {
+        if (instance.qcResult) {
+          try {
+            const qcData = JSON.parse(instance.qcResult)
+            // qcData 是一个对象，key是错误名称，value是错误值
+            Object.keys(qcData).forEach(key => {
+              const value = qcData[key]
+              // 如果值是数字字符串，转换为数字；否则作为错误名称的一部分
+              const errorName = key
+              const count = typeof value === 'string' && !isNaN(value) ? parseInt(value) : 1
+              
+              if (errorMap.has(errorName)) {
+                errorMap.set(errorName, errorMap.get(errorName) + count)
+              } else {
+                errorMap.set(errorName, count)
+              }
+            })
+          } catch (e) {
+            console.warn('解析质检结果失败:', instance.qcResult, e)
+          }
+        }
+      })
+      
+      // 转换为数组并排序（按数量降序）
+      return Array.from(errorMap.entries())
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count)
+    }
+    
+    // 计算属性：质检结果汇总
+    const qcResultSummary = computed(() => {
+      return parseQcResults()
+    })
+    
+    // 更新质检结果图表
+    const updateQcResultChart = () => {
+      if (!qcChartRef.value) {
+        return
+      }
+      
+      const summary = qcResultSummary.value
+      
+      if (summary.length === 0) {
+        if (qcChart) {
+          qcChart.dispose()
+          qcChart = null
+        }
+        return
+      }
+      
+      // 初始化图表
+      if (!qcChart) {
+        qcChart = echarts.init(qcChartRef.value)
+      }
+      
+      // 准备饼图数据
+      const pieData = summary.map(item => ({
+        value: item.count,
+        name: item.name,
+      }))
+      
+      // 配置选项
+      const option = {
+        tooltip: {
+          trigger: 'item',
+          formatter: '{a} <br/>{b}: {c} ({d}%)',
+        },
+        legend: {
+          orient: 'vertical',
+          left: 'left',
+          top: 'middle',
+        },
+        series: [
+          {
+            name: t('collectTask.qcError'),
+            type: 'pie',
+            radius: ['40%', '70%'],
+            avoidLabelOverlap: false,
+            itemStyle: {
+              borderRadius: 10,
+              borderColor: '#fff',
+              borderWidth: 2,
+            },
+            label: {
+              show: true,
+              formatter: '{b}: {c}\n({d}%)',
+            },
+            emphasis: {
+              label: {
+                show: true,
+                fontSize: 14,
+                fontWeight: 'bold',
+              },
+            },
+            data: pieData,
+          },
+        ],
+      }
+      
+      qcChart.setOption(option)
+      
+      // 响应式调整
+      window.addEventListener('resize', () => {
+        if (qcChart) {
+          qcChart.resize()
+        }
+      })
     }
 
     const refreshTaskProgress = async () => {
@@ -3415,9 +3578,13 @@ export default {
       }, 500)
     })
 
-    // 组件卸载时清理定时器
+    // 组件卸载时清理定时器和图表
     onUnmounted(() => {
       stopAutoRefresh()
+      if (qcChart) {
+        qcChart.dispose()
+        qcChart = null
+      }
     })
 
     return {
@@ -3534,6 +3701,10 @@ export default {
       getCalculatedProgress,
       refreshTaskProgress,
       refreshExecutionInstances,
+      qcChartRef,
+      qcChartLoading,
+      qcResultSummary,
+      updateQcResultChart,
       getProgressPercentage,
       getProgressStatus,
       getInstanceStatusType,
@@ -4058,6 +4229,63 @@ export default {
 .stat-label {
   font-size: 14px;
   color: #606266;
+}
+
+/* 质检结果样式 */
+.qc-result-section {
+  padding: 20px 0;
+}
+
+.qc-result-list {
+  min-height: 300px;
+}
+
+.no-qc-data {
+  text-align: center;
+  color: #909399;
+  padding: 40px 0;
+  font-size: 14px;
+}
+
+.qc-result-items {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.qc-result-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  background-color: #f5f7fa;
+  border-radius: 4px;
+  border-left: 3px solid #409eff;
+}
+
+.qc-error-name {
+  flex: 1;
+  font-size: 14px;
+  color: #303133;
+  word-break: break-word;
+}
+
+.qc-error-count {
+  font-size: 16px;
+  font-weight: bold;
+  color: #409eff;
+  min-width: 60px;
+  text-align: right;
+}
+
+.qc-chart-container {
+  height: 400px;
+  padding: 20px;
+}
+
+.qc-chart {
+  width: 100%;
+  height: 100%;
 }
 
 /* 执行例次表格样式 */
