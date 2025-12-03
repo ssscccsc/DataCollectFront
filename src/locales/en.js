@@ -918,6 +918,7 @@ export default {
     currentVersionNotCollected: 'Current Version Not Collected',
     collecting: 'Collecting',
     searchPlaceholder: 'Please enter app name',
+    startDialTest: 'Start Dial Test',
   },
   
   // APP Version Change
@@ -1054,6 +1055,7 @@ export default {
     currentVersionNotCollected: 'Current Version Not Collected',
     collecting: 'Collecting',
     searchPlaceholder: 'Please enter app name',
+    startDialTest: 'Start Dial Test',
   },
   
   // APP Version Change

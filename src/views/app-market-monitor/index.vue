@@ -138,6 +138,17 @@
             </el-tag>
           </template>
         </el-table-column>
+        <el-table-column :label="$t('common.operations')" width="150" align="center" fixed="right">
+          <template #default="scope">
+            <el-button 
+              type="primary" 
+              size="small" 
+              @click="handleStartDialTest(scope.row)"
+            >
+              {{ $t('appMarketMonitor.startDialTest') }}
+            </el-button>
+          </template>
+        </el-table-column>
       </el-table>
 
       <div class="pagination">
@@ -160,6 +171,7 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 import { Refresh, Search } from '@element-plus/icons-vue'
 import request from '@/utils/request'
 
@@ -171,6 +183,7 @@ export default {
   },
   setup() {
     const { t } = useI18n()
+    const router = useRouter()
     const loading = ref(false)
     const tableData = ref([])
     const allData = ref([]) // 保存所有已加载的数据，用于前端搜索
@@ -470,6 +483,22 @@ export default {
       ElMessage.info(t('appMarketMonitor.viewDetailNotImplemented'))
     }
 
+    // 处理发起拨测
+    const handleStartDialTest = (row) => {
+      const query = {
+        fromAppMarketMonitor: 'true',
+        appName: row.appName || '',
+        appVersion: row.currentVersion || '',
+        appCategory: row.category || '',
+        appDescription: row.description || '',
+      }
+      
+      router.push({
+        name: 'CollectTask',
+        query,
+      })
+    }
+
     onMounted(() => {
       loadData()
     })
@@ -499,6 +528,7 @@ export default {
       handleCurrentChange,
       getCollectionStatusType,
       getCollectionStatusText,
+      handleStartDialTest,
     }
   },
 }

@@ -919,6 +919,7 @@ export default {
     currentVersionNotCollected: '当前版本未采集',
     collecting: '采集中',
     searchPlaceholder: '请输入应用名称',
+    startDialTest: '发起拨测',
   },
   
   // APP版本变更

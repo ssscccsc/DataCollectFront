@@ -3166,10 +3166,10 @@ export default {
       }
     }
 
-    // 检查路由参数，如果来自 app 版本变更页面，自动打开新建任务对话框
+    // 检查路由参数，如果来自 app 版本变更页面或top应用监控页面，自动打开新建任务对话框
     const checkRouteParams = () => {
-      if (route.query.fromAppVersion === 'true') {
-        fromAppVersion.value = true
+      if (route.query.fromAppVersion === 'true' || route.query.fromAppMarketMonitor === 'true') {
+        fromAppVersion.value = route.query.fromAppVersion === 'true'
         appInfo.value = {
           appName: route.query.appName || '',
           appVersion: route.query.appVersion || '',
