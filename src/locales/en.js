@@ -310,6 +310,9 @@ export default {
     vncConnectionCancelled: 'VNC connection cancelled',
     rdpConnectionStarted: 'Starting RDP connection...',
     rdpConnectionCancelled: 'RDP connection cancelled',
+    executorIpEmpty: 'Executor IP address is empty',
+    remoteDesktopOpening: 'Opening remote desktop connection: {ip}',
+    remoteDesktopOpenFailed: 'Failed to open remote desktop connection',
     // Form Validation
     taskNameRequired: 'Please enter task name',
     collectStrategyRequired: 'Please select collection strategy',

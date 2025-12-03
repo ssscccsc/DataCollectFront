@@ -311,6 +311,9 @@ export default {
     vncConnectionCancelled: '已取消VNC连接',
     rdpConnectionStarted: '正在启动RDP连接...',
     rdpConnectionCancelled: '已取消RDP连接',
+    executorIpEmpty: '执行机IP地址为空',
+    remoteDesktopOpening: '正在打开远程桌面连接：{ip}',
+    remoteDesktopOpenFailed: '打开远程桌面连接失败',
     // 表单验证
     taskNameRequired: '请输入任务名称',
     collectStrategyRequired: '请选择采集策略',

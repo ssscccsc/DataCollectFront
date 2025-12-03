@@ -195,7 +195,20 @@
                     <el-table-column prop="testCaseName" :label="$t('collectTask.testCaseName')" />
                     <el-table-column prop="round" :label="$t('collectTask.round')" width="80" />
                     <el-table-column prop="logicEnvironmentName" :label="$t('collectTask.logicEnvironment')" width="150" />
-                    <el-table-column prop="executorIp" :label="$t('collectTask.executorIp')" width="120" />
+                    <el-table-column prop="executorIp" :label="$t('collectTask.executorIp')" width="120">
+                      <template #default="scope">
+                        <el-button 
+                          v-if="scope.row.executorIp"
+                          type="text" 
+                          size="small"
+                          @click="openRemoteDesktop(scope.row.executorIp)"
+                          style="color: #409eff; text-decoration: none; padding: 0;"
+                        >
+                          {{ scope.row.executorIp }}
+                        </el-button>
+                        <span v-else>-</span>
+                      </template>
+                    </el-table-column>
                     <el-table-column prop="status" :label="$t('collectTask.executionStatus')" width="100">
                       <template #default="scope">
                         <el-tag :type="getInstanceStatusType(scope.row.status)">
@@ -2958,6 +2971,33 @@ export default {
       ElMessage.info(`查看用例 ${instance.testCaseNumber} 第 ${instance.round} 轮执行详情，执行任务ID: ${instance.executionTaskId}`)
     }
 
+    // 打开Windows远程桌面连接
+    const openRemoteDesktop = (ipAddress) => {
+      if (!ipAddress || ipAddress.trim() === '') {
+        ElMessage.warning(t('collectTask.executorIpEmpty'))
+        return
+      }
+      
+      try {
+        // 使用 mstsc:// 协议打开Windows远程桌面连接
+        // 格式：mstsc://IP地址
+        const rdpUrl = `mstsc://${ipAddress.trim()}`
+        
+        // 创建一个隐藏的链接并触发点击
+        const link = document.createElement('a')
+        link.href = rdpUrl
+        link.style.display = 'none'
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        
+        ElMessage.success(t('collectTask.remoteDesktopOpening').replace('{ip}', ipAddress))
+      } catch (error) {
+        console.error('打开远程桌面连接失败:', error)
+        ElMessage.error(t('collectTask.remoteDesktopOpenFailed'))
+      }
+    }
+
     // 远程登录相关方法
     const openRemoteLoginDialog = (instance) => {
       // 填充执行机信息
@@ -3339,6 +3379,7 @@ export default {
       getInstanceResultType,
       getInstanceResultText,
       viewInstanceResult,
+      openRemoteDesktop,
       
       // 远程登录相关
       remoteLoginDialogVisible,
