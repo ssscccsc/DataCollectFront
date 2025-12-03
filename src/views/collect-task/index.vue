@@ -2935,12 +2935,24 @@ export default {
             return
           }
           
+          // 检查是否是有效的 DOM 元素
+          const chartDom = qcChartRef.value
+          // 确保是真正的 DOM 元素（HTMLElement 或 Element）
+          if (!chartDom || typeof chartDom !== 'object' || chartDom.nodeType !== 1) {
+            console.warn('图表容器不是有效的 DOM 元素:', chartDom, '类型:', typeof chartDom, 'nodeType:', chartDom?.nodeType)
+            return
+          }
+          
           const summary = qcResultSummary.value
           console.log('质检结果汇总:', summary)
           
           if (summary.length === 0) {
             if (qcChart) {
-              qcChart.dispose()
+              try {
+                qcChart.dispose()
+              } catch (e) {
+                console.warn('销毁图表时出错:', e)
+              }
               qcChart = null
             }
             return
@@ -2948,16 +2960,21 @@ export default {
           
           // 如果图表已存在，先销毁
           if (qcChart) {
-            qcChart.dispose()
+            try {
+              qcChart.dispose()
+            } catch (e) {
+              console.warn('销毁图表时出错:', e)
+            }
             qcChart = null
           }
           
           // 初始化图表
           try {
-            qcChart = echarts.init(qcChartRef.value)
-            console.log('图表初始化成功')
+            // 确保传递的是真正的 DOM 元素
+            qcChart = echarts.init(chartDom)
+            console.log('图表初始化成功，DOM元素:', chartDom)
           } catch (e) {
-            console.error('初始化图表失败:', e)
+            console.error('初始化图表失败:', e, 'DOM元素:', chartDom, '元素类型:', typeof chartDom, 'nodeType:', chartDom?.nodeType)
             return
           }
           
@@ -3028,7 +3045,7 @@ export default {
         // 延迟一下确保 DOM 渲染完成
         setTimeout(() => {
           updateQcResultChart()
-        }, 500)
+        }, 800)
       }
     }, { deep: true })
     
@@ -3036,9 +3053,10 @@ export default {
     watch(activeTab, (newTab) => {
       if (newTab && newTab.startsWith('detail-')) {
         // 切换 tab 时，延迟更新图表以确保 DOM 已渲染
+        // 使用更长的延迟确保 Tab 内容完全渲染
         setTimeout(() => {
           updateQcResultChart()
-        }, 1000)
+        }, 1500)
       } else {
         // 切换到列表 tab 时，销毁图表
         if (qcChart) {
