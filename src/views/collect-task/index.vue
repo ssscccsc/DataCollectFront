@@ -2979,23 +2979,84 @@ export default {
       }
       
       try {
-        // 使用 mstsc:// 协议打开Windows远程桌面连接
-        // 格式：mstsc://IP地址
-        const rdpUrl = `mstsc://${ipAddress.trim()}`
+        // 生成RDP文件内容
+        const rdpContent = generateRdpFileContent(ipAddress.trim())
         
-        // 创建一个隐藏的链接并触发点击
+        // 创建Blob对象
+        const blob = new Blob([rdpContent], { type: 'application/rdp' })
+        const url = window.URL.createObjectURL(blob)
+        
+        // 创建下载链接并触发下载
         const link = document.createElement('a')
-        link.href = rdpUrl
-        link.style.display = 'none'
+        link.href = url
+        link.download = `rdp_${ipAddress.trim()}.rdp`
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)
+        
+        // 释放URL对象
+        setTimeout(() => {
+          window.URL.revokeObjectURL(url)
+        }, 100)
         
         ElMessage.success(t('collectTask.remoteDesktopOpening').replace('{ip}', ipAddress))
       } catch (error) {
         console.error('打开远程桌面连接失败:', error)
         ElMessage.error(t('collectTask.remoteDesktopOpenFailed'))
       }
+    }
+
+    // 生成RDP文件内容
+    const generateRdpFileContent = (ipAddress) => {
+      const rdpLines = [
+        'screen mode id:i:2',
+        'use multimon:i:0',
+        'desktopwidth:i:1920',
+        'desktopheight:i:1080',
+        'session bpp:i:32',
+        'winposstr:s:0,1,0,0,1920,1080',
+        'compression:i:1',
+        'keyboardhook:i:2',
+        'audiocapturemode:i:0',
+        'videoplaybackmode:i:1',
+        'connection type:i:7',
+        'networkautodetect:i:1',
+        'bandwidthautodetect:i:1',
+        'enableworkspacereconnect:i:0',
+        'disable wallpaper:i:0',
+        'allow font smoothing:i:0',
+        'allow desktop composition:i:0',
+        'disable full window drag:i:1',
+        'disable menu anims:i:1',
+        'disable themes:i:0',
+        'disable cursor setting:i:0',
+        'bitmapcachepersistenable:i:1',
+        `full address:s:${ipAddress}`,
+        'audiomode:i:0',
+        'redirectprinters:i:1',
+        'redirectcomports:i:0',
+        'redirectsmartcards:i:1',
+        'redirectclipboard:i:1',
+        'redirectposdevices:i:0',
+        'autoreconnection enabled:i:1',
+        'authentication level:i:2',
+        'prompt for credentials:i:0',
+        'negotiate security layer:i:1',
+        'remoteapplicationmode:i:0',
+        'alternate shell:s:',
+        'shell working directory:s:',
+        'gatewayhostname:s:',
+        'gatewayusagemethod:i:4',
+        'gatewaycredentialssource:i:4',
+        'gatewayprofileusagemethod:i:0',
+        'promptcredentialonce:i:0',
+        'gatewaybrokeringtype:i:0',
+        'use redirection server name:i:0',
+        'rdgiskdcproxy:i:0',
+        'kdcproxyname:s:',
+      ]
+      
+      return rdpLines.join('\n')
     }
 
     // 远程登录相关方法
