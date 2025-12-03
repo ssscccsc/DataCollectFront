@@ -2930,16 +2930,66 @@ export default {
       nextTick(() => {
         // 再次延迟，确保 Tab 切换后 DOM 完全渲染
         setTimeout(() => {
-          if (!qcChartRef.value) {
-            console.warn('图表容器未准备好，qcChartRef.value:', qcChartRef.value)
-            return
+          // 尝试获取 DOM 元素，支持重试
+          let chartDom = null
+          
+          // 方法1: 尝试从 ref 获取
+          if (qcChartRef.value) {
+            chartDom = qcChartRef.value
+          }
+          
+          // 方法2: 如果 ref 不可用，尝试通过选择器查找
+          if (!chartDom || typeof chartDom !== 'object' || chartDom.nodeType !== 1) {
+            // 尝试在当前激活的 Tab 中查找图表容器
+            const currentTabName = activeTab.value
+            if (currentTabName && currentTabName.startsWith('detail-')) {
+              // 查找当前 Tab 面板中的图表容器
+              const tabPane = document.querySelector(`[aria-labelledby*="${currentTabName}"]`) || 
+                             document.querySelector(`[name="${currentTabName}"]`) ||
+                             document.querySelector('.el-tab-pane:not([style*="display: none"]) .qc-chart')
+              if (tabPane) {
+                const domElement = tabPane.querySelector ? tabPane.querySelector('.qc-chart') : 
+                                 (tabPane.classList && tabPane.classList.contains('qc-chart') ? tabPane : null)
+                if (domElement && domElement.nodeType === 1) {
+                  chartDom = domElement
+                  console.log('通过选择器找到图表容器')
+                  // 更新 ref 引用
+                  qcChartRef.value = domElement
+                }
+              } else {
+                // 如果找不到，尝试直接查找可见的图表容器
+                const allCharts = document.querySelectorAll('.qc-chart')
+                for (let i = 0; i < allCharts.length; i++) {
+                  const el = allCharts[i]
+                  // 检查元素是否可见（不在隐藏的 Tab 中）
+                  const style = window.getComputedStyle(el)
+                  if (style.display !== 'none' && style.visibility !== 'hidden') {
+                    chartDom = el
+                    console.log('通过选择器找到可见的图表容器')
+                    // 更新 ref 引用
+                    qcChartRef.value = el
+                    break
+                  }
+                }
+              }
+            }
           }
           
           // 检查是否是有效的 DOM 元素
-          const chartDom = qcChartRef.value
-          // 确保是真正的 DOM 元素（HTMLElement 或 Element）
           if (!chartDom || typeof chartDom !== 'object' || chartDom.nodeType !== 1) {
-            console.warn('图表容器不是有效的 DOM 元素:', chartDom, '类型:', typeof chartDom, 'nodeType:', chartDom?.nodeType)
+            console.warn('图表容器不是有效的 DOM 元素:', {
+              refValue: qcChartRef.value,
+              chartDom: chartDom,
+              type: typeof chartDom,
+              nodeType: chartDom?.nodeType,
+              activeTab: activeTab.value
+            })
+            // 如果当前在详情 tab，尝试延迟重试
+            if (activeTab.value && activeTab.value.startsWith('detail-')) {
+              setTimeout(() => {
+                updateQcResultChart()
+              }, 1000)
+            }
             return
           }
           
@@ -2972,9 +3022,15 @@ export default {
           try {
             // 确保传递的是真正的 DOM 元素
             qcChart = echarts.init(chartDom)
-            console.log('图表初始化成功，DOM元素:', chartDom)
+            console.log('图表初始化成功，DOM元素:', chartDom, '元素标签:', chartDom.tagName)
           } catch (e) {
             console.error('初始化图表失败:', e, 'DOM元素:', chartDom, '元素类型:', typeof chartDom, 'nodeType:', chartDom?.nodeType)
+            // 如果初始化失败，尝试延迟重试
+            if (activeTab.value && activeTab.value.startsWith('detail-')) {
+              setTimeout(() => {
+                updateQcResultChart()
+              }, 1000)
+            }
             return
           }
           
@@ -3053,14 +3109,22 @@ export default {
     watch(activeTab, (newTab) => {
       if (newTab && newTab.startsWith('detail-')) {
         // 切换 tab 时，延迟更新图表以确保 DOM 已渲染
-        // 使用更长的延迟确保 Tab 内容完全渲染
-        setTimeout(() => {
-          updateQcResultChart()
-        }, 1500)
+        // 使用多次 nextTick 和延迟确保 Tab 内容完全渲染
+        nextTick(() => {
+          nextTick(() => {
+            setTimeout(() => {
+              updateQcResultChart()
+            }, 1000)
+          })
+        })
       } else {
         // 切换到列表 tab 时，销毁图表
         if (qcChart) {
-          qcChart.dispose()
+          try {
+            qcChart.dispose()
+          } catch (e) {
+            console.warn('销毁图表时出错:', e)
+          }
           qcChart = null
         }
         if (resizeHandler) {
