@@ -3059,13 +3059,19 @@ export default {
           return
         }
         
-        // 如果是Windows网络盘路径（如 Z:\ 开头），尝试打开本地路径
-        if (processedPath.match(/^[A-Za-z]:\\/)) {
-          // 转换为 file:// 协议格式
+        // 如果是Windows本地路径（如 Z:\ 或 C:\ 开头），尝试打开本地文件资源管理器
+        if (processedPath.match(/^[A-Za-z]:[\\/]/)) {
+          // 转换为 file:// 协议格式（Windows路径需要三个斜杠）
           const fileUrl = 'file:///' + processedPath.replace(/\\/g, '/')
+          
+          // 创建隐藏的链接元素来打开本地路径
+          const link = document.createElement('a')
+          link.href = fileUrl
+          link.style.display = 'none'
+          document.body.appendChild(link)
+          
           try {
-            // 尝试打开文件资源管理器
-            window.open(fileUrl, '_blank')
+            link.click()
             ElMessage.success(t('collectTask.collectPathOpening'))
           } catch (e) {
             // 如果无法直接打开，复制到剪贴板
@@ -3078,6 +3084,8 @@ export default {
             } else {
               ElMessage.info(t('collectTask.collectPathInfo', { path: processedPath }))
             }
+          } finally {
+            document.body.removeChild(link)
           }
           return
         }
