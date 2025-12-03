@@ -253,6 +253,33 @@
                         <span v-else>-</span>
                       </template>
                     </el-table-column>
+                    <el-table-column prop="collectPath" :label="$t('collectTask.collectPath')" width="200">
+                      <template #default="scope">
+                        <div v-if="scope.row.collectPath">
+                          <el-tooltip :content="scope.row.collectPath" placement="top" :show-after="500">
+                            <el-link 
+                              v-if="scope.row.collectPath.startsWith('http')" 
+                              type="primary" 
+                              :href="scope.row.collectPath" 
+                              target="_blank"
+                              :underline="false"
+                            >
+                              {{ $t('collectTask.openPath') }}
+                            </el-link>
+                            <el-button 
+                              v-else
+                              type="text" 
+                              size="small"
+                              @click="openCollectPath(scope.row.collectPath)"
+                              style="color: #409eff; text-decoration: none; padding: 0;"
+                            >
+                              {{ scope.row.collectPath }}
+                            </el-button>
+                          </el-tooltip>
+                        </div>
+                        <span v-else>-</span>
+                      </template>
+                    </el-table-column>
                     <el-table-column prop="executionTaskId" :label="$t('collectTask.executionTaskId')" width="200" />
                     <el-table-column prop="createTime" :label="$t('collectTask.createTime')" width="160" />
                     <el-table-column prop="updateTime" :label="$t('collectTask.updateTime')" width="160" />
@@ -3006,6 +3033,73 @@ export default {
       }
     }
 
+    // 打开归档路径
+    const openCollectPath = (path) => {
+      if (!path || path.trim() === '') {
+        ElMessage.warning(t('collectTask.collectPathEmpty'))
+        return
+      }
+      
+      try {
+        let processedPath = path.trim()
+        
+        // 如果路径以 "screenshot" 结尾，去除这个后缀
+        if (processedPath.toLowerCase().endsWith('/screenshot') || processedPath.toLowerCase().endsWith('\\screenshot')) {
+          processedPath = processedPath.substring(0, processedPath.length - 10).trim()
+          // 去除末尾的斜杠
+          if (processedPath.endsWith('/') || processedPath.endsWith('\\')) {
+            processedPath = processedPath.substring(0, processedPath.length - 1)
+          }
+        }
+        
+        // 如果是HTTP/HTTPS链接，直接打开
+        if (processedPath.startsWith('http://') || processedPath.startsWith('https://')) {
+          window.open(processedPath, '_blank')
+          ElMessage.success(t('collectTask.collectPathOpening'))
+          return
+        }
+        
+        // 如果是Windows网络盘路径（如 Z:\ 开头），尝试打开本地路径
+        if (processedPath.match(/^[A-Za-z]:\\/)) {
+          // 转换为 file:// 协议格式
+          const fileUrl = 'file:///' + processedPath.replace(/\\/g, '/')
+          try {
+            // 尝试打开文件资源管理器
+            window.open(fileUrl, '_blank')
+            ElMessage.success(t('collectTask.collectPathOpening'))
+          } catch (e) {
+            // 如果无法直接打开，复制到剪贴板
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(processedPath).then(() => {
+                ElMessage.success(t('collectTask.collectPathCopied'))
+              }).catch(() => {
+                ElMessage.info(t('collectTask.collectPathInfo', { path: processedPath }))
+              })
+            } else {
+              ElMessage.info(t('collectTask.collectPathInfo', { path: processedPath }))
+            }
+          }
+          return
+        }
+        
+        // 其他文件路径，尝试复制到剪贴板
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(processedPath).then(() => {
+            ElMessage.success(t('collectTask.collectPathCopied'))
+          }).catch(() => {
+            // 如果复制失败，显示路径
+            ElMessage.info(t('collectTask.collectPathInfo', { path: processedPath }))
+          })
+        } else {
+          // 不支持剪贴板API，显示路径
+          ElMessage.info(t('collectTask.collectPathInfo', { path: processedPath }))
+        }
+      } catch (error) {
+        console.error('打开归档路径失败:', error)
+        ElMessage.error(t('collectTask.collectPathOpenFailed'))
+      }
+    }
+
     // 生成RDP文件内容
     const generateRdpFileContent = (ipAddress) => {
       const rdpLines = [
@@ -3441,6 +3535,7 @@ export default {
       getInstanceResultText,
       viewInstanceResult,
       openRemoteDesktop,
+      openCollectPath,
       
       // 远程登录相关
       remoteLoginDialogVisible,
