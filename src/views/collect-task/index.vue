@@ -1356,6 +1356,7 @@ export default {
     const qcChartRef = ref(null)
     const qcChartLoading = ref(false)
     let qcChart = null
+    let resizeHandler = null
     
     // 表单引用
     const basicFormRef = ref()
@@ -2873,10 +2874,10 @@ export default {
           method: 'get',
         })
         executionInstances.value = res.data
-        // 更新质检结果图表
-        nextTick(() => {
+        // 更新质检结果图表（延迟确保 DOM 渲染完成）
+        setTimeout(() => {
           updateQcResultChart()
-        })
+        }, 300)
       } catch (error) {
         console.error('加载执行例次失败:', error)
         executionInstances.value = []
@@ -2925,78 +2926,131 @@ export default {
     
     // 更新质检结果图表
     const updateQcResultChart = () => {
-      if (!qcChartRef.value) {
-        return
+      // 使用 nextTick 确保 DOM 已经渲染
+      nextTick(() => {
+        // 再次延迟，确保 Tab 切换后 DOM 完全渲染
+        setTimeout(() => {
+          if (!qcChartRef.value) {
+            console.warn('图表容器未准备好，qcChartRef.value:', qcChartRef.value)
+            return
+          }
+          
+          const summary = qcResultSummary.value
+          console.log('质检结果汇总:', summary)
+          
+          if (summary.length === 0) {
+            if (qcChart) {
+              qcChart.dispose()
+              qcChart = null
+            }
+            return
+          }
+          
+          // 如果图表已存在，先销毁
+          if (qcChart) {
+            qcChart.dispose()
+            qcChart = null
+          }
+          
+          // 初始化图表
+          try {
+            qcChart = echarts.init(qcChartRef.value)
+            console.log('图表初始化成功')
+          } catch (e) {
+            console.error('初始化图表失败:', e)
+            return
+          }
+          
+          // 准备饼图数据
+          const pieData = summary.map(item => ({
+            value: item.count,
+            name: item.name,
+          }))
+          
+          // 配置选项
+          const option = {
+            tooltip: {
+              trigger: 'item',
+              formatter: '{a} <br/>{b}: {c} ({d}%)',
+            },
+            legend: {
+              orient: 'vertical',
+              left: 'left',
+              top: 'middle',
+            },
+            series: [
+              {
+                name: t('collectTask.qcError'),
+                type: 'pie',
+                radius: ['40%', '70%'],
+                avoidLabelOverlap: false,
+                itemStyle: {
+                  borderRadius: 10,
+                  borderColor: '#fff',
+                  borderWidth: 2,
+                },
+                label: {
+                  show: true,
+                  formatter: '{b}: {c}\n({d}%)',
+                },
+                emphasis: {
+                  label: {
+                    show: true,
+                    fontSize: 14,
+                    fontWeight: 'bold',
+                  },
+                },
+                data: pieData,
+              },
+            ],
+          }
+          
+          qcChart.setOption(option)
+          console.log('图表配置已设置')
+          
+          // 响应式调整（避免重复添加监听器）
+          if (resizeHandler) {
+            window.removeEventListener('resize', resizeHandler)
+          }
+          resizeHandler = () => {
+            if (qcChart) {
+              qcChart.resize()
+            }
+          }
+          window.addEventListener('resize', resizeHandler)
+        }, 200)
+      })
+    }
+    
+    // 监听 qcResultSummary 变化，自动更新图表
+    watch(qcResultSummary, () => {
+      if (activeTab.value && activeTab.value.startsWith('detail-')) {
+        // 延迟一下确保 DOM 渲染完成
+        setTimeout(() => {
+          updateQcResultChart()
+        }, 500)
       }
-      
-      const summary = qcResultSummary.value
-      
-      if (summary.length === 0) {
+    }, { deep: true })
+    
+    // 监听 activeTab 变化，切换 tab 时更新图表
+    watch(activeTab, (newTab) => {
+      if (newTab && newTab.startsWith('detail-')) {
+        // 切换 tab 时，延迟更新图表以确保 DOM 已渲染
+        setTimeout(() => {
+          updateQcResultChart()
+        }, 1000)
+      } else {
+        // 切换到列表 tab 时，销毁图表
         if (qcChart) {
           qcChart.dispose()
           qcChart = null
         }
-        return
-      }
-      
-      // 初始化图表
-      if (!qcChart) {
-        qcChart = echarts.init(qcChartRef.value)
-      }
-      
-      // 准备饼图数据
-      const pieData = summary.map(item => ({
-        value: item.count,
-        name: item.name,
-      }))
-      
-      // 配置选项
-      const option = {
-        tooltip: {
-          trigger: 'item',
-          formatter: '{a} <br/>{b}: {c} ({d}%)',
-        },
-        legend: {
-          orient: 'vertical',
-          left: 'left',
-          top: 'middle',
-        },
-        series: [
-          {
-            name: t('collectTask.qcError'),
-            type: 'pie',
-            radius: ['40%', '70%'],
-            avoidLabelOverlap: false,
-            itemStyle: {
-              borderRadius: 10,
-              borderColor: '#fff',
-              borderWidth: 2,
-            },
-            label: {
-              show: true,
-              formatter: '{b}: {c}\n({d}%)',
-            },
-            emphasis: {
-              label: {
-                show: true,
-                fontSize: 14,
-                fontWeight: 'bold',
-              },
-            },
-            data: pieData,
-          },
-        ],
-      }
-      
-      qcChart.setOption(option)
-      
-      // 响应式调整
-      window.addEventListener('resize', () => {
-        if (qcChart) {
-          qcChart.resize()
+        if (resizeHandler) {
+          window.removeEventListener('resize', resizeHandler)
+          resizeHandler = null
         }
-      })
-    }
+      }
+    })
 
     const refreshTaskProgress = async () => {
       const currentTask = getCurrentTask()
@@ -3584,6 +3638,10 @@ export default {
       if (qcChart) {
         qcChart.dispose()
         qcChart = null
+      }
+      if (resizeHandler) {
+        window.removeEventListener('resize', resizeHandler)
+        resizeHandler = null
       }
     })
 
