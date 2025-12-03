@@ -163,6 +163,7 @@ export default {
     collectPathEmpty: 'Archive path is empty',
     collectPathOpening: 'Opening archive path',
     collectPathCopied: 'Archive path copied to clipboard',
+    collectPathCopiedAndOpenHint: 'Path copied to clipboard: {path}\nPlease paste the path in File Explorer (Ctrl+V) to open',
     collectPathInfo: 'Archive path: {path}',
     collectPathOpenFailed: 'Failed to open archive path',
     executionTaskId: 'Execution Task ID',

@@ -164,6 +164,7 @@ export default {
     collectPathEmpty: '归档路径为空',
     collectPathOpening: '正在打开归档路径',
     collectPathCopied: '归档路径已复制到剪贴板',
+    collectPathCopiedAndOpenHint: '路径已复制到剪贴板：{path}\n请在文件资源管理器中按 Ctrl+V 粘贴路径并打开',
     collectPathInfo: '归档路径：{path}',
     collectPathOpenFailed: '打开归档路径失败',
     executionTaskId: '执行任务ID',

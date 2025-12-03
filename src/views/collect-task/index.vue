@@ -3059,33 +3059,32 @@ export default {
           return
         }
         
-        // 如果是Windows本地路径（如 Z:\ 或 C:\ 开头），尝试打开本地文件资源管理器
+        // 如果是Windows本地路径（如 Z:\ 或 C:\ 开头），复制路径并提示用户手动打开
         if (processedPath.match(/^[A-Za-z]:[\\/]/)) {
-          // 转换为 file:// 协议格式（Windows路径需要三个斜杠）
-          const fileUrl = 'file:///' + processedPath.replace(/\\/g, '/')
-          
-          // 创建隐藏的链接元素来打开本地路径
-          const link = document.createElement('a')
-          link.href = fileUrl
-          link.style.display = 'none'
-          document.body.appendChild(link)
-          
-          try {
-            link.click()
-            ElMessage.success(t('collectTask.collectPathOpening'))
-          } catch (e) {
-            // 如果无法直接打开，复制到剪贴板
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-              navigator.clipboard.writeText(processedPath).then(() => {
-                ElMessage.success(t('collectTask.collectPathCopied'))
-              }).catch(() => {
-                ElMessage.info(t('collectTask.collectPathInfo', { path: processedPath }))
+          // 由于浏览器安全限制，无法直接打开本地文件路径
+          // 复制路径到剪贴板，提示用户在文件资源管理器中打开
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(processedPath).then(() => {
+              ElMessage.success({
+                message: t('collectTask.collectPathCopiedAndOpenHint', { path: processedPath }),
+                duration: 5000,
+                showClose: true,
               })
-            } else {
-              ElMessage.info(t('collectTask.collectPathInfo', { path: processedPath }))
-            }
-          } finally {
-            document.body.removeChild(link)
+            }).catch(() => {
+              // 如果复制失败，显示路径信息
+              ElMessage.info({
+                message: t('collectTask.collectPathInfo', { path: processedPath }),
+                duration: 5000,
+                showClose: true,
+              })
+            })
+          } else {
+            // 不支持剪贴板API，显示路径信息
+            ElMessage.info({
+              message: t('collectTask.collectPathInfo', { path: processedPath }),
+              duration: 5000,
+              showClose: true,
+            })
           }
           return
         }
