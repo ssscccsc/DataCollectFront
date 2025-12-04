@@ -45,6 +45,10 @@
             <el-icon><Operation /></el-icon>
             <span>{{ $t('menu.collectStrategy') }}</span>
           </el-menu-item>
+          <el-menu-item index="/collect-data-upload/index">
+            <el-icon><Upload /></el-icon>
+            <span>{{ $t('menu.collectDataUpload') }}</span>
+          </el-menu-item>
         </el-sub-menu>
         
         <el-sub-menu index="settings">
@@ -135,7 +139,7 @@
 </template>
 
 <script>
-import { Iphone, DataBoard } from '@element-plus/icons-vue'
+import { Iphone, DataBoard, Upload } from '@element-plus/icons-vue'
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -159,6 +163,7 @@ export default {
         '/app-version-change/index': t('pageTitle.appVersionChange'),
         '/collect-task/index': t('pageTitle.collectTask'),
         '/collect-strategy/index': t('pageTitle.collectStrategy'),
+        '/collect-data-upload/index': t('pageTitle.collectDataUpload'),
         '/test-case-set/index': t('pageTitle.testCaseSet'),
         '/logic-environment/index': t('pageTitle.logicEnvironment'),
         '/executor/index': t('pageTitle.executor'),

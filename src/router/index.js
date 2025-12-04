@@ -138,6 +138,18 @@ const routes = [
     ],
   },
   {
+    path: '/collect-data-upload',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        name: 'CollectDataUpload',
+        component: () => import('@/views/collect-data-upload/index.vue'),
+        meta: { title: 'menu.collectDataUpload', icon: 'Upload' },
+      },
+    ],
+  },
+  {
     path: '/collect-task',
     component: Layout,
     children: [

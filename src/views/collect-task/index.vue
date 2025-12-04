@@ -1488,16 +1488,6 @@ export default {
       ],
     }
 
-    // 步骤2：环境编排表单
-    const environmentForm = reactive({
-      manufacturer: [],
-      network: null,
-      regionId: null,
-      countryId: null,
-      provinceId: null,
-      cityId: null,
-    })
-
     // 厂商选项（全选选项放在最前面）
     const manufacturerOptions = [
       { label: '全选', value: 'all' },
@@ -1517,6 +1507,17 @@ export default {
         .filter(item => item.value !== 'all')
         .map(item => item.value)
     }
+
+    // 步骤2：环境编排表单（默认全选所有厂商）
+    const allManufacturerValues = getAllManufacturerValues()
+    const environmentForm = reactive({
+      manufacturer: ['all', ...allManufacturerValues],
+      network: null,
+      regionId: null,
+      countryId: null,
+      provinceId: null,
+      cityId: null,
+    })
 
     // 处理厂商选择变化
     const handleManufacturerChange = (selectedValues) => {
@@ -2400,8 +2401,10 @@ export default {
         strategyId: null,
       })
       
+      // 默认全选所有厂商
+      const allManufacturerValues = getAllManufacturerValues()
       Object.assign(environmentForm, {
-        manufacturer: [],
+        manufacturer: ['all', ...allManufacturerValues],
         network: null,
         regionId: null,
         countryId: null,
