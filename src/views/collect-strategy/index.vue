@@ -1372,6 +1372,31 @@ export default {
         // 加载用例自定义参数列表
         await loadTestCaseCustomParams()
         
+        // 如果是新增策略，自动为每个用例添加匹配的自定义参数并勾选全部值
+        if (dialogTitle.value === t('collectStrategy.addStrategy')) {
+          selectedTestCases.value.forEach(testCase => {
+            // 获取该用例匹配的参数键选项
+            const paramKeyOptions = getBatchParamKeyOptions(testCase)
+            
+            // 如果该用例还没有参数，或者参数为空，则自动添加所有匹配的参数
+            if (!form.testCaseCustomParams[testCase.id] || form.testCaseCustomParams[testCase.id].length === 0) {
+              form.testCaseCustomParams[testCase.id] = []
+              
+              // 为每个匹配的参数键创建一个参数项，并自动勾选所有参数值
+              paramKeyOptions.forEach(paramOption => {
+                const allValues = paramOption.paramValues && Array.isArray(paramOption.paramValues)
+                  ? [...paramOption.paramValues]
+                  : []
+                
+                form.testCaseCustomParams[testCase.id].push({
+                  key: paramOption.paramName,
+                  value: allValues,
+                })
+              })
+            }
+          })
+        }
+        
         // 进入第三步
         currentStep.value = 2
         // 默认所有用例都折叠隐藏
