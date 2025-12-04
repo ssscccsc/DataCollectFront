@@ -599,7 +599,6 @@
                 style="width: 100%" 
                 multiple
                 clearable
-                @change="handleManufacturerChange"
               >
                 <el-option
                   v-for="item in manufacturerOptions"
@@ -1488,9 +1487,8 @@ export default {
       ],
     }
 
-    // 厂商选项（全选选项放在最前面）
+    // 厂商选项
     const manufacturerOptions = [
-      { label: '全选', value: 'all' },
       { label: '小米', value: 'xiaomi' },
       { label: 'OPPO', value: 'oppo' },
       { label: 'vivo', value: 'vivo' },
@@ -1501,47 +1499,20 @@ export default {
       { label: '华为海思', value: 'hisilicon' },
     ]
 
-    // 获取所有厂商选项的值（排除全选）
+    // 获取所有厂商的值
     const getAllManufacturerValues = () => {
-      return manufacturerOptions
-        .filter(item => item.value !== 'all')
-        .map(item => item.value)
+      return manufacturerOptions.map(item => item.value)
     }
 
-    // 步骤2：环境编排表单（默认全选所有厂商）
-    const allManufacturerValues = getAllManufacturerValues()
+    // 步骤2：环境编排表单
     const environmentForm = reactive({
-      manufacturer: ['all', ...allManufacturerValues],
+      manufacturer: [],
       network: null,
       regionId: null,
       countryId: null,
       provinceId: null,
       cityId: null,
     })
-
-    // 处理厂商选择变化
-    const handleManufacturerChange = (selectedValues) => {
-      const allValues = getAllManufacturerValues()
-      const hasAll = selectedValues.includes('all')
-      const hasAllManufacturers = allValues.every(val => selectedValues.includes(val))
-      const currentSelected = selectedValues.filter(val => val !== 'all')
-
-      if (hasAll) {
-        // 如果选择了全选，选中所有厂商（包括全选本身）
-        if (currentSelected.length !== allValues.length) {
-          environmentForm.manufacturer = ['all', ...allValues]
-        }
-      } else {
-        // 如果取消全选，移除全选选项
-        if (hasAllManufacturers) {
-          // 如果所有厂商都被选中，自动添加全选
-          environmentForm.manufacturer = ['all', ...allValues]
-        } else {
-          // 只保留实际选中的厂商（排除全选）
-          environmentForm.manufacturer = currentSelected
-        }
-      }
-    }
 
     // 网络选项
     const networkOptions = [
@@ -1868,9 +1839,11 @@ export default {
           network: environmentForm.network,
         }
         
-        // 如果选择了厂商，直接传递数组（过滤掉"all"值）
+        // 如果选择了厂商，直接传递数组；如果为空，则传递所有厂商
         if (environmentForm.manufacturer && environmentForm.manufacturer.length > 0) {
-          params.manufacturer = environmentForm.manufacturer.filter(val => val !== 'all')
+          params.manufacturer = environmentForm.manufacturer
+        } else {
+          params.manufacturer = getAllManufacturerValues()
         }
         
         const res = await request({
@@ -2342,10 +2315,10 @@ export default {
         })
         
         // 构建提交数据
-        // 过滤掉厂商选择中的"all"值
-        const manufacturerValues = Array.isArray(environmentForm.manufacturer)
-          ? environmentForm.manufacturer.filter(val => val !== 'all')
-          : []
+        // 如果厂商为空，则使用所有厂商
+        const manufacturerValues = (environmentForm.manufacturer && environmentForm.manufacturer.length > 0)
+          ? environmentForm.manufacturer
+          : getAllManufacturerValues()
         
         const submitData = {
           name: basicForm.name,
@@ -2401,10 +2374,8 @@ export default {
         strategyId: null,
       })
       
-      // 默认全选所有厂商
-      const allManufacturerValues = getAllManufacturerValues()
       Object.assign(environmentForm, {
-        manufacturer: ['all', ...allManufacturerValues],
+        manufacturer: [],
         network: null,
         regionId: null,
         countryId: null,
@@ -3856,7 +3827,6 @@ export default {
       handleCountryChange,
       handleProvinceChange,
       handleCityChange,
-      handleManufacturerChange,
       loadAvailableEnvironments,
       toggleEnvironmentSelection,
       handleEnvironmentSelection,
