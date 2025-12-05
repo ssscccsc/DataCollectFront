@@ -1423,10 +1423,16 @@ export default {
       const categories = new Set()
       // 获取策略中已选择的用例ID
       const selectedTestCaseIds = getSelectedTestCaseIds()
+      const selectedApp = selectedStrategy.value.app
+      
       if (selectedTestCaseIds.length > 0) {
         selectedStrategy.value.testCaseList.forEach(testCase => {
           const testCaseId = typeof testCase.id === 'string' ? parseInt(testCase.id) : Number(testCase.id)
           if (selectedTestCaseIds.includes(testCaseId) && testCase.businessCategory) {
+            // 如果选择了APP，只显示该APP对应的业务大类
+            if (selectedApp && testCase.app !== selectedApp) {
+              return
+            }
             categories.add(testCase.businessCategory)
           }
         })
@@ -1434,6 +1440,10 @@ export default {
         // 如果没有已选择的用例，从所有用例中提取
         selectedStrategy.value.testCaseList.forEach(testCase => {
           if (testCase.businessCategory) {
+            // 如果选择了APP，只显示该APP对应的业务大类
+            if (selectedApp && testCase.app !== selectedApp) {
+              return
+            }
             categories.add(testCase.businessCategory)
           }
         })
@@ -1449,10 +1459,16 @@ export default {
       const apps = new Set()
       // 获取策略中已选择的用例ID
       const selectedTestCaseIds = getSelectedTestCaseIds()
+      const selectedBusinessCategory = selectedStrategy.value.businessCategory
+      
       if (selectedTestCaseIds.length > 0) {
         selectedStrategy.value.testCaseList.forEach(testCase => {
           const testCaseId = typeof testCase.id === 'string' ? parseInt(testCase.id) : Number(testCase.id)
           if (selectedTestCaseIds.includes(testCaseId) && testCase.app) {
+            // 如果选择了业务大类，只显示该业务大类对应的APP
+            if (selectedBusinessCategory && testCase.businessCategory !== selectedBusinessCategory) {
+              return
+            }
             apps.add(testCase.app)
           }
         })
@@ -1460,6 +1476,10 @@ export default {
         // 如果没有已选择的用例，从所有用例中提取
         selectedStrategy.value.testCaseList.forEach(testCase => {
           if (testCase.app) {
+            // 如果选择了业务大类，只显示该业务大类对应的APP
+            if (selectedBusinessCategory && testCase.businessCategory !== selectedBusinessCategory) {
+              return
+            }
             apps.add(testCase.app)
           }
         })
@@ -2177,6 +2197,64 @@ export default {
         loadAvailableEnvironments()
       }
     }, { deep: true })
+    
+    // 监听APP选择变化，自动更新业务大类选项并自动选择
+    watch(() => selectedStrategy.value?.app, (newApp, oldApp) => {
+      if (!selectedStrategy.value) {
+        return
+      }
+      
+      // 如果选择了APP，更新业务大类选项
+      if (newApp) {
+        // 等待下一个tick，确保计算属性已更新
+        nextTick(() => {
+          const categories = strategyBusinessCategoryOptions.value
+          // 如果只有一个业务大类选项，自动选择
+          if (categories.length === 1) {
+            selectedStrategy.value.businessCategory = categories[0]
+          } else if (categories.length > 1) {
+            // 如果有多个选项，检查当前选择的业务大类是否还在选项中
+            if (selectedStrategy.value.businessCategory && !categories.includes(selectedStrategy.value.businessCategory)) {
+              // 如果当前选择的业务大类不在新选项中，清空选择
+              selectedStrategy.value.businessCategory = ''
+            }
+          } else {
+            // 如果没有选项，清空业务大类选择
+            selectedStrategy.value.businessCategory = ''
+          }
+        })
+      }
+      // 如果清空了APP选择，不清空业务大类选择，让它恢复为所有选项
+    })
+    
+    // 监听业务大类选择变化，自动更新APP选项并自动选择
+    watch(() => selectedStrategy.value?.businessCategory, (newCategory, oldCategory) => {
+      if (!selectedStrategy.value) {
+        return
+      }
+      
+      // 如果选择了业务大类，更新APP选项
+      if (newCategory) {
+        // 等待下一个tick，确保计算属性已更新
+        nextTick(() => {
+          const apps = strategyAppOptions.value
+          // 如果只有一个APP选项，自动选择
+          if (apps.length === 1) {
+            selectedStrategy.value.app = apps[0]
+          } else if (apps.length > 1) {
+            // 如果有多个选项，检查当前选择的APP是否还在选项中
+            if (selectedStrategy.value.app && !apps.includes(selectedStrategy.value.app)) {
+              // 如果当前选择的APP不在新选项中，清空选择
+              selectedStrategy.value.app = ''
+            }
+          } else {
+            // 如果没有选项，清空APP选择
+            selectedStrategy.value.app = ''
+          }
+        })
+      }
+      // 如果清空了业务大类选择，不清空APP选择，让它恢复为所有选项
+    })
     
     // 切换逻辑环境选择
     const toggleEnvironmentSelection = (environmentId) => {
