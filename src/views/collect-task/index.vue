@@ -421,28 +421,36 @@
                 <el-descriptions-item :label="$t('collectTask.collectCount')">{{ selectedStrategy.collectCount }}次</el-descriptions-item>
                 <el-descriptions-item :label="$t('collectTask.relatedTestCaseSet')">{{ selectedStrategy.testCaseSetName }} ({{ selectedStrategy.testCaseSetVersion }})</el-descriptions-item>
                 <el-descriptions-item :label="$t('collectTask.businessCategoryFilter')">
-                  <el-radio-group v-model="selectedStrategy.businessCategory" size="small">
-                    <el-radio label="">{{ $t('collectTask.noFilter') }}</el-radio>
-                    <el-radio 
+                  <el-select 
+                    v-model="selectedStrategy.businessCategory" 
+                    :placeholder="$t('collectTask.noFilter')" 
+                    size="small" 
+                    clearable
+                    style="width: 100%;"
+                  >
+                    <el-option 
                       v-for="category in strategyBusinessCategoryOptions" 
                       :key="category" 
                       :label="category"
-                    >
-                      {{ category }}
-                    </el-radio>
-                  </el-radio-group>
+                      :value="category"
+                    />
+                  </el-select>
                 </el-descriptions-item>
                 <el-descriptions-item :label="$t('collectTask.appFilter')">
-                  <el-radio-group v-model="selectedStrategy.app" size="small">
-                    <el-radio label="">{{ $t('collectTask.noFilter') }}</el-radio>
-                    <el-radio 
+                  <el-select 
+                    v-model="selectedStrategy.app" 
+                    :placeholder="$t('collectTask.noFilter')" 
+                    size="small" 
+                    clearable
+                    style="width: 100%;"
+                  >
+                    <el-option 
                       v-for="app in strategyAppOptions" 
                       :key="app" 
                       :label="app"
-                    >
-                      {{ app }}
-                    </el-radio>
-                  </el-radio-group>
+                      :value="app"
+                    />
+                  </el-select>
                 </el-descriptions-item>
                 <el-descriptions-item :label="$t('testCaseSet.appEn')">
                   <el-tag v-if="selectedStrategyAppEn" size="small" type="warning">
