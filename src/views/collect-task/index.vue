@@ -2037,6 +2037,8 @@ export default {
           await loadStrategyDetail(strategyId)
           // 初始化自定义参数
           initializeCustomParams()
+          // 如果从app版本变更或top应用监控页面跳转过来，自动设置app筛选
+          await setAppFilterFromRoute()
           await loadAvailableEnvironments()
         }
       } else {
@@ -2045,6 +2047,38 @@ export default {
         // 清空自定义参数
         editableCustomParams.value = []
         originalCustomParams.value = []
+      }
+    }
+    
+    // 根据路由参数自动设置app筛选
+    const setAppFilterFromRoute = async () => {
+      if (!appInfo.value.appName || !selectedStrategy.value || !selectedStrategy.value.testCaseList) {
+        return
+      }
+      
+      // 等待计算属性更新
+      await nextTick()
+      
+      // 在策略用例列表中查找匹配的app
+      const matchedApp = selectedStrategy.value.testCaseList.find(
+        testCase => testCase.app === appInfo.value.appName
+      )
+      
+      if (matchedApp) {
+        // 如果找到匹配的app，设置app筛选
+        selectedStrategy.value.app = appInfo.value.appName
+        console.log('自动设置app筛选:', appInfo.value.appName)
+      } else {
+        // 如果没有找到匹配的app，尝试在app选项中查找
+        await nextTick() // 再次等待，确保计算属性已更新
+        const appOptions = strategyAppOptions.value
+        const foundApp = appOptions.find(app => app === appInfo.value.appName)
+        if (foundApp) {
+          selectedStrategy.value.app = appInfo.value.appName
+          console.log('自动设置app筛选:', appInfo.value.appName)
+        } else {
+          console.warn('未找到匹配的app:', appInfo.value.appName, '可用选项:', appOptions)
+        }
       }
     }
     
