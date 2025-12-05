@@ -139,7 +139,24 @@
 </template>
 
 <script>
-import { Iphone, DataBoard, Upload } from '@element-plus/icons-vue'
+import {
+  Iphone,
+  DataBoard,
+  Upload,
+  Odometer,
+  Monitor,
+  ShoppingBag,
+  DocumentCopy,
+  DataAnalysis,
+  List,
+  Operation,
+  Setting,
+  Document,
+  Location,
+  Connection,
+  User,
+  ArrowDown,
+} from '@element-plus/icons-vue'
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -150,6 +167,22 @@ export default {
   name: 'Layout',
   components: {
     LanguageSwitcher,
+    Odometer,
+    Monitor,
+    ShoppingBag,
+    DocumentCopy,
+    DataAnalysis,
+    List,
+    Operation,
+    Upload,
+    Setting,
+    Document,
+    Iphone,
+    Location,
+    Connection,
+    User,
+    DataBoard,
+    ArrowDown,
   },
   setup() {
     const route = useRoute()

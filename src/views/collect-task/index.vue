@@ -421,16 +421,28 @@
                 <el-descriptions-item :label="$t('collectTask.collectCount')">{{ selectedStrategy.collectCount }}次</el-descriptions-item>
                 <el-descriptions-item :label="$t('collectTask.relatedTestCaseSet')">{{ selectedStrategy.testCaseSetName }} ({{ selectedStrategy.testCaseSetVersion }})</el-descriptions-item>
                 <el-descriptions-item :label="$t('collectTask.businessCategoryFilter')">
-                  <el-tag v-if="selectedStrategy.businessCategory" size="small" type="info">
-                    {{ selectedStrategy.businessCategory }}
-                  </el-tag>
-                  <span v-else style="color: #909399;">{{ $t('collectTask.noFilter') }}</span>
+                  <el-radio-group v-model="selectedStrategy.businessCategory" size="small">
+                    <el-radio label="">{{ $t('collectTask.noFilter') }}</el-radio>
+                    <el-radio 
+                      v-for="category in strategyBusinessCategoryOptions" 
+                      :key="category" 
+                      :label="category"
+                    >
+                      {{ category }}
+                    </el-radio>
+                  </el-radio-group>
                 </el-descriptions-item>
                 <el-descriptions-item :label="$t('collectTask.appFilter')">
-                  <el-tag v-if="selectedStrategy.app" size="small" type="success">
-                    {{ selectedStrategyAppLabel }}
-                  </el-tag>
-                  <span v-else style="color: #909399;">{{ $t('collectTask.noFilter') }}</span>
+                  <el-radio-group v-model="selectedStrategy.app" size="small">
+                    <el-radio label="">{{ $t('collectTask.noFilter') }}</el-radio>
+                    <el-radio 
+                      v-for="app in strategyAppOptions" 
+                      :key="app" 
+                      :label="app"
+                    >
+                      {{ app }}
+                    </el-radio>
+                  </el-radio-group>
                 </el-descriptions-item>
                 <el-descriptions-item :label="$t('testCaseSet.appEn')">
                   <el-tag v-if="selectedStrategyAppEn" size="small" type="warning">
@@ -1395,6 +1407,58 @@ export default {
       return hit ? (hit.appEn || '') : ''
     })
     
+    // 从策略用例列表中提取业务大类选项（基于策略选择的用例）
+    const strategyBusinessCategoryOptions = computed(() => {
+      if (!selectedStrategy.value || !selectedStrategy.value.testCaseList) {
+        return []
+      }
+      const categories = new Set()
+      // 获取策略中已选择的用例ID
+      const selectedTestCaseIds = getSelectedTestCaseIds()
+      if (selectedTestCaseIds.length > 0) {
+        selectedStrategy.value.testCaseList.forEach(testCase => {
+          const testCaseId = typeof testCase.id === 'string' ? parseInt(testCase.id) : Number(testCase.id)
+          if (selectedTestCaseIds.includes(testCaseId) && testCase.businessCategory) {
+            categories.add(testCase.businessCategory)
+          }
+        })
+      } else {
+        // 如果没有已选择的用例，从所有用例中提取
+        selectedStrategy.value.testCaseList.forEach(testCase => {
+          if (testCase.businessCategory) {
+            categories.add(testCase.businessCategory)
+          }
+        })
+      }
+      return Array.from(categories).sort()
+    })
+    
+    // 从策略用例列表中提取app选项（基于策略选择的用例）
+    const strategyAppOptions = computed(() => {
+      if (!selectedStrategy.value || !selectedStrategy.value.testCaseList) {
+        return []
+      }
+      const apps = new Set()
+      // 获取策略中已选择的用例ID
+      const selectedTestCaseIds = getSelectedTestCaseIds()
+      if (selectedTestCaseIds.length > 0) {
+        selectedStrategy.value.testCaseList.forEach(testCase => {
+          const testCaseId = typeof testCase.id === 'string' ? parseInt(testCase.id) : Number(testCase.id)
+          if (selectedTestCaseIds.includes(testCaseId) && testCase.app) {
+            apps.add(testCase.app)
+          }
+        })
+      } else {
+        // 如果没有已选择的用例，从所有用例中提取
+        selectedStrategy.value.testCaseList.forEach(testCase => {
+          if (testCase.app) {
+            apps.add(testCase.app)
+          }
+        })
+      }
+      return Array.from(apps).sort()
+    })
+    
     // 可用逻辑环境列表
     const availableEnvironments = ref([])
     const environmentsLoading = ref(false)
@@ -2186,7 +2250,22 @@ export default {
       if (selectedTestCaseIds.length > 0) {
         return selectedStrategy.value.testCaseList.filter(testCase => {
           const testCaseId = typeof testCase.id === 'string' ? parseInt(testCase.id) : Number(testCase.id)
-          return selectedTestCaseIds.includes(testCaseId)
+          // 首先检查是否在已选择的用例ID列表中
+          if (!selectedTestCaseIds.includes(testCaseId)) {
+            return false
+          }
+          
+          // 然后根据业务大类筛选
+          if (selectedStrategy.value.businessCategory && testCase.businessCategory !== selectedStrategy.value.businessCategory) {
+            return false
+          }
+          
+          // 最后根据app筛选
+          if (selectedStrategy.value.app && testCase.app !== selectedStrategy.value.app) {
+            return false
+          }
+          
+          return true
         })
       }
       
@@ -3766,6 +3845,8 @@ export default {
       selectedStrategy,
       selectedStrategyAppEn,
       selectedStrategyAppLabel,
+      strategyBusinessCategoryOptions,
+      strategyAppOptions,
       availableEnvironments,
       environmentsLoading,
       selectedEnvironmentIds,
