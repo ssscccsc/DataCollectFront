@@ -40,6 +40,12 @@
               <el-form-item :label="$t('experienceTest.testSettings.checkMd5')" prop="checkMd5">
                 <el-switch v-model="clientFtpForm.checkMd5" />
               </el-form-item>
+              <el-form-item :label="$t('experienceTest.testSettings.directory')" prop="directory">
+                <el-input
+                  v-model="clientFtpForm.directory"
+                  :placeholder="$t('experienceTest.testSettings.directoryPlaceholder')"
+                />
+              </el-form-item>
               <el-form-item>
                 <el-button type="primary" @click="handleSaveClientFtp">
                   {{ $t('common.save') }}
@@ -84,6 +90,12 @@
               </el-form-item>
               <el-form-item :label="$t('experienceTest.testSettings.checkMd5')" prop="checkMd5">
                 <el-switch v-model="networkFtpForm.checkMd5" />
+              </el-form-item>
+              <el-form-item :label="$t('experienceTest.testSettings.directory')" prop="directory">
+                <el-input
+                  v-model="networkFtpForm.directory"
+                  :placeholder="$t('experienceTest.testSettings.directoryPlaceholder')"
+                />
               </el-form-item>
               <el-form-item>
                 <el-button type="primary" @click="handleSaveNetworkFtp">
@@ -213,6 +225,7 @@ export default {
       account: '',
       password: '',
       checkMd5: false,
+      directory: '',
     })
 
     // 网络侧FTP服务器表单
@@ -221,6 +234,7 @@ export default {
       account: '',
       password: '',
       checkMd5: false,
+      directory: '',
     })
 
     // deviceid和IMSI对应关系数据
@@ -286,6 +300,7 @@ export default {
           clientFtpForm.account = response.data.account || ''
           clientFtpForm.password = response.data.password || ''
           clientFtpForm.checkMd5 = response.data.checkMd5 === 1
+          clientFtpForm.directory = response.data.directory || ''
         }
       } catch (error) {
         // 如果没有数据，不显示错误，保持表单为空
@@ -304,6 +319,7 @@ export default {
           networkFtpForm.account = response.data.account || ''
           networkFtpForm.password = response.data.password || ''
           networkFtpForm.checkMd5 = response.data.checkMd5 === 1
+          networkFtpForm.directory = response.data.directory || ''
         }
       } catch (error) {
         // 如果没有数据，不显示错误，保持表单为空
@@ -326,6 +342,7 @@ export default {
               account: clientFtpForm.account,
               password: clientFtpForm.password,
               checkMd5: clientFtpForm.checkMd5 ? 1 : 0,
+              directory: clientFtpForm.directory,
             }
             await testSettingsApi.saveOrUpdateClientFtpConfig(data)
             ElMessage.success(t('common.success'))
@@ -357,6 +374,7 @@ export default {
               account: networkFtpForm.account,
               password: networkFtpForm.password,
               checkMd5: networkFtpForm.checkMd5 ? 1 : 0,
+              directory: networkFtpForm.directory,
             }
             await testSettingsApi.saveOrUpdateNetworkFtpConfig(data)
             ElMessage.success(t('common.success'))

@@ -1,0 +1,175 @@
+# 代码编写规则
+
+## 通用规则
+- 始终使用中文回复和注释
+- 代码注释使用中文
+
+## JavaScript/TypeScript/Vue 规则
+
+### 控制流语句
+- 在 if, for, do, while 等语句的执行体必须加大括号 {}
+- 即使只有一行代码，也必须使用大括号
+
+### 对象和数组
+- .js .ts .vue 文件在定义对象和数组时需要使用拖尾逗号
+- 正确示例：`const hero = { firstName: 'Dana', lastName: 'Scully', }`
+- 正确示例：`const items = [1, 2, 3, ]`
+
+### 代码风格
+- 使用 2 个空格缩进
+- 使用单引号（字符串）
+- 语句末尾使用分号
+- 使用 const/let，避免使用 var
+
+### Vue 特定规则
+- 使用组合式 API (Composition API)
+- 组件名使用 PascalCase
+- Props 和 emits 需要定义类型
+- 使用 `<script setup>` 语法
+
+### 命名规范
+- 变量和函数使用驼峰命名 (camelCase)
+- 常量使用大写字母和下划线 (UPPER_SNAKE_CASE)
+- 组件名使用 PascalCase
+- 私有变量使用下划线前缀 (_privateVar)
+
+### 代码质量
+- 避免使用 any 类型
+- 函数应该尽量短小，单一职责
+- 避免深层嵌套（最多 3 层）
+- 使用有意义的变量和函数名
+
+### 错误处理
+- 使用 try-catch 处理异步错误
+- 提供有意义的错误信息
+- 不要忽略错误
+
+### 注释规范
+- 复杂逻辑必须添加注释
+- 函数和类需要添加 JSDoc 注释
+- 使用中文注释
+
+## Java 代码规则
+
+### 控制流语句
+- 在 if, for, do, while 等语句的执行体必须加大括号 {}
+- 即使只有一行代码，也必须使用大括号
+- 正确示例：
+  ```java
+  if (condition) {
+      doSomething();
+  }
+  ```
+
+### 代码风格
+- 使用 4 个空格缩进（Java 标准）
+- 使用单行注释 `//` 或多行注释 `/* */`
+- 每行代码长度不超过 120 个字符
+- 类和方法之间使用空行分隔
+- 导入语句按字母顺序排列，不使用通配符
+
+### 命名规范
+- **类名**: 使用 PascalCase（首字母大写的驼峰命名）
+  - 示例：`CollectTaskService`, `UserController`
+- **方法名**: 使用 camelCase（首字母小写的驼峰命名）
+  - 示例：`getUserById()`, `createTask()`
+- **变量名**: 使用 camelCase
+  - 示例：`userName`, `taskList`
+- **常量**: 使用 UPPER_SNAKE_CASE（全大写下划线分隔）
+  - 示例：`MAX_RETRY_COUNT`, `DEFAULT_TIMEOUT`
+- **包名**: 使用小写字母，多个单词用点分隔
+  - 示例：`com.datacollect.service`
+
+### 类和方法
+- 类必须有 JavaDoc 注释，说明类的用途
+- 公共方法必须有 JavaDoc 注释，包括参数说明和返回值说明
+- 方法应该尽量短小，单一职责
+- 避免方法参数过多（建议不超过 5 个）
+- 使用有意义的类名和方法名
+
+### 异常处理
+- 必须捕获和处理异常，不要忽略异常
+- 使用 try-catch-finally 或 try-with-resources
+- 提供有意义的错误信息和日志
+- 日志使用英文日志
+- 不使用Exception异常类
+- 不要捕获 Exception 而不处理
+- 正确示例：
+  ```java
+  try {
+      // 业务逻辑
+  } catch (SpecificException e) {
+      log.error("错误信息: {}", e.getMessage(), e);
+      throw new BusinessException("业务异常", e);
+  }
+  ```
+
+### 注释规范
+- 类和方法必须添加 JavaDoc 注释
+- 复杂逻辑必须添加中文注释说明
+- JavaDoc 注释格式：
+  ```java
+  /**
+   * 方法功能描述
+   * 
+   * @param paramName 参数说明
+   * @return 返回值说明
+   * @throws ExceptionType 异常说明
+   */
+  ```
+
+### 代码质量
+- 避免使用魔法数字，使用常量替代
+- 避免深层嵌套（最多 3 层）
+- 使用有意义的变量名，避免单字母变量（循环变量除外）
+- 优先使用接口而不是具体实现类
+- 使用 `@Override` 注解标记重写的方法
+
+### 集合和泛型
+- 使用泛型明确集合类型
+- 优先使用 `List`, `Set`, `Map` 接口
+- 初始化集合时指定初始容量（如果知道大小）
+- 正确示例：
+  ```java
+  List<String> names = new ArrayList<>();
+  Map<String, Object> data = new HashMap<>();
+  ```
+
+### 字符串处理
+- 使用 `StringBuilder` 或 `StringBuffer` 进行字符串拼接（循环中）
+- 使用 `equals()` 比较字符串，不要使用 `==`
+- 检查字符串是否为空：`str == null || str.isEmpty()` 或使用工具类
+
+### 空值处理
+- 检查 null 值，避免 NullPointerException
+- 使用 Optional 处理可能为 null 的返回值（Java 8+）
+- 正确示例：
+  ```java
+  if (obj != null) {
+      obj.doSomething();
+  }
+  ```
+
+### Lombok 使用（如果项目使用）
+- 使用 `@Data` 生成 getter/setter
+- 使用 `@Builder` 构建对象
+- 使用 `@Slf4j` 生成日志对象
+- 使用 `@AllArgsConstructor` 和 `@NoArgsConstructor` 生成构造函数
+
+### Spring Boot 特定规则
+- Controller 使用 `@RestController` 或 `@Controller`
+- Service 使用 `@Service` 注解
+- Repository/Mapper 使用 `@Mapper` 或 `@Repository`
+- 使用 `@Autowired` 或构造函数注入（推荐构造函数注入）
+- 使用 `@Transactional` 管理事务
+
+### 日志规范
+- 使用 SLF4J 日志框架
+- 日志级别：DEBUG < INFO < WARN < ERROR
+- 使用参数化日志，避免字符串拼接
+- 正确示例：
+  ```java
+  log.info("用户 {} 执行了操作 {}", userId, action);
+  log.error("处理失败: {}", e.getMessage(), e);
+  ```
+

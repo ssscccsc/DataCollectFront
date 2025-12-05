@@ -1017,6 +1017,8 @@ export default {
       password: '密码',
       passwordPlaceholder: '请输入密码',
       checkMd5: '是否检验MD5值',
+      directory: '目录',
+      directoryPlaceholder: '请输入目录路径',
       deviceId: 'deviceid',
       deviceIdPlaceholder: '请输入deviceid',
       imsi: 'IMSI',
