@@ -32,7 +32,7 @@ export function saveOrUpdateNetworkFtpConfig(data) {
   })
 }
 
-// deviceid和IMSI对应关系API
+// deviceid和GPSI对应关系API
 export function getDeviceImsiMappings() {
   return request({
     url: '/test-settings/device-imsi-mapping',

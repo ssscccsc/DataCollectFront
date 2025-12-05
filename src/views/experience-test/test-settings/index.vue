@@ -109,8 +109,8 @@
           </div>
         </el-tab-pane>
 
-        <!-- deviceid和IMSI对应关系 -->
-        <el-tab-pane :label="$t('experienceTest.testSettings.deviceIdImsiMapping')" name="deviceIdImsi">
+        <!-- deviceid和GPSI对应关系 -->
+        <el-tab-pane :label="$t('experienceTest.testSettings.deviceIdGpsiMapping')" name="deviceIdGpsi">
           <div class="tab-content">
             <div class="table-operations">
               <el-button type="primary" @click="handleAddMapping">
@@ -131,8 +131,8 @@
                 width="200"
               />
               <el-table-column
-                prop="imsi"
-                :label="$t('experienceTest.testSettings.imsi')"
+                prop="gpsi"
+                :label="$t('experienceTest.testSettings.gpsi')"
                 width="200"
               />
               <el-table-column
@@ -156,7 +156,7 @@
       </el-tabs>
     </el-card>
 
-    <!-- 添加/编辑deviceid和IMSI对应关系对话框 -->
+    <!-- 添加/编辑deviceid和GPSI对应关系对话框 -->
     <el-dialog
       v-model="mappingDialogVisible"
       :title="mappingDialogTitle"
@@ -175,10 +175,10 @@
             :placeholder="$t('experienceTest.testSettings.deviceIdPlaceholder')"
           />
         </el-form-item>
-        <el-form-item :label="$t('experienceTest.testSettings.imsi')" prop="imsi">
+        <el-form-item :label="$t('experienceTest.testSettings.gpsi')" prop="gpsi">
           <el-input
-            v-model="mappingForm.imsi"
-            :placeholder="$t('experienceTest.testSettings.imsiPlaceholder')"
+            v-model="mappingForm.gpsi"
+            :placeholder="$t('experienceTest.testSettings.gpsiPlaceholder')"
           />
         </el-form-item>
       </el-form>
@@ -237,13 +237,13 @@ export default {
       directory: '',
     })
 
-    // deviceid和IMSI对应关系数据
+    // deviceid和GPSI对应关系数据
     const mappingData = ref([])
 
-    // deviceid和IMSI对应关系表单
+    // deviceid和GPSI对应关系表单
     const mappingForm = reactive({
       deviceId: '',
-      imsi: '',
+      gpsi: '',
     })
 
     // 表单验证规则
@@ -275,14 +275,14 @@ export default {
       deviceId: [
         { required: true, message: t('experienceTest.testSettings.deviceIdRequired'), trigger: 'blur' },
       ],
-      imsi: [
-        { required: true, message: t('experienceTest.testSettings.imsiRequired'), trigger: 'blur' },
+      gpsi: [
+        { required: true, message: t('experienceTest.testSettings.gpsiRequired'), trigger: 'blur' },
       ],
     }
 
     // Tab切换
     const handleTabClick = (tab) => {
-      if (tab.name === 'deviceIdImsi') {
+      if (tab.name === 'deviceIdGpsi') {
         loadMappingData()
       } else if (tab.name === 'clientFtp') {
         loadClientFtpData()
@@ -393,7 +393,7 @@ export default {
       }
     }
 
-    // 加载deviceid和IMSI对应关系数据
+    // 加载deviceid和GPSI对应关系数据
     const loadMappingData = async () => {
       mappingLoading.value = true
       try {
@@ -407,27 +407,27 @@ export default {
       }
     }
 
-    // 添加deviceid和IMSI对应关系
+    // 添加deviceid和GPSI对应关系
     const handleAddMapping = () => {
       isEditMapping.value = false
       currentMappingId.value = null
       mappingDialogTitle.value = t('experienceTest.testSettings.addMapping')
       mappingForm.deviceId = ''
-      mappingForm.imsi = ''
+      mappingForm.gpsi = ''
       mappingDialogVisible.value = true
     }
 
-    // 编辑deviceid和IMSI对应关系
+    // 编辑deviceid和GPSI对应关系
     const handleEditMapping = (row) => {
       isEditMapping.value = true
       currentMappingId.value = row.id
       mappingDialogTitle.value = t('experienceTest.testSettings.editMapping')
       mappingForm.deviceId = row.deviceId
-      mappingForm.imsi = row.imsi
+      mappingForm.gpsi = row.gpsi
       mappingDialogVisible.value = true
     }
 
-    // 删除deviceid和IMSI对应关系
+    // 删除deviceid和GPSI对应关系
     const handleDeleteMapping = async (row) => {
       try {
         await ElMessageBox.confirm(
@@ -449,7 +449,7 @@ export default {
       }
     }
 
-    // 保存deviceid和IMSI对应关系
+    // 保存deviceid和GPSI对应关系
     const handleSaveMapping = async () => {
       if (!mappingFormRef.value) {
         return
@@ -459,7 +459,7 @@ export default {
           try {
             const data = {
               deviceId: mappingForm.deviceId,
-              imsi: mappingForm.imsi,
+              gpsi: mappingForm.gpsi,
             }
             if (isEditMapping.value) {
               await testSettingsApi.updateDeviceImsiMapping(currentMappingId.value, data)
