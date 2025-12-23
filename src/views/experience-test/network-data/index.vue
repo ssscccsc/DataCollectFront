@@ -72,20 +72,57 @@
         </template>
       </el-dialog>
 
-      <el-table :data="tableData" v-loading="loading" style="width: 100%">
+      <!-- 搜索栏 -->
+      <div class="search-bar">
+        <el-input
+          v-model="searchForm.gpsi"
+          :placeholder="$t('experienceTest.networkData.searchGpsi')"
+          style="width: 200px; margin-right: 10px;"
+          clearable
+        />
+        <el-input
+          v-model="searchForm.timeStamp"
+          :placeholder="$t('experienceTest.networkData.searchTimeStamp')"
+          style="width: 200px; margin-right: 10px;"
+          clearable
+        />
+        <el-input
+          v-model="searchForm.startTime"
+          :placeholder="$t('experienceTest.networkData.searchStartTime')"
+          style="width: 200px; margin-right: 10px;"
+          clearable
+        />
+        <el-input
+          v-model="searchForm.subAppId"
+          :placeholder="$t('experienceTest.networkData.searchSubAppId')"
+          style="width: 200px; margin-right: 10px;"
+          clearable
+        />
+        <el-button type="primary" @click="handleSearch">
+          <el-icon><Search /></el-icon>
+          {{ $t('common.search') }}
+        </el-button>
+        <el-button @click="handleReset">
+          <el-icon><RefreshLeft /></el-icon>
+          {{ $t('common.reset') }}
+        </el-button>
+      </div>
+
+      <el-table :data="tableData" v-loading="loading" style="width: 100%" stripe border>
         <el-table-column type="index" label="#" width="60" />
-        <el-table-column prop="name" :label="$t('experienceTest.networkData.name')" />
-        <el-table-column prop="createTime" :label="$t('common.createTime')" width="180" />
-        <el-table-column :label="$t('common.operations')" width="200" fixed="right">
-          <template #default="scope">
-            <el-button type="primary" size="small" @click="handleEdit(scope.row)">
-              {{ $t('common.edit') }}
-            </el-button>
-            <el-button type="danger" size="small" @click="handleDelete(scope.row)">
-              {{ $t('common.delete') }}
-            </el-button>
-          </template>
-        </el-table-column>
+        <el-table-column prop="gpsi" :label="$t('experienceTest.networkData.gpsi')" min-width="150" show-overflow-tooltip />
+        <el-table-column prop="timeStamp" :label="$t('experienceTest.networkData.timeStamp')" min-width="150" show-overflow-tooltip />
+        <el-table-column prop="startTime" :label="$t('experienceTest.networkData.startTime')" min-width="150" show-overflow-tooltip />
+        <el-table-column prop="appId" :label="$t('experienceTest.networkData.appId')" min-width="120" show-overflow-tooltip />
+        <el-table-column prop="subAppId" :label="$t('experienceTest.networkData.subAppId')" min-width="120" show-overflow-tooltip />
+        <el-table-column prop="uplinkBandwidth" :label="$t('experienceTest.networkData.uplinkBandwidth')" min-width="150" show-overflow-tooltip />
+        <el-table-column prop="downlinkBandwidth" :label="$t('experienceTest.networkData.downlinkBandwidth')" min-width="150" show-overflow-tooltip />
+        <el-table-column prop="avgQoe" :label="$t('experienceTest.networkData.avgQoe')" min-width="120" show-overflow-tooltip />
+        <el-table-column prop="mostResolution" :label="$t('experienceTest.networkData.mostResolution')" min-width="150" show-overflow-tooltip />
+        <el-table-column prop="stallingDuration" :label="$t('experienceTest.networkData.stallingDuration')" min-width="150" show-overflow-tooltip />
+        <el-table-column prop="stallingNumber" :label="$t('experienceTest.networkData.stallingNumber')" min-width="150" show-overflow-tooltip />
+        <el-table-column prop="serviceDelay" :label="$t('experienceTest.networkData.serviceDelay')" min-width="150" show-overflow-tooltip />
+        <el-table-column prop="serviceInitialDuration" :label="$t('experienceTest.networkData.serviceInitialDuration')" min-width="180" show-overflow-tooltip />
       </el-table>
 
       <div class="pagination">
@@ -107,8 +144,8 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useI18n } from 'vue-i18n'
-import { Plus, Refresh, UploadFilled } from '@element-plus/icons-vue'
-import { uploadNetworkDataFile } from '@/api/network-data'
+import { Plus, Refresh, UploadFilled, Search, RefreshLeft } from '@element-plus/icons-vue'
+import { uploadNetworkDataFile, getNetworkDataPage } from '@/api/network-data'
 
 export default {
   name: 'NetworkData',
@@ -116,6 +153,8 @@ export default {
     Plus,
     Refresh,
     UploadFilled,
+    Search,
+    RefreshLeft,
   },
   setup() {
     const { t } = useI18n()
@@ -132,17 +171,60 @@ export default {
       total: 0,
     })
 
+    const searchForm = reactive({
+      gpsi: '',
+      timeStamp: '',
+      startTime: '',
+      subAppId: '',
+    })
+
     const loadData = async () => {
       loading.value = true
       try {
-        // TODO: 实现数据加载逻辑
-        tableData.value = []
-        pagination.total = 0
+        const params = {
+          current: pagination.current,
+          size: pagination.size,
+        }
+        if (searchForm.gpsi) {
+          params.gpsi = searchForm.gpsi
+        }
+        if (searchForm.timeStamp) {
+          params.timeStamp = searchForm.timeStamp
+        }
+        if (searchForm.startTime) {
+          params.startTime = searchForm.startTime
+        }
+        if (searchForm.subAppId) {
+          params.subAppId = searchForm.subAppId
+        }
+
+        const response = await getNetworkDataPage(params)
+        if (response.code === 200) {
+          tableData.value = response.data.records || []
+          pagination.total = response.data.total || 0
+        } else {
+          ElMessage.error(response.message || t('common.error'))
+        }
       } catch (error) {
+        console.error('Load data error:', error)
         ElMessage.error(t('common.error'))
       } finally {
         loading.value = false
       }
+    }
+
+    const handleSearch = () => {
+      pagination.current = 1
+      loadData()
+    }
+
+    const handleReset = () => {
+      searchForm.gpsi = ''
+      searchForm.timeStamp = ''
+      searchForm.startTime = ''
+      searchForm.subAppId = ''
+      pagination.current = 1
+      loadData()
     }
 
     const handleAdd = () => {
@@ -219,29 +301,6 @@ export default {
       }
     }
 
-    const handleEdit = (row) => {
-      ElMessage.info(t('experienceTest.networkData.editNotImplemented'))
-    }
-
-    const handleDelete = async (row) => {
-      try {
-        await ElMessageBox.confirm(
-          t('experienceTest.networkData.deleteConfirm'),
-          t('common.warning'),
-          {
-            confirmButtonText: t('common.confirm'),
-            cancelButtonText: t('common.cancel'),
-            type: 'warning',
-          }
-        )
-        ElMessage.success(t('common.success'))
-        loadData()
-      } catch (error) {
-        if (error !== 'cancel') {
-          ElMessage.error(t('common.error'))
-        }
-      }
-    }
 
     const handleSizeChange = (val) => {
       pagination.size = val
@@ -261,14 +320,15 @@ export default {
       loading,
       tableData,
       pagination,
+      searchForm,
       uploadDialogVisible,
       uploading,
       selectedFile,
       uploadRef,
       loadData,
       handleAdd,
-      handleEdit,
-      handleDelete,
+      handleSearch,
+      handleReset,
       handleSizeChange,
       handleCurrentChange,
       handleFileChange,
@@ -308,6 +368,12 @@ export default {
 
 .table-operations .el-button {
   margin-right: 8px;
+}
+
+.search-bar {
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
 }
 
 .pagination {

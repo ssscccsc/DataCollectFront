@@ -15,3 +15,12 @@ export function uploadNetworkDataFile(file) {
   });
 }
 
+// 分页查询网络侧数据列表
+export function getNetworkDataPage(params) {
+  return request({
+    url: '/network-data/page',
+    method: 'get',
+    params,
+  });
+}
+
