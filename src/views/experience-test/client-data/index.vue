@@ -17,6 +17,61 @@
         </el-button>
       </div>
 
+      <!-- 文件上传对话框 -->
+      <el-dialog
+        v-model="uploadDialogVisible"
+        :title="$t('experienceTest.clientData.uploadFile')"
+        width="600px"
+        :close-on-click-modal="false"
+      >
+        <el-upload
+          ref="uploadRef"
+          :auto-upload="false"
+          :on-change="handleFileChange"
+          :on-remove="handleFileRemove"
+          :limit="1"
+          accept=".zip,.gz,.tar.gz,.rar"
+          drag
+        >
+          <el-icon class="el-icon--upload"><upload-filled /></el-icon>
+          <div class="el-upload__text">
+            {{ $t('experienceTest.clientData.uploadTip') }}
+          </div>
+          <template #tip>
+            <div class="el-upload__tip">
+              {{ $t('experienceTest.clientData.uploadTipDetail') }}
+            </div>
+          </template>
+        </el-upload>
+
+        <div v-if="selectedFile" class="file-info">
+          <el-descriptions :column="1" border>
+            <el-descriptions-item :label="$t('experienceTest.clientData.fileName')">
+              {{ selectedFile.name }}
+            </el-descriptions-item>
+            <el-descriptions-item :label="$t('experienceTest.clientData.fileSize')">
+              {{ formatFileSize(selectedFile.size) }}
+            </el-descriptions-item>
+          </el-descriptions>
+        </div>
+
+        <template #footer>
+          <span class="dialog-footer">
+            <el-button @click="uploadDialogVisible = false">
+              {{ $t('common.cancel') }}
+            </el-button>
+            <el-button
+              type="primary"
+              @click="handleUpload"
+              :loading="uploading"
+              :disabled="!selectedFile"
+            >
+              {{ $t('common.upload') }}
+            </el-button>
+          </span>
+        </template>
+      </el-dialog>
+
       <el-table :data="tableData" v-loading="loading" style="width: 100%">
         <el-table-column type="index" label="#" width="60" />
         <el-table-column prop="name" :label="$t('experienceTest.clientData.name')" />
@@ -52,18 +107,24 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useI18n } from 'vue-i18n'
-import { Plus, Refresh } from '@element-plus/icons-vue'
+import { Plus, Refresh, UploadFilled } from '@element-plus/icons-vue'
+import { uploadClientDataFile } from '@/api/client-data'
 
 export default {
   name: 'ClientData',
   components: {
     Plus,
     Refresh,
+    UploadFilled,
   },
   setup() {
     const { t } = useI18n()
     const loading = ref(false)
     const tableData = ref([])
+    const uploadDialogVisible = ref(false)
+    const uploading = ref(false)
+    const selectedFile = ref(null)
+    const uploadRef = ref(null)
 
     const pagination = reactive({
       current: 1,
@@ -85,7 +146,92 @@ export default {
     }
 
     const handleAdd = () => {
-      ElMessage.info(t('experienceTest.clientData.addNotImplemented'))
+      uploadDialogVisible.value = true
+      selectedFile.value = null
+      if (uploadRef.value) {
+        uploadRef.value.clearFiles()
+      }
+    }
+
+    const handleFileChange = (file) => {
+      selectedFile.value = file.raw
+    }
+
+    const handleFileRemove = () => {
+      selectedFile.value = null
+    }
+
+    const formatFileSize = (bytes) => {
+      if (bytes === 0) {
+        return '0 B'
+      }
+      const k = 1024
+      const sizes = ['B', 'KB', 'MB', 'GB']
+      const i = Math.floor(Math.log(bytes) / Math.log(k))
+      return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i]
+    }
+
+    const handleUpload = async () => {
+      if (!selectedFile.value) {
+        ElMessage.warning(t('experienceTest.clientData.selectFileFirst'))
+        return
+      }
+
+      // 验证文件类型
+      const fileName = selectedFile.value.name.toLowerCase()
+      const validExtensions = ['.zip', '.gz', '.tar.gz', '.rar']
+      const isValid = validExtensions.some(ext => fileName.endsWith(ext))
+      
+      if (!isValid) {
+        ElMessage.error(t('experienceTest.clientData.invalidFileType'))
+        return
+      }
+
+      uploading.value = true
+      try {
+        const response = await uploadClientDataFile(selectedFile.value)
+        
+        if (response.code === 200) {
+          const result = response.data
+          let message = t('experienceTest.clientData.uploadSuccess')
+          
+          // 显示解析结果
+          if (result.taskId) {
+            message += `\n${t('experienceTest.clientData.taskId')}: ${result.taskId}`
+          }
+          if (result.speedDataCount) {
+            message += `\n${t('experienceTest.clientData.speedDataCount')}: ${result.speedDataCount}`
+          }
+          if (result.vmosDataCount) {
+            message += `\n${t('experienceTest.clientData.vmosDataCount')}: ${result.vmosDataCount}`
+          }
+          if (result.rttDataCount) {
+            message += `\n${t('experienceTest.clientData.rttDataCount')}: ${result.rttDataCount}`
+          }
+          if (result.lostDataCount) {
+            message += `\n${t('experienceTest.clientData.lostDataCount')}: ${result.lostDataCount}`
+          }
+          if (result.videoDataCount) {
+            message += `\n${t('experienceTest.clientData.videoDataCount')}: ${result.videoDataCount}`
+          }
+          
+          ElMessage.success(message)
+          uploadDialogVisible.value = false
+          selectedFile.value = null
+          if (uploadRef.value) {
+            uploadRef.value.clearFiles()
+          }
+          // 刷新数据列表
+          loadData()
+        } else {
+          ElMessage.error(response.message || t('common.error'))
+        }
+      } catch (error) {
+        console.error('Upload error:', error)
+        ElMessage.error(error.message || t('common.error'))
+      } finally {
+        uploading.value = false
+      }
     }
 
     const handleEdit = (row) => {
@@ -130,12 +276,20 @@ export default {
       loading,
       tableData,
       pagination,
+      uploadDialogVisible,
+      uploading,
+      selectedFile,
+      uploadRef,
       loadData,
       handleAdd,
       handleEdit,
       handleDelete,
       handleSizeChange,
       handleCurrentChange,
+      handleFileChange,
+      handleFileRemove,
+      handleUpload,
+      formatFileSize,
     }
   },
 }
@@ -175,7 +329,19 @@ export default {
   margin-top: 20px;
   text-align: right;
 }
+
+.file-info {
+  margin-top: 20px;
+}
+
+.el-upload__tip {
+  color: #606266;
+  font-size: 12px;
+  margin-top: 7px;
+}
 </style>
+
+
 
 
 
