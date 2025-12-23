@@ -72,6 +72,131 @@
         </template>
       </el-dialog>
 
+      <!-- 详情对话框 -->
+      <el-dialog
+        v-model="detailDialogVisible"
+        :title="$t('experienceTest.clientData.detailTitle')"
+        width="90%"
+        :close-on-click-modal="false"
+        destroy-on-close
+        v-loading="loading"
+      >
+        <el-tabs v-model="activeDetailTab" type="border-card" v-if="taskDetail.taskInfo">
+          <!-- 基础信息 -->
+          <el-tab-pane :label="$t('experienceTest.clientData.basicInfo')" name="basic">
+            <el-descriptions :column="2" border v-if="taskDetail.taskInfo">
+              <el-descriptions-item :label="$t('experienceTest.clientData.taskId')">
+                {{ taskDetail.taskInfo.taskId }}
+              </el-descriptions-item>
+              <el-descriptions-item :label="$t('experienceTest.clientData.service')">
+                {{ taskDetail.taskInfo.service }}
+              </el-descriptions-item>
+              <el-descriptions-item :label="$t('experienceTest.clientData.app')">
+                {{ taskDetail.taskInfo.app }}
+              </el-descriptions-item>
+              <el-descriptions-item :label="$t('experienceTest.clientData.nation')">
+                {{ taskDetail.taskInfo.nation }}
+              </el-descriptions-item>
+              <el-descriptions-item :label="$t('experienceTest.clientData.operator')">
+                {{ taskDetail.taskInfo.operator }}
+              </el-descriptions-item>
+              <el-descriptions-item :label="$t('experienceTest.clientData.deviceId')">
+                {{ taskDetail.taskInfo.deviceId }}
+              </el-descriptions-item>
+              <el-descriptions-item :label="$t('experienceTest.clientData.startTime')">
+                {{ taskDetail.taskInfo.startTime }}
+              </el-descriptions-item>
+              <el-descriptions-item :label="$t('experienceTest.clientData.endTime')">
+                {{ taskDetail.taskInfo.endTime }}
+              </el-descriptions-item>
+              <el-descriptions-item :label="$t('experienceTest.clientData.prb')">
+                {{ taskDetail.taskInfo.prb }}
+              </el-descriptions-item>
+              <el-descriptions-item :label="$t('experienceTest.clientData.rsrp')">
+                {{ taskDetail.taskInfo.rsrp }}
+              </el-descriptions-item>
+              <el-descriptions-item :label="$t('experienceTest.clientData.userCategory')">
+                {{ taskDetail.taskInfo.userCategory }}
+              </el-descriptions-item>
+              <el-descriptions-item :label="$t('common.createTime')" :span="2">
+                {{ taskDetail.taskInfo.createTime }}
+              </el-descriptions-item>
+            </el-descriptions>
+            <el-empty v-else :description="$t('common.noData')" />
+          </el-tab-pane>
+
+          <!-- vMOS数据 -->
+          <el-tab-pane :label="$t('experienceTest.clientData.vmos')" name="vmos">
+            <el-table :data="taskDetail.vmosDataList" border style="width: 100%" max-height="600">
+              <el-table-column type="index" label="#" width="60" />
+              <el-table-column prop="sequenceNumber" :label="$t('experienceTest.clientData.sequenceNumber')" width="120" />
+              <el-table-column prop="speed" :label="$t('experienceTest.clientData.speed')" width="120" />
+              <el-table-column prop="resolution" :label="$t('experienceTest.clientData.resolution')" width="150" />
+              <el-table-column prop="rtt" :label="$t('experienceTest.clientData.rtt')" width="120" />
+              <el-table-column prop="packetLossRate" :label="$t('experienceTest.clientData.packetLossRate')" width="150" />
+              <el-table-column prop="stutterRatio" :label="$t('experienceTest.clientData.stutterRatio')" width="150" />
+              <el-table-column prop="initialBufferingDelay" :label="$t('experienceTest.clientData.initialBufferingDelay')" width="180" />
+              <el-table-column prop="bitrate" :label="$t('experienceTest.clientData.bitrate')" width="120" />
+              <el-table-column prop="videoExperience" :label="$t('experienceTest.clientData.videoExperience')" width="150" />
+              <el-table-column prop="interactionExperience" :label="$t('experienceTest.clientData.interactionExperience')" width="180" />
+              <el-table-column prop="presentationExperience" :label="$t('experienceTest.clientData.presentationExperience')" width="180" />
+              <el-table-column prop="alpha" :label="$t('experienceTest.clientData.alpha')" width="100" />
+              <el-table-column prop="beta" :label="$t('experienceTest.clientData.beta')" width="100" />
+              <el-table-column prop="vmos" :label="$t('experienceTest.clientData.vmos')" width="100" />
+              <el-table-column prop="avgQoe" :label="$t('experienceTest.clientData.avgQoe')" width="120" />
+            </el-table>
+            <el-empty v-if="!taskDetail.vmosDataList || taskDetail.vmosDataList.length === 0" :description="$t('common.noData')" />
+          </el-tab-pane>
+
+          <!-- 上下行速率统计 -->
+          <el-tab-pane :label="$t('experienceTest.clientData.speedStatistics')" name="speed">
+            <el-table :data="taskDetail.speedDataList" border style="width: 100%" max-height="600">
+              <el-table-column type="index" label="#" width="60" />
+              <el-table-column prop="dlSpeed" :label="$t('experienceTest.clientData.dlSpeed')" width="150" />
+              <el-table-column prop="ulSpeed" :label="$t('experienceTest.clientData.ulSpeed')" width="150" />
+              <el-table-column prop="total" :label="$t('experienceTest.clientData.total')" width="150" />
+            </el-table>
+            <el-empty v-if="!taskDetail.speedDataList || taskDetail.speedDataList.length === 0" :description="$t('common.noData')" />
+          </el-tab-pane>
+
+          <!-- 上下行RTT统计 -->
+          <el-tab-pane :label="$t('experienceTest.clientData.rttStatistics')" name="rtt">
+            <el-table :data="taskDetail.rttDataList" border style="width: 100%" max-height="600">
+              <el-table-column type="index" label="#" width="60" />
+              <el-table-column prop="indexTime" :label="$t('experienceTest.clientData.indexTime')" width="180" />
+              <el-table-column prop="dlDelay" :label="$t('experienceTest.clientData.dlDelay')" width="150" />
+              <el-table-column prop="ulDelay" :label="$t('experienceTest.clientData.ulDelay')" width="150" />
+            </el-table>
+            <el-empty v-if="!taskDetail.rttDataList || taskDetail.rttDataList.length === 0" :description="$t('common.noData')" />
+          </el-tab-pane>
+
+          <!-- 上下行丢包率统计 -->
+          <el-tab-pane :label="$t('experienceTest.clientData.lostStatistics')" name="lost">
+            <el-table :data="taskDetail.lostDataList" border style="width: 100%" max-height="600">
+              <el-table-column type="index" label="#" width="60" />
+              <el-table-column prop="indexTime" :label="$t('experienceTest.clientData.indexTime')" width="180" />
+              <el-table-column prop="dlLoss" :label="$t('experienceTest.clientData.dlLoss')" width="150" />
+              <el-table-column prop="ulLoss" :label="$t('experienceTest.clientData.ulLoss')" width="150" />
+              <el-table-column prop="totalLoss" :label="$t('experienceTest.clientData.totalLoss')" width="150" />
+            </el-table>
+            <el-empty v-if="!taskDetail.lostDataList || taskDetail.lostDataList.length === 0" :description="$t('common.noData')" />
+          </el-tab-pane>
+
+          <!-- 视频卡顿统计 -->
+          <el-tab-pane :label="$t('experienceTest.clientData.videoStatistics')" name="video">
+            <el-table :data="taskDetail.videoDataList" border style="width: 100%" max-height="600">
+              <el-table-column type="index" label="#" width="60" />
+              <el-table-column prop="time" :label="$t('experienceTest.clientData.time')" width="180" />
+              <el-table-column prop="catonTime" :label="$t('experienceTest.clientData.catonTime')" width="150" />
+            </el-table>
+            <el-empty v-if="!taskDetail.videoDataList || taskDetail.videoDataList.length === 0" :description="$t('common.noData')" />
+          </el-tab-pane>
+        </el-tabs>
+        <div v-else style="text-align: center; padding: 40px;">
+          <el-empty :description="$t('common.noData')" />
+        </div>
+      </el-dialog>
+
       <!-- 搜索栏 -->
       <div class="search-bar">
         <el-input
@@ -101,14 +226,21 @@
         </el-button>
       </div>
 
-      <el-table :data="tableData" v-loading="loading" style="width: 100%">
+      <el-table 
+        :data="tableData" 
+        v-loading="loading" 
+        style="width: 100%"
+        :fit="true"
+        stripe
+        border
+      >
         <el-table-column type="index" label="#" width="60" />
-        <el-table-column prop="taskId" :label="$t('experienceTest.clientData.taskId')" width="200" />
-        <el-table-column prop="service" :label="$t('experienceTest.clientData.service')" width="150" />
-        <el-table-column prop="app" :label="$t('experienceTest.clientData.app')" width="150" />
-        <el-table-column prop="startTime" :label="$t('experienceTest.clientData.startTime')" width="180" />
-        <el-table-column prop="endTime" :label="$t('experienceTest.clientData.endTime')" width="180" />
-        <el-table-column :label="$t('common.operations')" width="150" fixed="right">
+        <el-table-column prop="taskId" :label="$t('experienceTest.clientData.taskId')" min-width="200" show-overflow-tooltip />
+        <el-table-column prop="service" :label="$t('experienceTest.clientData.service')" min-width="150" show-overflow-tooltip />
+        <el-table-column prop="app" :label="$t('experienceTest.clientData.app')" min-width="150" show-overflow-tooltip />
+        <el-table-column prop="startTime" :label="$t('experienceTest.clientData.startTime')" min-width="180" show-overflow-tooltip />
+        <el-table-column prop="endTime" :label="$t('experienceTest.clientData.endTime')" min-width="180" show-overflow-tooltip />
+        <el-table-column :label="$t('common.operations')" width="120" fixed="right">
           <template #default="scope">
             <el-button type="primary" size="small" @click="handleViewDetail(scope.row)">
               {{ $t('common.view') }}
@@ -224,10 +356,28 @@ export default {
     }
 
     const handleViewDetail = async (row) => {
+      if (!row || !row.taskId) {
+        ElMessage.warning('无效的数据')
+        return
+      }
+      
       try {
-        loading.value = true
+        // 先显示对话框，显示加载状态
+        detailDialogVisible.value = true
+        activeDetailTab.value = 'basic'
+        
+        // 重置数据
+        taskDetail.value = {
+          taskInfo: null,
+          vmosDataList: [],
+          speedDataList: [],
+          rttDataList: [],
+          lostDataList: [],
+          videoDataList: [],
+        }
+        
         const response = await getClientDataDetail(row.taskId)
-        if (response.code === 200) {
+        if (response.code === 200 && response.data) {
           taskDetail.value = {
             taskInfo: response.data.taskInfo || null,
             vmosDataList: response.data.vmosDataList || [],
@@ -236,16 +386,14 @@ export default {
             lostDataList: response.data.lostDataList || [],
             videoDataList: response.data.videoDataList || [],
           }
-          activeDetailTab.value = 'basic'
-          detailDialogVisible.value = true
         } else {
           ElMessage.error(response.message || t('common.error'))
+          detailDialogVisible.value = false
         }
       } catch (error) {
         console.error('Get detail error:', error)
-        ElMessage.error(t('common.error'))
-      } finally {
-        loading.value = false
+        ElMessage.error(error.message || t('common.error'))
+        detailDialogVisible.value = false
       }
     }
 
@@ -383,10 +531,14 @@ export default {
 <style scoped>
 .client-data-page {
   padding: 20px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .page-header {
   margin-bottom: 20px;
+  flex-shrink: 0;
 }
 
 .page-title {
@@ -402,8 +554,24 @@ export default {
   font-size: 14px;
 }
 
+.client-data-page :deep(.el-card) {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.client-data-page :deep(.el-card__body) {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 20px;
+}
+
 .table-operations {
   margin-bottom: 16px;
+  flex-shrink: 0;
 }
 
 .table-operations .el-button {
@@ -414,11 +582,23 @@ export default {
   margin-bottom: 16px;
   display: flex;
   align-items: center;
+  flex-shrink: 0;
+}
+
+.client-data-page :deep(.el-table) {
+  flex: 1;
+  width: 100% !important;
+}
+
+.client-data-page :deep(.el-table__body-wrapper) {
+  max-height: calc(100vh - 400px);
+  overflow-y: auto;
 }
 
 .pagination {
   margin-top: 20px;
   text-align: right;
+  flex-shrink: 0;
 }
 
 .file-info {
