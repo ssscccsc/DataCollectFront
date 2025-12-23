@@ -15,3 +15,20 @@ export function uploadClientDataFile(file) {
   });
 }
 
+// 分页查询端侧任务信息列表
+export function getClientDataPage(params) {
+  return request({
+    url: '/client-data/page',
+    method: 'get',
+    params,
+  });
+}
+
+// 根据任务ID获取任务详情
+export function getClientDataDetail(taskId) {
+  return request({
+    url: `/client-data/detail/${taskId}`,
+    method: 'get',
+  });
+}
+

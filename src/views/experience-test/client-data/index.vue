@@ -72,17 +72,46 @@
         </template>
       </el-dialog>
 
+      <!-- 搜索栏 -->
+      <div class="search-bar">
+        <el-input
+          v-model="searchForm.taskId"
+          :placeholder="$t('experienceTest.clientData.searchTaskId')"
+          style="width: 200px; margin-right: 10px;"
+          clearable
+        />
+        <el-input
+          v-model="searchForm.service"
+          :placeholder="$t('experienceTest.clientData.searchService')"
+          style="width: 200px; margin-right: 10px;"
+          clearable
+        />
+        <el-input
+          v-model="searchForm.app"
+          :placeholder="$t('experienceTest.clientData.searchApp')"
+          style="width: 200px; margin-right: 10px;"
+          clearable
+        />
+        <el-button type="primary" @click="handleSearch">
+          <el-icon><Search /></el-icon>
+          {{ $t('common.search') }}
+        </el-button>
+        <el-button @click="handleReset">
+          {{ $t('common.reset') }}
+        </el-button>
+      </div>
+
       <el-table :data="tableData" v-loading="loading" style="width: 100%">
         <el-table-column type="index" label="#" width="60" />
-        <el-table-column prop="name" :label="$t('experienceTest.clientData.name')" />
-        <el-table-column prop="createTime" :label="$t('common.createTime')" width="180" />
-        <el-table-column :label="$t('common.operations')" width="200" fixed="right">
+        <el-table-column prop="taskId" :label="$t('experienceTest.clientData.taskId')" width="200" />
+        <el-table-column prop="service" :label="$t('experienceTest.clientData.service')" width="150" />
+        <el-table-column prop="app" :label="$t('experienceTest.clientData.app')" width="150" />
+        <el-table-column prop="startTime" :label="$t('experienceTest.clientData.startTime')" width="180" />
+        <el-table-column prop="endTime" :label="$t('experienceTest.clientData.endTime')" width="180" />
+        <el-table-column :label="$t('common.operations')" width="150" fixed="right">
           <template #default="scope">
-            <el-button type="primary" size="small" @click="handleEdit(scope.row)">
-              {{ $t('common.edit') }}
-            </el-button>
-            <el-button type="danger" size="small" @click="handleDelete(scope.row)">
-              {{ $t('common.delete') }}
+            <el-button type="primary" size="small" @click="handleViewDetail(scope.row)">
+              {{ $t('common.view') }}
             </el-button>
           </template>
         </el-table-column>
@@ -107,8 +136,8 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useI18n } from 'vue-i18n'
-import { Plus, Refresh, UploadFilled } from '@element-plus/icons-vue'
-import { uploadClientDataFile } from '@/api/client-data'
+import { Plus, Refresh, UploadFilled, Search } from '@element-plus/icons-vue'
+import { uploadClientDataFile, getClientDataPage, getClientDataDetail } from '@/api/client-data'
 
 export default {
   name: 'ClientData',
@@ -116,6 +145,7 @@ export default {
     Plus,
     Refresh,
     UploadFilled,
+    Search,
   },
   setup() {
     const { t } = useI18n()
@@ -125,6 +155,16 @@ export default {
     const uploading = ref(false)
     const selectedFile = ref(null)
     const uploadRef = ref(null)
+    const detailDialogVisible = ref(false)
+    const activeDetailTab = ref('basic')
+    const taskDetail = ref({
+      taskInfo: null,
+      vmosDataList: [],
+      speedDataList: [],
+      rttDataList: [],
+      lostDataList: [],
+      videoDataList: [],
+    })
 
     const pagination = reactive({
       current: 1,
@@ -132,13 +172,77 @@ export default {
       total: 0,
     })
 
+    const searchForm = reactive({
+      taskId: '',
+      service: '',
+      app: '',
+    })
+
     const loadData = async () => {
       loading.value = true
       try {
-        // TODO: 实现数据加载逻辑
-        tableData.value = []
-        pagination.total = 0
+        const params = {
+          current: pagination.current,
+          size: pagination.size,
+        }
+        if (searchForm.taskId) {
+          params.taskId = searchForm.taskId
+        }
+        if (searchForm.service) {
+          params.service = searchForm.service
+        }
+        if (searchForm.app) {
+          params.app = searchForm.app
+        }
+
+        const response = await getClientDataPage(params)
+        if (response.code === 200) {
+          tableData.value = response.data.records || []
+          pagination.total = response.data.total || 0
+        } else {
+          ElMessage.error(response.message || t('common.error'))
+        }
       } catch (error) {
+        console.error('Load data error:', error)
+        ElMessage.error(t('common.error'))
+      } finally {
+        loading.value = false
+      }
+    }
+
+    const handleSearch = () => {
+      pagination.current = 1
+      loadData()
+    }
+
+    const handleReset = () => {
+      searchForm.taskId = ''
+      searchForm.service = ''
+      searchForm.app = ''
+      pagination.current = 1
+      loadData()
+    }
+
+    const handleViewDetail = async (row) => {
+      try {
+        loading.value = true
+        const response = await getClientDataDetail(row.taskId)
+        if (response.code === 200) {
+          taskDetail.value = {
+            taskInfo: response.data.taskInfo || null,
+            vmosDataList: response.data.vmosDataList || [],
+            speedDataList: response.data.speedDataList || [],
+            rttDataList: response.data.rttDataList || [],
+            lostDataList: response.data.lostDataList || [],
+            videoDataList: response.data.videoDataList || [],
+          }
+          activeDetailTab.value = 'basic'
+          detailDialogVisible.value = true
+        } else {
+          ElMessage.error(response.message || t('common.error'))
+        }
+      } catch (error) {
+        console.error('Get detail error:', error)
         ElMessage.error(t('common.error'))
       } finally {
         loading.value = false
@@ -234,30 +338,6 @@ export default {
       }
     }
 
-    const handleEdit = (row) => {
-      ElMessage.info(t('experienceTest.clientData.editNotImplemented'))
-    }
-
-    const handleDelete = async (row) => {
-      try {
-        await ElMessageBox.confirm(
-          t('experienceTest.clientData.deleteConfirm'),
-          t('common.warning'),
-          {
-            confirmButtonText: t('common.confirm'),
-            cancelButtonText: t('common.cancel'),
-            type: 'warning',
-          }
-        )
-        ElMessage.success(t('common.success'))
-        loadData()
-      } catch (error) {
-        if (error !== 'cancel') {
-          ElMessage.error(t('common.error'))
-        }
-      }
-    }
-
     const handleSizeChange = (val) => {
       pagination.size = val
       loadData()
@@ -276,14 +356,19 @@ export default {
       loading,
       tableData,
       pagination,
+      searchForm,
       uploadDialogVisible,
       uploading,
       selectedFile,
       uploadRef,
+      detailDialogVisible,
+      activeDetailTab,
+      taskDetail,
       loadData,
       handleAdd,
-      handleEdit,
-      handleDelete,
+      handleSearch,
+      handleReset,
+      handleViewDetail,
       handleSizeChange,
       handleCurrentChange,
       handleFileChange,
@@ -323,6 +408,12 @@ export default {
 
 .table-operations .el-button {
   margin-right: 8px;
+}
+
+.search-bar {
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
 }
 
 .pagination {
