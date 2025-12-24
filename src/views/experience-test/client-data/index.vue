@@ -182,6 +182,37 @@
                   {{ taskDetail.taskInfo.createTime }}
                 </el-descriptions-item>
               </el-descriptions>
+
+              <!-- Summary 数据统计 -->
+              <el-descriptions v-if="summaryData" :column="2" border class="summary-section">
+                <el-descriptions-item :label="$t('experienceTest.clientData.stunNumber')" :span="2">
+                  {{ summaryData.stunNumber || '-' }}
+                </el-descriptions-item>
+                <el-descriptions-item :label="$t('experienceTest.clientData.stunRate')" :span="2">
+                  {{ summaryData.stunRate || '-' }}
+                </el-descriptions-item>
+                <el-descriptions-item :label="$t('experienceTest.clientData.avgUplinkRtt')">
+                  {{ summaryData.avgUplinkRtt || '-' }}
+                </el-descriptions-item>
+                <el-descriptions-item :label="$t('experienceTest.clientData.avgDownlinkRtt')">
+                  {{ summaryData.avgDownlinkRtt || '-' }}
+                </el-descriptions-item>
+                <el-descriptions-item :label="$t('experienceTest.clientData.avgUplinkSpeed')">
+                  {{ summaryData.avgUplinkSpeed || '-' }}
+                </el-descriptions-item>
+                <el-descriptions-item :label="$t('experienceTest.clientData.avgDownlinkSpeed')">
+                  {{ summaryData.avgDownlinkSpeed || '-' }}
+                </el-descriptions-item>
+                <el-descriptions-item :label="$t('experienceTest.clientData.avgUplinkLost')">
+                  {{ summaryData.avgUplinkLost || '-' }}
+                </el-descriptions-item>
+                <el-descriptions-item :label="$t('experienceTest.clientData.avgDownlinkLost')">
+                  {{ summaryData.avgDownlinkLost || '-' }}
+                </el-descriptions-item>
+                <el-descriptions-item :label="$t('experienceTest.clientData.avgLost')" :span="2">
+                  {{ summaryData.avgLost || '-' }}
+                </el-descriptions-item>
+              </el-descriptions>
             </div>
             <el-empty v-else-if="!detailLoading" :description="$t('common.noData')" />
 
@@ -262,7 +293,7 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted, nextTick } from 'vue'
+import { ref, reactive, onMounted, nextTick, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { Plus, Refresh, UploadFilled, Search } from '@element-plus/icons-vue'
@@ -307,6 +338,23 @@ export default {
       taskId: '',
       service: '',
       app: '',
+    })
+
+    // 解析 summary JSON 字符串
+    const summaryData = computed(() => {
+      if (!taskDetail.value.taskInfo || !taskDetail.value.taskInfo.summary) {
+        return null
+      }
+      try {
+        const summaryStr = taskDetail.value.taskInfo.summary
+        if (typeof summaryStr === 'string') {
+          return JSON.parse(summaryStr)
+        }
+        return summaryStr
+      } catch (error) {
+        console.error('解析 summary 失败:', error)
+        return null
+      }
     })
 
     const loadData = async () => {
@@ -524,6 +572,7 @@ export default {
       detailLoading,
       activeDetailTab,
       taskDetail,
+      summaryData,
       loadData,
       handleAdd,
       handleSearch,
@@ -637,6 +686,10 @@ export default {
   font-size: 18px;
   font-weight: 600;
   color: #303133;
+}
+
+.summary-section {
+  margin-top: 20px;
 }
 
 .data-tabs {
