@@ -141,50 +141,52 @@
         <!-- 第二个tab：任务详情页 -->
         <el-tab-pane :label="$t('experienceTest.clientData.detailTitle')" name="detail">
           <div class="detail-container" v-loading="detailLoading">
-            <el-tabs v-model="activeDetailTab" type="border-card">
-              <!-- 基础信息 -->
-              <el-tab-pane :label="$t('experienceTest.clientData.basicInfo')" name="basic">
-                <el-descriptions :column="2" border v-if="taskDetail.taskInfo">
-                  <el-descriptions-item :label="$t('experienceTest.clientData.taskId')">
-                    {{ taskDetail.taskInfo.taskId }}
-                  </el-descriptions-item>
-                  <el-descriptions-item :label="$t('experienceTest.clientData.service')">
-                    {{ taskDetail.taskInfo.service }}
-                  </el-descriptions-item>
-                  <el-descriptions-item :label="$t('experienceTest.clientData.app')">
-                    {{ taskDetail.taskInfo.app }}
-                  </el-descriptions-item>
-                  <el-descriptions-item :label="$t('experienceTest.clientData.nation')">
-                    {{ taskDetail.taskInfo.nation }}
-                  </el-descriptions-item>
-                  <el-descriptions-item :label="$t('experienceTest.clientData.operator')">
-                    {{ taskDetail.taskInfo.operator }}
-                  </el-descriptions-item>
-                  <el-descriptions-item :label="$t('experienceTest.clientData.deviceId')">
-                    {{ taskDetail.taskInfo.deviceId }}
-                  </el-descriptions-item>
-                  <el-descriptions-item :label="$t('experienceTest.clientData.startTime')">
-                    {{ taskDetail.taskInfo.startTime }}
-                  </el-descriptions-item>
-                  <el-descriptions-item :label="$t('experienceTest.clientData.endTime')">
-                    {{ taskDetail.taskInfo.endTime }}
-                  </el-descriptions-item>
-                  <el-descriptions-item :label="$t('experienceTest.clientData.prb')">
-                    {{ taskDetail.taskInfo.prb }}
-                  </el-descriptions-item>
-                  <el-descriptions-item :label="$t('experienceTest.clientData.rsrp')">
-                    {{ taskDetail.taskInfo.rsrp }}
-                  </el-descriptions-item>
-                  <el-descriptions-item :label="$t('experienceTest.clientData.userCategory')">
-                    {{ taskDetail.taskInfo.userCategory }}
-                  </el-descriptions-item>
-                  <el-descriptions-item :label="$t('common.createTime')" :span="2">
-                    {{ taskDetail.taskInfo.createTime }}
-                  </el-descriptions-item>
-                </el-descriptions>
-                <el-empty v-else :description="$t('common.noData')" />
-              </el-tab-pane>
+            <!-- 基础信息 -->
+            <div class="basic-info-section" v-if="taskDetail.taskInfo">
+              <h3 class="section-title">{{ $t('experienceTest.clientData.basicInfo') }}</h3>
+              <el-descriptions :column="2" border>
+                <el-descriptions-item :label="$t('experienceTest.clientData.taskId')">
+                  {{ taskDetail.taskInfo.taskId }}
+                </el-descriptions-item>
+                <el-descriptions-item :label="$t('experienceTest.clientData.service')">
+                  {{ taskDetail.taskInfo.service }}
+                </el-descriptions-item>
+                <el-descriptions-item :label="$t('experienceTest.clientData.app')">
+                  {{ taskDetail.taskInfo.app }}
+                </el-descriptions-item>
+                <el-descriptions-item :label="$t('experienceTest.clientData.nation')">
+                  {{ taskDetail.taskInfo.nation }}
+                </el-descriptions-item>
+                <el-descriptions-item :label="$t('experienceTest.clientData.operator')">
+                  {{ taskDetail.taskInfo.operator }}
+                </el-descriptions-item>
+                <el-descriptions-item :label="$t('experienceTest.clientData.deviceId')">
+                  {{ taskDetail.taskInfo.deviceId }}
+                </el-descriptions-item>
+                <el-descriptions-item :label="$t('experienceTest.clientData.startTime')">
+                  {{ taskDetail.taskInfo.startTime }}
+                </el-descriptions-item>
+                <el-descriptions-item :label="$t('experienceTest.clientData.endTime')">
+                  {{ taskDetail.taskInfo.endTime }}
+                </el-descriptions-item>
+                <el-descriptions-item :label="$t('experienceTest.clientData.prb')">
+                  {{ taskDetail.taskInfo.prb }}
+                </el-descriptions-item>
+                <el-descriptions-item :label="$t('experienceTest.clientData.rsrp')">
+                  {{ taskDetail.taskInfo.rsrp }}
+                </el-descriptions-item>
+                <el-descriptions-item :label="$t('experienceTest.clientData.userCategory')">
+                  {{ taskDetail.taskInfo.userCategory }}
+                </el-descriptions-item>
+                <el-descriptions-item :label="$t('common.createTime')" :span="2">
+                  {{ taskDetail.taskInfo.createTime }}
+                </el-descriptions-item>
+              </el-descriptions>
+            </div>
+            <el-empty v-else-if="!detailLoading" :description="$t('common.noData')" />
 
+            <!-- 数据统计子tab -->
+            <el-tabs v-model="activeDetailTab" type="border-card" class="data-tabs">
               <!-- vMOS数据 -->
               <el-tab-pane :label="$t('experienceTest.clientData.vmos')" name="vmos">
                 <el-table :data="taskDetail.vmosDataList" border style="width: 100%" max-height="600">
@@ -285,7 +287,7 @@ export default {
     // 初始化主tab，默认显示任务列表
     const activeMainTab = ref('taskList')
     const detailLoading = ref(false)
-    const activeDetailTab = ref('basic')
+    const activeDetailTab = ref('vmos')
     const taskDetail = ref({
       taskInfo: null,
       vmosDataList: [],
@@ -361,7 +363,7 @@ export default {
       try {
         // 切换到详情tab
         activeMainTab.value = 'detail'
-        activeDetailTab.value = 'basic'
+        activeDetailTab.value = 'vmos'
         detailLoading.value = true
         
         // 重置数据
@@ -384,8 +386,8 @@ export default {
             lostDataList: response.data.lostDataList || [],
             videoDataList: response.data.videoDataList || [],
           }
-          // 确保默认显示基础信息子tab
-          activeDetailTab.value = 'basic'
+          // 确保默认显示vMOS数据子tab
+          activeDetailTab.value = 'vmos'
         } else {
           ElMessage.error(response.message || t('common.error'))
           // 如果加载失败，切换回任务列表tab
@@ -624,6 +626,21 @@ export default {
 .detail-container {
   min-height: 400px;
   padding: 20px;
+}
+
+.basic-info-section {
+  margin-bottom: 20px;
+}
+
+.section-title {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.data-tabs {
+  margin-top: 20px;
 }
 
 .empty-container {
