@@ -978,6 +978,7 @@ export default {
   experienceTest: {
     clientData: {
       description: '管理端侧数据，包括数据查看、编辑、删除等操作',
+      taskList: '任务列表',
       name: '名称',
       addNotImplemented: '添加功能待实现',
       editNotImplemented: '编辑功能待实现',

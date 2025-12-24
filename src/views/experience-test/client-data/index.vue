@@ -263,7 +263,7 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { Plus, Refresh, UploadFilled, Search } from '@element-plus/icons-vue'
@@ -285,6 +285,7 @@ export default {
     const uploading = ref(false)
     const selectedFile = ref(null)
     const uploadRef = ref(null)
+    // 初始化主tab，默认显示任务列表
     const activeMainTab = ref('taskList')
     const detailLoading = ref(false)
     const activeDetailTab = ref('basic')
@@ -386,6 +387,8 @@ export default {
             lostDataList: response.data.lostDataList || [],
             videoDataList: response.data.videoDataList || [],
           }
+          // 确保默认显示基础信息子tab
+          activeDetailTab.value = 'basic'
         } else {
           ElMessage.error(response.message || t('common.error'))
           // 如果加载失败，切换回任务列表tab
@@ -503,7 +506,10 @@ export default {
     onMounted(() => {
       // 确保默认显示任务列表tab
       activeMainTab.value = 'taskList'
-      loadData()
+      // 使用 nextTick 确保 DOM 更新后再加载数据
+      nextTick(() => {
+        loadData()
+      })
     })
 
     return {

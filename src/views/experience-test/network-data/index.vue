@@ -145,7 +145,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { Plus, Refresh, UploadFilled, Search, RefreshLeft } from '@element-plus/icons-vue'
-import { uploadNetworkDataFile, getNetworkDataPage } from '@/api/network-data'
+import { uploadNetworkDataFile, getNetworkDataPage } from '@/api/test-settings'
 
 export default {
   name: 'NetworkData',

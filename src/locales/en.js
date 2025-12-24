@@ -977,6 +977,7 @@ export default {
   experienceTest: {
     clientData: {
       description: 'Manage client-side data, including viewing, editing, deleting, etc.',
+      taskList: 'Task List',
       name: 'Name',
       addNotImplemented: 'Add feature not implemented',
       editNotImplemented: 'Edit feature not implemented',
@@ -1272,6 +1273,7 @@ export default {
   experienceTest: {
     clientData: {
       description: 'Manage client-side data, including viewing, editing, deleting, etc.',
+      taskList: 'Task List',
       name: 'Name',
       addNotImplemented: 'Add feature not implemented',
       editNotImplemented: 'Edit feature not implemented',
