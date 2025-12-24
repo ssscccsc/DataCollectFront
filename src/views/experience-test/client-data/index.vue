@@ -6,6 +6,9 @@
     </div>
 
     <el-card>
+      <el-tabs v-model="activeMainTab" type="border-card">
+        <!-- 第一个tab：端侧任务列表页 -->
+        <el-tab-pane :label="$t('experienceTest.clientData.taskList')" name="taskList">
       <div class="table-operations">
         <el-button type="primary" @click="handleAdd">
           <el-icon><Plus /></el-icon>
@@ -71,17 +74,75 @@
           </span>
         </template>
       </el-dialog>
+          <!-- 搜索栏 -->
+          <div class="search-bar">
+            <el-input
+              v-model="searchForm.taskId"
+              :placeholder="$t('experienceTest.clientData.searchTaskId')"
+              style="width: 200px; margin-right: 10px;"
+              clearable
+            />
+            <el-input
+              v-model="searchForm.service"
+              :placeholder="$t('experienceTest.clientData.searchService')"
+              style="width: 200px; margin-right: 10px;"
+              clearable
+            />
+            <el-input
+              v-model="searchForm.app"
+              :placeholder="$t('experienceTest.clientData.searchApp')"
+              style="width: 200px; margin-right: 10px;"
+              clearable
+            />
+            <el-button type="primary" @click="handleSearch">
+              <el-icon><Search /></el-icon>
+              {{ $t('common.search') }}
+            </el-button>
+            <el-button @click="handleReset">
+              {{ $t('common.reset') }}
+            </el-button>
+          </div>
 
-      <!-- 详情对话框 -->
-      <el-dialog
-        v-model="detailDialogVisible"
-        :title="$t('experienceTest.clientData.detailTitle')"
-        width="90%"
-        :close-on-click-modal="false"
-        destroy-on-close
-        v-loading="loading"
-      >
-        <el-tabs v-model="activeDetailTab" type="border-card" v-if="taskDetail.taskInfo">
+          <el-table 
+            :data="tableData" 
+            v-loading="loading" 
+            style="width: 100%"
+            :fit="true"
+            stripe
+            border
+          >
+            <el-table-column type="index" label="#" width="60" />
+            <el-table-column prop="taskId" :label="$t('experienceTest.clientData.taskId')" min-width="200" show-overflow-tooltip />
+            <el-table-column prop="service" :label="$t('experienceTest.clientData.service')" min-width="150" show-overflow-tooltip />
+            <el-table-column prop="app" :label="$t('experienceTest.clientData.app')" min-width="150" show-overflow-tooltip />
+            <el-table-column prop="startTime" :label="$t('experienceTest.clientData.startTime')" min-width="180" show-overflow-tooltip />
+            <el-table-column prop="endTime" :label="$t('experienceTest.clientData.endTime')" min-width="180" show-overflow-tooltip />
+            <el-table-column :label="$t('common.operations')" width="120" fixed="right">
+              <template #default="scope">
+                <el-button type="primary" size="small" @click="handleViewDetail(scope.row)">
+                  {{ $t('common.view') }}
+                </el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+
+          <div class="pagination">
+            <el-pagination
+              v-model:current-page="pagination.current"
+              v-model:page-size="pagination.size"
+              :page-sizes="[10, 20, 50, 100]"
+              :total="pagination.total"
+              layout="total, sizes, prev, pager, next, jumper"
+              @size-change="handleSizeChange"
+              @current-change="handleCurrentChange"
+            />
+          </div>
+        </el-tab-pane>
+
+        <!-- 第二个tab：任务详情页 -->
+        <el-tab-pane :label="$t('experienceTest.clientData.detailTitle')" name="detail">
+          <div class="detail-container" v-loading="detailLoading">
+            <el-tabs v-model="activeDetailTab" type="border-card" v-if="taskDetail.taskInfo">
           <!-- 基础信息 -->
           <el-tab-pane :label="$t('experienceTest.clientData.basicInfo')" name="basic">
             <el-descriptions :column="2" border v-if="taskDetail.taskInfo">
@@ -191,75 +252,13 @@
             </el-table>
             <el-empty v-if="!taskDetail.videoDataList || taskDetail.videoDataList.length === 0" :description="$t('common.noData')" />
           </el-tab-pane>
-        </el-tabs>
-        <div v-else style="text-align: center; padding: 40px;">
-          <el-empty :description="$t('common.noData')" />
-        </div>
-      </el-dialog>
-
-      <!-- 搜索栏 -->
-      <div class="search-bar">
-        <el-input
-          v-model="searchForm.taskId"
-          :placeholder="$t('experienceTest.clientData.searchTaskId')"
-          style="width: 200px; margin-right: 10px;"
-          clearable
-        />
-        <el-input
-          v-model="searchForm.service"
-          :placeholder="$t('experienceTest.clientData.searchService')"
-          style="width: 200px; margin-right: 10px;"
-          clearable
-        />
-        <el-input
-          v-model="searchForm.app"
-          :placeholder="$t('experienceTest.clientData.searchApp')"
-          style="width: 200px; margin-right: 10px;"
-          clearable
-        />
-        <el-button type="primary" @click="handleSearch">
-          <el-icon><Search /></el-icon>
-          {{ $t('common.search') }}
-        </el-button>
-        <el-button @click="handleReset">
-          {{ $t('common.reset') }}
-        </el-button>
-      </div>
-
-      <el-table 
-        :data="tableData" 
-        v-loading="loading" 
-        style="width: 100%"
-        :fit="true"
-        stripe
-        border
-      >
-        <el-table-column type="index" label="#" width="60" />
-        <el-table-column prop="taskId" :label="$t('experienceTest.clientData.taskId')" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="service" :label="$t('experienceTest.clientData.service')" min-width="150" show-overflow-tooltip />
-        <el-table-column prop="app" :label="$t('experienceTest.clientData.app')" min-width="150" show-overflow-tooltip />
-        <el-table-column prop="startTime" :label="$t('experienceTest.clientData.startTime')" min-width="180" show-overflow-tooltip />
-        <el-table-column prop="endTime" :label="$t('experienceTest.clientData.endTime')" min-width="180" show-overflow-tooltip />
-        <el-table-column :label="$t('common.operations')" width="120" fixed="right">
-          <template #default="scope">
-            <el-button type="primary" size="small" @click="handleViewDetail(scope.row)">
-              {{ $t('common.view') }}
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-
-      <div class="pagination">
-        <el-pagination
-          v-model:current-page="pagination.current"
-          v-model:page-size="pagination.size"
-          :page-sizes="[10, 20, 50, 100]"
-          :total="pagination.total"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-        />
-      </div>
+            </el-tabs>
+            <div v-else class="empty-container">
+              <el-empty :description="$t('common.noData')" />
+            </div>
+          </div>
+        </el-tab-pane>
+      </el-tabs>
     </el-card>
   </div>
 </template>
@@ -269,7 +268,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { Plus, Refresh, UploadFilled, Search } from '@element-plus/icons-vue'
-import { uploadClientDataFile, getClientDataPage, getClientDataDetail } from '@/api/client-data'
+import { uploadClientDataFile, getClientDataPage, getClientDataDetail } from '@/api/test-settings'
 
 export default {
   name: 'ClientData',
@@ -287,7 +286,8 @@ export default {
     const uploading = ref(false)
     const selectedFile = ref(null)
     const uploadRef = ref(null)
-    const detailDialogVisible = ref(false)
+    const activeMainTab = ref('taskList')
+    const detailLoading = ref(false)
     const activeDetailTab = ref('basic')
     const taskDetail = ref({
       taskInfo: null,
@@ -362,9 +362,10 @@ export default {
       }
       
       try {
-        // 先显示对话框，显示加载状态
-        detailDialogVisible.value = true
+        // 切换到详情tab
+        activeMainTab.value = 'detail'
         activeDetailTab.value = 'basic'
+        detailLoading.value = true
         
         // 重置数据
         taskDetail.value = {
@@ -388,12 +389,16 @@ export default {
           }
         } else {
           ElMessage.error(response.message || t('common.error'))
-          detailDialogVisible.value = false
+          // 如果加载失败，切换回任务列表tab
+          activeMainTab.value = 'taskList'
         }
       } catch (error) {
         console.error('Get detail error:', error)
         ElMessage.error(error.message || t('common.error'))
-        detailDialogVisible.value = false
+        // 如果加载失败，切换回任务列表tab
+        activeMainTab.value = 'taskList'
+      } finally {
+        detailLoading.value = false
       }
     }
 
@@ -509,7 +514,8 @@ export default {
       uploading,
       selectedFile,
       uploadRef,
-      detailDialogVisible,
+      activeMainTab,
+      detailLoading,
       activeDetailTab,
       taskDetail,
       loadData,
@@ -609,6 +615,16 @@ export default {
   color: #606266;
   font-size: 12px;
   margin-top: 7px;
+}
+
+.detail-container {
+  min-height: 400px;
+  padding: 20px;
+}
+
+.empty-container {
+  text-align: center;
+  padding: 40px;
 }
 </style>
 
