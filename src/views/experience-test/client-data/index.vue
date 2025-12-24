@@ -19,7 +19,6 @@
           {{ $t('common.refresh') }}
         </el-button>
       </div>
-
       <!-- 文件上传对话框 -->
       <el-dialog
         v-model="uploadDialogVisible"
@@ -502,6 +501,8 @@ export default {
     }
 
     onMounted(() => {
+      // 确保默认显示任务列表tab
+      activeMainTab.value = 'taskList'
       loadData()
     })
 
