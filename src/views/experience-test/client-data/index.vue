@@ -141,7 +141,7 @@
         <!-- 第二个tab：任务详情页 -->
         <el-tab-pane :label="$t('experienceTest.clientData.detailTitle')" name="detail">
           <div class="detail-container" v-loading="detailLoading">
-            <el-tabs v-model="activeDetailTab" type="border-card" v-if="taskDetail.taskInfo">
+            <el-tabs v-model="activeDetailTab" type="border-card">
               <!-- 基础信息 -->
               <el-tab-pane :label="$t('experienceTest.clientData.basicInfo')" name="basic">
                 <el-descriptions :column="2" border v-if="taskDetail.taskInfo">
@@ -252,9 +252,6 @@
                 <el-empty v-if="!taskDetail.videoDataList || taskDetail.videoDataList.length === 0" :description="$t('common.noData')" />
               </el-tab-pane>
             </el-tabs>
-            <div v-else class="empty-container">
-              <el-empty :description="$t('common.noData')" />
-            </div>
           </div>
         </el-tab-pane>
       </el-tabs>
