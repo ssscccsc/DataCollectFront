@@ -21,6 +21,8 @@ export default {
     view: 'View',
     operations: 'Operations',
     createTime: 'Create Time',
+    collapse: 'Collapse',
+    expand: 'Expand',
   },
   
   // Navigation Menu

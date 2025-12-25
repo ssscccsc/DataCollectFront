@@ -140,6 +140,7 @@
 
         <!-- 第二个tab：任务详情页 -->
         <el-tab-pane :label="$t('experienceTest.clientData.detailTitle')" name="detail">
+          <div class="info-right" v-if="summaryData">
           <div class="detail-container" v-loading="detailLoading">
           <!-- 基础信息和Summary信息 -->
             <div class="info-section-header" v-if="taskDetail.taskInfo">
@@ -199,7 +200,6 @@
                 </div>
 
                 <!-- 右侧：Summary 数据统计 -->
-                <div class="info-right" v-if="summaryData">
                   <h3 class="section-title">{{ $t('experienceTest.clientData.summary') }}</h3>
                   <el-descriptions :column="1" border>
                     <el-descriptions-item :label="$t('experienceTest.clientData.stunNumber')">

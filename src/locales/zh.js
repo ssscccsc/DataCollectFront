@@ -21,6 +21,8 @@ export default {
     view: '查看',
     operations: '操作',
     createTime: '创建时间',
+    collapse: '收起',
+    expand: '展开',
   },
   
   // 导航菜单
