@@ -230,13 +230,23 @@
               <el-table-column prop="stutterRatio" :label="$t('experienceTest.clientData.stutterRatioPercent')" width="150" />
               <el-table-column prop="initialBufferingDelay" :label="$t('experienceTest.clientData.sRtt')" width="180" />
               <el-table-column prop="bitrate" :label="$t('experienceTest.clientData.sBitrate')" width="120" />
+              <el-table-column prop="calculatedResolution" :label="$t('experienceTest.clientData.calculatedResolution')" width="150" />
               <el-table-column prop="videoExperience" :label="$t('experienceTest.clientData.sQuality')" width="150" />
               <el-table-column prop="interactionExperience" :label="$t('experienceTest.clientData.sInteraction')" width="180" />
               <el-table-column prop="presentationExperience" :label="$t('experienceTest.clientData.sView')" width="180" />
+              <el-table-column prop="sLostPacketRate" :label="$t('experienceTest.clientData.sLostPacketRate')" width="150" />
+              <el-table-column prop="sStallRate" :label="$t('experienceTest.clientData.sStallRate')" width="150" />
               <el-table-column prop="alpha" :label="$t('experienceTest.clientData.alpha')" width="100" />
               <el-table-column prop="beta" :label="$t('experienceTest.clientData.beta')" width="100" />
               <el-table-column prop="vmos" :label="$t('experienceTest.clientData.vmos')" width="100" />
               <el-table-column prop="avgQoe" :label="$t('experienceTest.clientData.avgQoe')" width="120" />
+              <el-table-column :label="$t('common.operations')" width="120" fixed="right">
+                <template #default="scope">
+                  <el-button type="primary" size="small" @click="handleEditVmos(scope.row)">
+                    {{ $t('common.edit') }}
+                  </el-button>
+                </template>
+              </el-table-column>
             </el-table>
             <el-empty v-if="!taskDetail.vmosDataList || taskDetail.vmosDataList.length === 0" :description="$t('common.noData')" />
           </el-tab-pane>
@@ -289,6 +299,33 @@
         </el-tab-pane>
       </el-tabs>
     </el-card>
+
+    <!-- vMOS数据编辑对话框 -->
+    <el-dialog
+      v-model="vmosEditDialogVisible"
+      :title="$t('experienceTest.clientData.editVmosData')"
+      width="600px"
+      :close-on-click-modal="false"
+    >
+      <el-form :model="vmosEditForm" label-width="180px">
+        <el-form-item :label="$t('experienceTest.clientData.sLostPacketRate')">
+          <el-input v-model="vmosEditForm.sLostPacketRate" placeholder="" />
+        </el-form-item>
+        <el-form-item :label="$t('experienceTest.clientData.sStallRate')">
+          <el-input v-model="vmosEditForm.sStallRate" placeholder="" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="vmosEditDialogVisible = false">
+            {{ $t('common.cancel') }}
+          </el-button>
+          <el-button type="primary" @click="handleSaveVmos" :loading="vmosSaving">
+            {{ $t('common.confirm') }}
+          </el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -297,7 +334,7 @@ import { ref, reactive, onMounted, nextTick, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { Plus, Refresh, UploadFilled, Search } from '@element-plus/icons-vue'
-import { uploadClientDataFile, getClientDataPage, getClientDataDetail } from '@/api/test-settings'
+import { uploadClientDataFile, getClientDataPage, getClientDataDetail, updateVmosData } from '@/api/test-settings'
 
 export default {
   name: 'ClientData',
@@ -326,6 +363,14 @@ export default {
       rttDataList: [],
       lostDataList: [],
       videoDataList: [],
+    })
+    // vMOS编辑相关
+    const vmosEditDialogVisible = ref(false)
+    const vmosSaving = ref(false)
+    const vmosEditForm = reactive({
+      id: null,
+      sLostPacketRate: '',
+      sStallRate: '',
     })
 
     const pagination = reactive({
@@ -584,6 +629,11 @@ export default {
       handleFileRemove,
       handleUpload,
       formatFileSize,
+      vmosEditDialogVisible,
+      vmosEditForm,
+      vmosSaving,
+      handleEditVmos,
+      handleSaveVmos,
     }
   },
 }
