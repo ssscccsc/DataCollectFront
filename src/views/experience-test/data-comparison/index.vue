@@ -22,15 +22,13 @@
 
           <el-table :data="tableData" v-loading="loading" style="width: 100%" stripe border>
             <el-table-column type="index" label="#" width="60" />
-            <el-table-column prop="name" :label="$t('experienceTest.dataComparison.name')" min-width="200" show-overflow-tooltip />
-            <el-table-column prop="createTime" :label="$t('common.createTime')" width="180" show-overflow-tooltip />
-            <el-table-column :label="$t('common.operations')" width="200" fixed="right">
+            <el-table-column prop="taskId" :label="$t('experienceTest.clientData.taskId')" min-width="200" show-overflow-tooltip />
+            <el-table-column prop="service" :label="$t('experienceTest.clientData.service')" min-width="150" show-overflow-tooltip />
+            <el-table-column prop="app" :label="$t('experienceTest.clientData.app')" min-width="150" show-overflow-tooltip />
+            <el-table-column :label="$t('common.operations')" width="120" fixed="right">
               <template #default="scope">
                 <el-button type="primary" size="small" @click="handleView(scope.row)">
                   {{ $t('common.view') }}
-                </el-button>
-                <el-button type="danger" size="small" @click="handleDelete(scope.row)">
-                  {{ $t('common.delete') }}
                 </el-button>
               </template>
             </el-table-column>
@@ -69,6 +67,7 @@ import { ref, reactive, onMounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { DataAnalysis, Refresh } from '@element-plus/icons-vue'
+import { getClientDataPage } from '@/api/test-settings'
 
 export default {
   name: 'DataComparison',
@@ -94,10 +93,20 @@ export default {
     const loadData = async () => {
       loading.value = true
       try {
-        // TODO: 实现数据加载逻辑
-        tableData.value = []
-        pagination.total = 0
+        const params = {
+          current: pagination.current,
+          size: pagination.size,
+        }
+
+        const response = await getClientDataPage(params)
+        if (response.code === 200) {
+          tableData.value = response.data.records || []
+          pagination.total = response.data.total || 0
+        } else {
+          ElMessage.error(response.message || t('common.error'))
+        }
       } catch (error) {
+        console.error('Load data error:', error)
         ElMessage.error(t('common.error'))
       } finally {
         loading.value = false
@@ -109,7 +118,7 @@ export default {
     }
 
     const handleView = (row) => {
-      if (!row || !row.id) {
+      if (!row || !row.taskId) {
         ElMessage.warning('无效的数据')
         return
       }
@@ -123,7 +132,7 @@ export default {
         comparisonDetail.value = null
         
         // TODO: 实现详情数据加载逻辑
-        // const response = await getComparisonDetail(row.id)
+        // const response = await getComparisonDetail(row.taskId)
         // if (response.code === 200 && response.data) {
         //   comparisonDetail.value = response.data
         // } else {
@@ -144,25 +153,6 @@ export default {
       }
     }
 
-    const handleDelete = async (row) => {
-      try {
-        await ElMessageBox.confirm(
-          t('experienceTest.dataComparison.deleteConfirm'),
-          t('common.warning'),
-          {
-            confirmButtonText: t('common.confirm'),
-            cancelButtonText: t('common.cancel'),
-            type: 'warning',
-          }
-        )
-        ElMessage.success(t('common.success'))
-        loadData()
-      } catch (error) {
-        if (error !== 'cancel') {
-          ElMessage.error(t('common.error'))
-        }
-      }
-    }
 
     const handleSizeChange = (val) => {
       pagination.size = val
@@ -193,7 +183,6 @@ export default {
       loadData,
       handleCompare,
       handleView,
-      handleDelete,
       handleSizeChange,
       handleCurrentChange,
     }
