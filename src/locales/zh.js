@@ -23,6 +23,7 @@ export default {
     createTime: '创建时间',
     collapse: '收起',
     expand: '展开',
+    upload: '上传',
   },
   
   // 导航菜单

@@ -23,6 +23,7 @@ export default {
     createTime: 'Create Time',
     collapse: 'Collapse',
     expand: 'Expand',
+    upload: 'Upload',
   },
   
   // Navigation Menu

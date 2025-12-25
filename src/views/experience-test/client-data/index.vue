@@ -233,7 +233,7 @@
                 </div>
               </div>
             </div>
-            <el-empty v-else-if="!detailLoading" :description="$t('common.noData')" />
+            <el-empty v-if="!taskDetail.taskInfo && !detailLoading" :description="$t('common.noData')" />
 
             <!-- 数据统计子tab -->
             <div class="data-tabs-wrapper">
