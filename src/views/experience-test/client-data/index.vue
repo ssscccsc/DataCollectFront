@@ -142,7 +142,18 @@
         <el-tab-pane :label="$t('experienceTest.clientData.detailTitle')" name="detail">
           <div class="detail-container" v-loading="detailLoading">
           <!-- 基础信息和Summary信息 -->
-            <div class="info-section" v-if="taskDetail.taskInfo">
+            <div class="info-section-header" v-if="taskDetail.taskInfo">
+              <h3 class="section-title">{{ $t('experienceTest.clientData.basicInfo') }}</h3>
+              <el-button 
+                type="text" 
+                @click="showBasicInfo = !showBasicInfo"
+              >
+                <el-icon v-if="showBasicInfo"><ArrowUp /></el-icon>
+                <el-icon v-else><ArrowDown /></el-icon>
+                <span style="margin-left: 4px;">{{ showBasicInfo ? $t('common.collapse') : $t('common.expand') }}</span>
+              </el-button>
+            </div>
+            <div class="info-section" v-if="taskDetail.taskInfo && showBasicInfo">
               <div class="info-container">
                 <!-- 左侧：基础信息 -->
                 <div class="info-left">
@@ -225,10 +236,11 @@
             <el-empty v-else-if="!detailLoading" :description="$t('common.noData')" />
 
             <!-- 数据统计子tab -->
+            <div class="data-tabs-wrapper">
             <el-tabs v-model="activeDetailTab" type="border-card" class="data-tabs">
           <!-- vMOS数据 -->
           <el-tab-pane :label="$t('experienceTest.clientData.vmos')" name="vmos">
-            <el-table :data="taskDetail.vmosDataList" border style="width: 100%" max-height="1000">
+            <el-table :data="taskDetail.vmosDataList" border style="width: 100%">
               <el-table-column prop="sequenceNumber" :label="$t('experienceTest.clientData.sequenceNumber')" width="100" />
               <el-table-column :label="$t('experienceTest.clientData.speedKbps')" width="100">
                 <template #default="scope">
@@ -307,7 +319,7 @@
 
           <!-- 上下行速率统计 -->
           <el-tab-pane :label="$t('experienceTest.clientData.speedStatistics')" name="speed">
-            <el-table :data="taskDetail.speedDataList" border style="width: 100%" max-height="1000">
+            <el-table :data="taskDetail.speedDataList" border style="width: 100%">
               <el-table-column type="index" label="#" width="60" />
               <el-table-column prop="dlSpeed" :label="$t('experienceTest.clientData.dlSpeed')" width="150" />
               <el-table-column prop="ulSpeed" :label="$t('experienceTest.clientData.ulSpeed')" width="150" />
@@ -318,7 +330,7 @@
 
           <!-- 上下行RTT统计 -->
           <el-tab-pane :label="$t('experienceTest.clientData.rttStatistics')" name="rtt">
-            <el-table :data="taskDetail.rttDataList" border style="width: 100%" max-height="1000">
+            <el-table :data="taskDetail.rttDataList" border style="width: 100%">
               <el-table-column type="index" label="#" width="60" />
               <el-table-column prop="indexTime" :label="$t('experienceTest.clientData.indexTime')" width="180" />
               <el-table-column prop="dlDelay" :label="$t('experienceTest.clientData.dlDelay')" width="150" />
@@ -329,7 +341,7 @@
 
           <!-- 上下行丢包率统计 -->
           <el-tab-pane :label="$t('experienceTest.clientData.lostStatistics')" name="lost">
-            <el-table :data="taskDetail.lostDataList" border style="width: 100%" max-height="1000">
+            <el-table :data="taskDetail.lostDataList" border style="width: 100%">
               <el-table-column type="index" label="#" width="60" />
               <el-table-column prop="indexTime" :label="$t('experienceTest.clientData.indexTime')" width="180" />
               <el-table-column prop="dlLoss" :label="$t('experienceTest.clientData.dlLoss')" width="150" />
@@ -341,7 +353,7 @@
 
           <!-- 视频卡顿统计 -->
           <el-tab-pane :label="$t('experienceTest.clientData.videoStatistics')" name="video">
-            <el-table :data="taskDetail.videoDataList" border style="width: 100%" max-height="1000">
+            <el-table :data="taskDetail.videoDataList" border style="width: 100%">
               <el-table-column type="index" label="#" width="60" />
               <el-table-column prop="time" :label="$t('experienceTest.clientData.time')" width="180" />
               <el-table-column prop="catonTime" :label="$t('experienceTest.clientData.catonTime')" width="150" />
@@ -349,6 +361,7 @@
             <el-empty v-if="!taskDetail.videoDataList || taskDetail.videoDataList.length === 0" :description="$t('common.noData')" />
           </el-tab-pane>
         </el-tabs>
+        </div>
         </div>
         </el-tab-pane>
       </el-tabs>
@@ -361,7 +374,7 @@
 import { ref, reactive, onMounted, nextTick, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useI18n } from 'vue-i18n'
-import { Plus, Refresh, UploadFilled, Search } from '@element-plus/icons-vue'
+import { Plus, Refresh, UploadFilled, Search, ArrowUp, ArrowDown } from '@element-plus/icons-vue'
 import { uploadClientDataFile, getClientDataPage, getClientDataDetail, updateVmosData } from '@/api/test-settings'
 
 export default {
@@ -371,6 +384,8 @@ export default {
     Refresh,
     UploadFilled,
     Search,
+    ArrowUp,
+    ArrowDown,
   },
   setup() {
     const { t } = useI18n()
@@ -384,6 +399,7 @@ export default {
     const activeMainTab = ref('taskList')
     const detailLoading = ref(false)
     const activeDetailTab = ref('vmos')
+    const showBasicInfo = ref(true)
     const taskDetail = ref({
       taskInfo: null,
       vmosDataList: [],
@@ -720,6 +736,7 @@ export default {
       activeDetailTab,
       taskDetail,
       summaryData,
+      showBasicInfo,
       loadData,
       handleAdd,
       handleSearch,
@@ -825,9 +842,8 @@ export default {
 }
 
 .detail-container {
-  height: 800px;
+  min-height: 800px;
   padding: 20px;
-  overflow-y: auto;
 }
 
 .info-section {
@@ -858,8 +874,29 @@ export default {
   }
 }
 
-.data-tabs {
+.info-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 0 4px;
+}
+
+.info-section-header .section-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.data-tabs-wrapper {
   margin-top: 20px;
+  height: 1000px;
+  overflow-y: auto;
+}
+
+.data-tabs {
+  height: 100%;
 }
 
 .empty-container {
