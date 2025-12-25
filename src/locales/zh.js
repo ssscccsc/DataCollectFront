@@ -1006,6 +1006,7 @@ export default {
       searchApp: '请输入应用名称',
       detailTitle: '任务详情',
       basicInfo: '基础信息',
+      summary: '数据统计',
       vmos: 'vMOS数据',
       speedStatistics: '上下行速率统计',
       rttStatistics: '上下行RTT统计',

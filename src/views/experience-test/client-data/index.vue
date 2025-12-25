@@ -141,78 +141,86 @@
         <!-- 第二个tab：任务详情页 -->
         <el-tab-pane :label="$t('experienceTest.clientData.detailTitle')" name="detail">
           <div class="detail-container" v-loading="detailLoading">
-          <!-- 基础信息 -->
-            <div class="basic-info-section" v-if="taskDetail.taskInfo">
-              <h3 class="section-title">{{ $t('experienceTest.clientData.basicInfo') }}</h3>
-              <el-descriptions :column="2" border>
-              <el-descriptions-item :label="$t('experienceTest.clientData.taskId')">
-                {{ taskDetail.taskInfo.taskId }}
-              </el-descriptions-item>
-              <el-descriptions-item :label="$t('experienceTest.clientData.service')">
-                {{ taskDetail.taskInfo.service }}
-              </el-descriptions-item>
-              <el-descriptions-item :label="$t('experienceTest.clientData.app')">
-                {{ taskDetail.taskInfo.app }}
-              </el-descriptions-item>
-              <el-descriptions-item :label="$t('experienceTest.clientData.nation')">
-                {{ taskDetail.taskInfo.nation }}
-              </el-descriptions-item>
-              <el-descriptions-item :label="$t('experienceTest.clientData.operator')">
-                {{ taskDetail.taskInfo.operator }}
-              </el-descriptions-item>
-              <el-descriptions-item :label="$t('experienceTest.clientData.deviceId')">
-                {{ taskDetail.taskInfo.deviceId }}
-              </el-descriptions-item>
-              <el-descriptions-item :label="$t('experienceTest.clientData.startTime')">
-                {{ taskDetail.taskInfo.startTime }}
-              </el-descriptions-item>
-              <el-descriptions-item :label="$t('experienceTest.clientData.endTime')">
-                {{ taskDetail.taskInfo.endTime }}
-              </el-descriptions-item>
-              <el-descriptions-item :label="$t('experienceTest.clientData.prb')">
-                {{ taskDetail.taskInfo.prb }}
-              </el-descriptions-item>
-              <el-descriptions-item :label="$t('experienceTest.clientData.rsrp')">
-                {{ taskDetail.taskInfo.rsrp }}
-              </el-descriptions-item>
-              <el-descriptions-item :label="$t('experienceTest.clientData.userCategory')">
-                {{ taskDetail.taskInfo.userCategory }}
-              </el-descriptions-item>
-              <el-descriptions-item :label="$t('common.createTime')" :span="2">
-                {{ taskDetail.taskInfo.createTime }}
-              </el-descriptions-item>
-            </el-descriptions>
+          <!-- 基础信息和Summary信息 -->
+            <div class="info-section" v-if="taskDetail.taskInfo">
+              <div class="info-container">
+                <!-- 左侧：基础信息 -->
+                <div class="info-left">
+                  <h3 class="section-title">{{ $t('experienceTest.clientData.basicInfo') }}</h3>
+                  <el-descriptions :column="1" border>
+                    <el-descriptions-item :label="$t('experienceTest.clientData.taskId')">
+                      {{ taskDetail.taskInfo.taskId }}
+                    </el-descriptions-item>
+                    <el-descriptions-item :label="$t('experienceTest.clientData.service')">
+                      {{ taskDetail.taskInfo.service }}
+                    </el-descriptions-item>
+                    <el-descriptions-item :label="$t('experienceTest.clientData.app')">
+                      {{ taskDetail.taskInfo.app }}
+                    </el-descriptions-item>
+                    <el-descriptions-item :label="$t('experienceTest.clientData.nation')">
+                      {{ taskDetail.taskInfo.nation }}
+                    </el-descriptions-item>
+                    <el-descriptions-item :label="$t('experienceTest.clientData.operator')">
+                      {{ taskDetail.taskInfo.operator }}
+                    </el-descriptions-item>
+                    <el-descriptions-item :label="$t('experienceTest.clientData.deviceId')">
+                      {{ taskDetail.taskInfo.deviceId }}
+                    </el-descriptions-item>
+                    <el-descriptions-item :label="$t('experienceTest.clientData.startTime')">
+                      {{ taskDetail.taskInfo.startTime }}
+                    </el-descriptions-item>
+                    <el-descriptions-item :label="$t('experienceTest.clientData.endTime')">
+                      {{ taskDetail.taskInfo.endTime }}
+                    </el-descriptions-item>
+                    <el-descriptions-item :label="$t('experienceTest.clientData.prb')">
+                      {{ taskDetail.taskInfo.prb }}
+                    </el-descriptions-item>
+                    <el-descriptions-item :label="$t('experienceTest.clientData.rsrp')">
+                      {{ taskDetail.taskInfo.rsrp }}
+                    </el-descriptions-item>
+                    <el-descriptions-item :label="$t('experienceTest.clientData.userCategory')">
+                      {{ taskDetail.taskInfo.userCategory }}
+                    </el-descriptions-item>
+                    <el-descriptions-item :label="$t('common.createTime')">
+                      {{ taskDetail.taskInfo.createTime }}
+                    </el-descriptions-item>
+                  </el-descriptions>
+                </div>
 
-              <!-- Summary 数据统计 -->
-              <el-descriptions v-if="summaryData" :column="2" border class="summary-section">
-                <el-descriptions-item :label="$t('experienceTest.clientData.stunNumber')" :span="2">
-                  {{ summaryData.stunNumber || '-' }}
-                </el-descriptions-item>
-                <el-descriptions-item :label="$t('experienceTest.clientData.stunRate')" :span="2">
-                  {{ summaryData.stunRate || '-' }}
-                </el-descriptions-item>
-                <el-descriptions-item :label="$t('experienceTest.clientData.avgUplinkRtt')">
-                  {{ summaryData.avgUplinkRtt || '-' }}
-                </el-descriptions-item>
-                <el-descriptions-item :label="$t('experienceTest.clientData.avgDownlinkRtt')">
-                  {{ summaryData.avgDownlinkRtt || '-' }}
-                </el-descriptions-item>
-                <el-descriptions-item :label="$t('experienceTest.clientData.avgUplinkSpeed')">
-                  {{ summaryData.avgUplinkSpeed || '-' }}
-                </el-descriptions-item>
-                <el-descriptions-item :label="$t('experienceTest.clientData.avgDownlinkSpeed')">
-                  {{ summaryData.avgDownlinkSpeed || '-' }}
-                </el-descriptions-item>
-                <el-descriptions-item :label="$t('experienceTest.clientData.avgUplinkLost')">
-                  {{ summaryData.avgUplinkLost || '-' }}
-                </el-descriptions-item>
-                <el-descriptions-item :label="$t('experienceTest.clientData.avgDownlinkLost')">
-                  {{ summaryData.avgDownlinkLost || '-' }}
-                </el-descriptions-item>
-                <el-descriptions-item :label="$t('experienceTest.clientData.avgLost')" :span="2">
-                  {{ summaryData.avgLost || '-' }}
-                </el-descriptions-item>
-              </el-descriptions>
+                <!-- 右侧：Summary 数据统计 -->
+                <div class="info-right" v-if="summaryData">
+                  <h3 class="section-title">{{ $t('experienceTest.clientData.summary') }}</h3>
+                  <el-descriptions :column="1" border>
+                    <el-descriptions-item :label="$t('experienceTest.clientData.stunNumber')">
+                      {{ summaryData.stunNumber || '-' }}
+                    </el-descriptions-item>
+                    <el-descriptions-item :label="$t('experienceTest.clientData.stunRate')">
+                      {{ summaryData.stunRate || '-' }}
+                    </el-descriptions-item>
+                    <el-descriptions-item :label="$t('experienceTest.clientData.avgUplinkRtt')">
+                      {{ summaryData.avgUplinkRtt || '-' }}
+                    </el-descriptions-item>
+                    <el-descriptions-item :label="$t('experienceTest.clientData.avgDownlinkRtt')">
+                      {{ summaryData.avgDownlinkRtt || '-' }}
+                    </el-descriptions-item>
+                    <el-descriptions-item :label="$t('experienceTest.clientData.avgUplinkSpeed')">
+                      {{ summaryData.avgUplinkSpeed || '-' }}
+                    </el-descriptions-item>
+                    <el-descriptions-item :label="$t('experienceTest.clientData.avgDownlinkSpeed')">
+                      {{ summaryData.avgDownlinkSpeed || '-' }}
+                    </el-descriptions-item>
+                    <el-descriptions-item :label="$t('experienceTest.clientData.avgUplinkLost')">
+                      {{ summaryData.avgUplinkLost || '-' }}
+                    </el-descriptions-item>
+                    <el-descriptions-item :label="$t('experienceTest.clientData.avgDownlinkLost')">
+                      {{ summaryData.avgDownlinkLost || '-' }}
+                    </el-descriptions-item>
+                    <el-descriptions-item :label="$t('experienceTest.clientData.avgLost')">
+                      {{ summaryData.avgLost || '-' }}
+                    </el-descriptions-item>
+                  </el-descriptions>
+                </div>
+              </div>
             </div>
             <el-empty v-else-if="!detailLoading" :description="$t('common.noData')" />
 
@@ -821,8 +829,19 @@ export default {
   padding: 20px;
 }
 
-.basic-info-section {
+.info-section {
   margin-bottom: 20px;
+}
+
+.info-container {
+  display: flex;
+  gap: 20px;
+}
+
+.info-left,
+.info-right {
+  flex: 1;
+  min-width: 0;
 }
 
 .section-title {
@@ -832,8 +851,10 @@ export default {
   color: #303133;
 }
 
-.summary-section {
-  margin-top: 20px;
+@media (max-width: 1200px) {
+  .info-container {
+    flex-direction: column;
+  }
 }
 
 .data-tabs {
