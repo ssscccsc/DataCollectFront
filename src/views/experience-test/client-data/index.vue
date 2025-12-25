@@ -222,14 +222,53 @@
           <el-tab-pane :label="$t('experienceTest.clientData.vmos')" name="vmos">
             <el-table :data="taskDetail.vmosDataList" border style="width: 100%" max-height="600">
               <el-table-column prop="sequenceNumber" :label="$t('experienceTest.clientData.sequenceNumber')" width="100" />
-              <el-table-column prop="speed" :label="$t('experienceTest.clientData.speedKbps')" width="100" />
+              <el-table-column :label="$t('experienceTest.clientData.speedKbps')" width="100">
+                <template #default="scope">
+                  <el-input
+                    v-if="editingVmosRowId === scope.row.id"
+                    v-model="scope.row.speed"
+                    size="small"
+                    @keyup.enter="handleSaveVmosRow(scope.row)"
+                  />
+                  <span v-else>{{ scope.row.speed || '-' }}</span>
+                </template>
+              </el-table-column>
               <el-table-column prop="resolution" :label="$t('experienceTest.clientData.resolution')" width="120" />
-              <el-table-column prop="rtt" :label="$t('experienceTest.clientData.rttMs')" width="100" />
-              <el-table-column prop="packetLossRate" :label="$t('experienceTest.clientData.packetLossRatePercent')" width="120" />
-              <el-table-column prop="stutterRatio" :label="$t('experienceTest.clientData.stutterRatioPercent')" width="120" />
+              <el-table-column :label="$t('experienceTest.clientData.rttMs')" width="100">
+                <template #default="scope">
+                  <el-input
+                    v-if="editingVmosRowId === scope.row.id"
+                    v-model="scope.row.rtt"
+                    size="small"
+                    @keyup.enter="handleSaveVmosRow(scope.row)"
+                  />
+                  <span v-else>{{ scope.row.rtt || '-' }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column :label="$t('experienceTest.clientData.packetLossRatePercent')" width="120">
+                <template #default="scope">
+                  <el-input
+                    v-if="editingVmosRowId === scope.row.id"
+                    v-model="scope.row.packetLossRate"
+                    size="small"
+                    @keyup.enter="handleSaveVmosRow(scope.row)"
+                  />
+                  <span v-else>{{ scope.row.packetLossRate || '-' }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column :label="$t('experienceTest.clientData.stutterRatioPercent')" width="120">
+                <template #default="scope">
+                  <el-input
+                    v-if="editingVmosRowId === scope.row.id"
+                    v-model="scope.row.stutterRatio"
+                    size="small"
+                    @keyup.enter="handleSaveVmosRow(scope.row)"
+                  />
+                  <span v-else>{{ scope.row.stutterRatio || '-' }}</span>
+                </template>
+              </el-table-column>
               <el-table-column prop="initialBufferingDelay" :label="$t('experienceTest.clientData.sRtt')" width="120" />
               <el-table-column prop="bitrate" :label="$t('experienceTest.clientData.sBitrate')" width="100" />
-              <el-table-column prop="calculatedResolution" :label="$t('experienceTest.clientData.calculatedResolution')" width="120" />
               <el-table-column prop="videoExperience" :label="$t('experienceTest.clientData.sQuality')" width="100" />
               <el-table-column prop="interactionExperience" :label="$t('experienceTest.clientData.sInteraction')" width="120" />
               <el-table-column prop="presentationExperience" :label="$t('experienceTest.clientData.sView')" width="120" />
@@ -239,9 +278,17 @@
               <el-table-column prop="beta" :label="$t('experienceTest.clientData.beta')" width="80" />
               <el-table-column prop="vmos" :label="$t('experienceTest.clientData.vmos')" width="80" />
               <el-table-column prop="avgQoe" :label="$t('experienceTest.clientData.avgQoe')" width="100" />
-              <el-table-column :label="$t('common.operations')" width="100" fixed="right">
+              <el-table-column :label="$t('common.operations')" width="150" fixed="right">
                 <template #default="scope">
-                  <el-button type="primary" size="small" @click="handleEditVmos(scope.row)">
+                  <template v-if="editingVmosRowId === scope.row.id">
+                    <el-button type="primary" size="small" @click="handleSaveVmosRow(scope.row)" :loading="vmosSaving">
+                      {{ $t('common.save') }}
+                    </el-button>
+                    <el-button size="small" @click="handleCancelVmosEdit(scope.row)">
+                      {{ $t('common.cancel') }}
+                    </el-button>
+                  </template>
+                  <el-button v-else type="primary" size="small" @click="handleEditVmosRow(scope.row)" :disabled="editingVmosRowId !== null">
                     {{ $t('common.edit') }}
                   </el-button>
                 </template>
@@ -299,38 +346,6 @@
       </el-tabs>
     </el-card>
 
-    <!-- vMOS数据编辑对话框 -->
-    <el-dialog
-      v-model="vmosEditDialogVisible"
-      :title="$t('experienceTest.clientData.editVmosData')"
-      width="600px"
-      :close-on-click-modal="false"
-    >
-      <el-form :model="vmosEditForm" label-width="180px">
-        <el-form-item :label="$t('experienceTest.clientData.speedKbps')">
-          <el-input v-model="vmosEditForm.speed" placeholder="" />
-        </el-form-item>
-        <el-form-item :label="$t('experienceTest.clientData.rttMs')">
-          <el-input v-model="vmosEditForm.rtt" placeholder="" />
-        </el-form-item>
-        <el-form-item :label="$t('experienceTest.clientData.packetLossRatePercent')">
-          <el-input v-model="vmosEditForm.packetLossRate" placeholder="" />
-        </el-form-item>
-        <el-form-item :label="$t('experienceTest.clientData.stutterRatioPercent')">
-          <el-input v-model="vmosEditForm.stutterRatio" placeholder="" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="vmosEditDialogVisible = false">
-            {{ $t('common.cancel') }}
-          </el-button>
-          <el-button type="primary" @click="handleSaveVmos" :loading="vmosSaving">
-            {{ $t('common.confirm') }}
-          </el-button>
-        </span>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
@@ -370,15 +385,9 @@ export default {
       videoDataList: [],
     })
     // vMOS编辑相关
-    const vmosEditDialogVisible = ref(false)
+    const editingVmosRowId = ref(null)
     const vmosSaving = ref(false)
-    const vmosEditForm = reactive({
-      id: null,
-      speed: '',
-      rtt: '',
-      packetLossRate: '',
-      stutterRatio: '',
-    })
+    const vmosEditBackup = ref({})
 
     const pagination = reactive({
       current: 1,
@@ -602,37 +611,48 @@ export default {
       loadData()
     }
 
-    const handleEditVmos = (row) => {
+    const handleEditVmosRow = (row) => {
       if (!row || !row.id) {
         ElMessage.warning('无效的数据')
         return
       }
-      vmosEditForm.id = row.id
-      vmosEditForm.speed = row.speed || ''
-      vmosEditForm.rtt = row.rtt || ''
-      vmosEditForm.packetLossRate = row.packetLossRate || ''
-      vmosEditForm.stutterRatio = row.stutterRatio || ''
-      vmosEditDialogVisible.value = true
+      
+      // 如果已经有正在编辑的行，先提示
+      if (editingVmosRowId.value !== null && editingVmosRowId.value !== row.id) {
+        ElMessage.warning('请先完成当前行的编辑')
+        return
+      }
+      
+      // 保存原始数据用于取消时恢复
+      vmosEditBackup.value = {
+        speed: row.speed || '',
+        rtt: row.rtt || '',
+        packetLossRate: row.packetLossRate || '',
+        stutterRatio: row.stutterRatio || '',
+      }
+      
+      editingVmosRowId.value = row.id
     }
 
-    const handleSaveVmos = async () => {
-      if (!vmosEditForm.id) {
+    const handleSaveVmosRow = async (row) => {
+      if (!row || !row.id) {
         ElMessage.warning('无效的数据')
         return
       }
 
       vmosSaving.value = true
       try {
-        const response = await updateVmosData(vmosEditForm.id, {
-          speed: vmosEditForm.speed,
-          rtt: vmosEditForm.rtt,
-          packetLossRate: vmosEditForm.packetLossRate,
-          stutterRatio: vmosEditForm.stutterRatio,
+        const response = await updateVmosData(row.id, {
+          speed: row.speed || '',
+          rtt: row.rtt || '',
+          packetLossRate: row.packetLossRate || '',
+          stutterRatio: row.stutterRatio || '',
         })
 
         if (response.code === 200) {
           ElMessage.success(t('common.success'))
-          vmosEditDialogVisible.value = false
+          editingVmosRowId.value = null
+          vmosEditBackup.value = {}
           // 刷新当前任务详情
           if (taskDetail.value.taskInfo && taskDetail.value.taskInfo.taskId) {
             await handleViewDetail({ taskId: taskDetail.value.taskInfo.taskId })
@@ -646,6 +666,23 @@ export default {
       } finally {
         vmosSaving.value = false
       }
+    }
+
+    const handleCancelVmosEdit = (row) => {
+      if (!row || !row.id) {
+        return
+      }
+      
+      // 恢复原始数据
+      if (vmosEditBackup.value) {
+        row.speed = vmosEditBackup.value.speed
+        row.rtt = vmosEditBackup.value.rtt
+        row.packetLossRate = vmosEditBackup.value.packetLossRate
+        row.stutterRatio = vmosEditBackup.value.stutterRatio
+      }
+      
+      editingVmosRowId.value = null
+      vmosEditBackup.value = {}
     }
 
     onMounted(() => {
@@ -682,11 +719,11 @@ export default {
       handleFileRemove,
       handleUpload,
       formatFileSize,
-      vmosEditDialogVisible,
-      vmosEditForm,
+      editingVmosRowId,
       vmosSaving,
-      handleEditVmos,
-      handleSaveVmos,
+      handleEditVmosRow,
+      handleSaveVmosRow,
+      handleCancelVmosEdit,
     }
   },
 }
