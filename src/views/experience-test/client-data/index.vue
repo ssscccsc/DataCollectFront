@@ -825,8 +825,9 @@ export default {
 }
 
 .detail-container {
-  min-height: 400px;
+  height: 800px;
   padding: 20px;
+  overflow-y: auto;
 }
 
 .info-section {
