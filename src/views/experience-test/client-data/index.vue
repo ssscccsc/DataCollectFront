@@ -228,7 +228,7 @@
             <el-tabs v-model="activeDetailTab" type="border-card" class="data-tabs">
           <!-- vMOS数据 -->
           <el-tab-pane :label="$t('experienceTest.clientData.vmos')" name="vmos">
-            <el-table :data="taskDetail.vmosDataList" border style="width: 100%" max-height="600">
+            <el-table :data="taskDetail.vmosDataList" border style="width: 100%" max-height="1000">
               <el-table-column prop="sequenceNumber" :label="$t('experienceTest.clientData.sequenceNumber')" width="100" />
               <el-table-column :label="$t('experienceTest.clientData.speedKbps')" width="100">
                 <template #default="scope">
@@ -307,7 +307,7 @@
 
           <!-- 上下行速率统计 -->
           <el-tab-pane :label="$t('experienceTest.clientData.speedStatistics')" name="speed">
-            <el-table :data="taskDetail.speedDataList" border style="width: 100%" max-height="600">
+            <el-table :data="taskDetail.speedDataList" border style="width: 100%" max-height="1000">
               <el-table-column type="index" label="#" width="60" />
               <el-table-column prop="dlSpeed" :label="$t('experienceTest.clientData.dlSpeed')" width="150" />
               <el-table-column prop="ulSpeed" :label="$t('experienceTest.clientData.ulSpeed')" width="150" />
@@ -318,7 +318,7 @@
 
           <!-- 上下行RTT统计 -->
           <el-tab-pane :label="$t('experienceTest.clientData.rttStatistics')" name="rtt">
-            <el-table :data="taskDetail.rttDataList" border style="width: 100%" max-height="600">
+            <el-table :data="taskDetail.rttDataList" border style="width: 100%" max-height="1000">
               <el-table-column type="index" label="#" width="60" />
               <el-table-column prop="indexTime" :label="$t('experienceTest.clientData.indexTime')" width="180" />
               <el-table-column prop="dlDelay" :label="$t('experienceTest.clientData.dlDelay')" width="150" />
@@ -329,7 +329,7 @@
 
           <!-- 上下行丢包率统计 -->
           <el-tab-pane :label="$t('experienceTest.clientData.lostStatistics')" name="lost">
-            <el-table :data="taskDetail.lostDataList" border style="width: 100%" max-height="600">
+            <el-table :data="taskDetail.lostDataList" border style="width: 100%" max-height="1000">
               <el-table-column type="index" label="#" width="60" />
               <el-table-column prop="indexTime" :label="$t('experienceTest.clientData.indexTime')" width="180" />
               <el-table-column prop="dlLoss" :label="$t('experienceTest.clientData.dlLoss')" width="150" />
@@ -341,7 +341,7 @@
 
           <!-- 视频卡顿统计 -->
           <el-tab-pane :label="$t('experienceTest.clientData.videoStatistics')" name="video">
-            <el-table :data="taskDetail.videoDataList" border style="width: 100%" max-height="600">
+            <el-table :data="taskDetail.videoDataList" border style="width: 100%" max-height="1000">
               <el-table-column type="index" label="#" width="60" />
               <el-table-column prop="time" :label="$t('experienceTest.clientData.time')" width="180" />
               <el-table-column prop="catonTime" :label="$t('experienceTest.clientData.catonTime')" width="150" />
