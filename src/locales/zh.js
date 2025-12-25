@@ -1087,10 +1087,13 @@ export default {
     },
     dataComparison: {
       description: '端网数据对比分析，支持数据对比和查看',
+      comparisonList: '对比列表',
+      detailTitle: '对比详情',
       name: '名称',
       compare: '对比',
       compareNotImplemented: '对比功能待实现',
       viewNotImplemented: '查看功能待实现',
+      detailNotImplemented: '详情功能待实现',
       deleteConfirm: '确定要删除该对比记录吗？',
     },
     networkSettings: {

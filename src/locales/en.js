@@ -1162,10 +1162,13 @@ export default {
     },
     dataComparison: {
       description: 'Client-network data comparison analysis, support data comparison and viewing',
+      comparisonList: 'Comparison List',
+      detailTitle: 'Comparison Detail',
       name: 'Name',
       compare: 'Compare',
       compareNotImplemented: 'Compare feature not implemented',
       viewNotImplemented: 'View feature not implemented',
+      detailNotImplemented: 'Detail feature not implemented',
       deleteConfirm: 'Are you sure to delete this comparison record?',
     },
     networkSettings: {
