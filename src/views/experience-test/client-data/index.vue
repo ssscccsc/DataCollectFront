@@ -475,6 +475,10 @@ export default {
         activeDetailTab.value = 'vmos'
         detailLoading.value = true
         
+        // 重置编辑状态
+        editingVmosRowId.value = null
+        vmosEditBackup.value = {}
+        
         // 重置数据
         taskDetail.value = {
           taskInfo: null,
