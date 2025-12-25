@@ -221,26 +221,25 @@
           <!-- vMOS数据 -->
           <el-tab-pane :label="$t('experienceTest.clientData.vmos')" name="vmos">
             <el-table :data="taskDetail.vmosDataList" border style="width: 100%" max-height="600">
-              <el-table-column type="index" label="#" width="60" />
-              <el-table-column prop="sequenceNumber" :label="$t('experienceTest.clientData.sequenceNumber')" width="120" />
-              <el-table-column prop="speed" :label="$t('experienceTest.clientData.speedKbps')" width="120" />
-              <el-table-column prop="resolution" :label="$t('experienceTest.clientData.resolution')" width="150" />
-              <el-table-column prop="rtt" :label="$t('experienceTest.clientData.rttMs')" width="120" />
-              <el-table-column prop="packetLossRate" :label="$t('experienceTest.clientData.packetLossRatePercent')" width="150" />
-              <el-table-column prop="stutterRatio" :label="$t('experienceTest.clientData.stutterRatioPercent')" width="150" />
-              <el-table-column prop="initialBufferingDelay" :label="$t('experienceTest.clientData.sRtt')" width="180" />
-              <el-table-column prop="bitrate" :label="$t('experienceTest.clientData.sBitrate')" width="120" />
-              <el-table-column prop="calculatedResolution" :label="$t('experienceTest.clientData.calculatedResolution')" width="150" />
-              <el-table-column prop="videoExperience" :label="$t('experienceTest.clientData.sQuality')" width="150" />
-              <el-table-column prop="interactionExperience" :label="$t('experienceTest.clientData.sInteraction')" width="180" />
-              <el-table-column prop="presentationExperience" :label="$t('experienceTest.clientData.sView')" width="180" />
-              <el-table-column prop="sLostPacketRate" :label="$t('experienceTest.clientData.sLostPacketRate')" width="150" />
-              <el-table-column prop="sStallRate" :label="$t('experienceTest.clientData.sStallRate')" width="150" />
-              <el-table-column prop="alpha" :label="$t('experienceTest.clientData.alpha')" width="100" />
-              <el-table-column prop="beta" :label="$t('experienceTest.clientData.beta')" width="100" />
-              <el-table-column prop="vmos" :label="$t('experienceTest.clientData.vmos')" width="100" />
-              <el-table-column prop="avgQoe" :label="$t('experienceTest.clientData.avgQoe')" width="120" />
-              <el-table-column :label="$t('common.operations')" width="120" fixed="right">
+              <el-table-column prop="sequenceNumber" :label="$t('experienceTest.clientData.sequenceNumber')" width="100" />
+              <el-table-column prop="speed" :label="$t('experienceTest.clientData.speedKbps')" width="100" />
+              <el-table-column prop="resolution" :label="$t('experienceTest.clientData.resolution')" width="120" />
+              <el-table-column prop="rtt" :label="$t('experienceTest.clientData.rttMs')" width="100" />
+              <el-table-column prop="packetLossRate" :label="$t('experienceTest.clientData.packetLossRatePercent')" width="120" />
+              <el-table-column prop="stutterRatio" :label="$t('experienceTest.clientData.stutterRatioPercent')" width="120" />
+              <el-table-column prop="initialBufferingDelay" :label="$t('experienceTest.clientData.sRtt')" width="120" />
+              <el-table-column prop="bitrate" :label="$t('experienceTest.clientData.sBitrate')" width="100" />
+              <el-table-column prop="calculatedResolution" :label="$t('experienceTest.clientData.calculatedResolution')" width="120" />
+              <el-table-column prop="videoExperience" :label="$t('experienceTest.clientData.sQuality')" width="100" />
+              <el-table-column prop="interactionExperience" :label="$t('experienceTest.clientData.sInteraction')" width="120" />
+              <el-table-column prop="presentationExperience" :label="$t('experienceTest.clientData.sView')" width="120" />
+              <el-table-column prop="sLostPacketRate" :label="$t('experienceTest.clientData.sLostPacketRate')" width="140" />
+              <el-table-column prop="sStallRate" :label="$t('experienceTest.clientData.sStallRate')" width="140" />
+              <el-table-column prop="alpha" :label="$t('experienceTest.clientData.alpha')" width="80" />
+              <el-table-column prop="beta" :label="$t('experienceTest.clientData.beta')" width="80" />
+              <el-table-column prop="vmos" :label="$t('experienceTest.clientData.vmos')" width="80" />
+              <el-table-column prop="avgQoe" :label="$t('experienceTest.clientData.avgQoe')" width="100" />
+              <el-table-column :label="$t('common.operations')" width="100" fixed="right">
                 <template #default="scope">
                   <el-button type="primary" size="small" @click="handleEditVmos(scope.row)">
                     {{ $t('common.edit') }}
@@ -308,11 +307,17 @@
       :close-on-click-modal="false"
     >
       <el-form :model="vmosEditForm" label-width="180px">
-        <el-form-item :label="$t('experienceTest.clientData.sLostPacketRate')">
-          <el-input v-model="vmosEditForm.sLostPacketRate" placeholder="" />
+        <el-form-item :label="$t('experienceTest.clientData.speedKbps')">
+          <el-input v-model="vmosEditForm.speed" placeholder="" />
         </el-form-item>
-        <el-form-item :label="$t('experienceTest.clientData.sStallRate')">
-          <el-input v-model="vmosEditForm.sStallRate" placeholder="" />
+        <el-form-item :label="$t('experienceTest.clientData.rttMs')">
+          <el-input v-model="vmosEditForm.rtt" placeholder="" />
+        </el-form-item>
+        <el-form-item :label="$t('experienceTest.clientData.packetLossRatePercent')">
+          <el-input v-model="vmosEditForm.packetLossRate" placeholder="" />
+        </el-form-item>
+        <el-form-item :label="$t('experienceTest.clientData.stutterRatioPercent')">
+          <el-input v-model="vmosEditForm.stutterRatio" placeholder="" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -369,8 +374,10 @@ export default {
     const vmosSaving = ref(false)
     const vmosEditForm = reactive({
       id: null,
-      sLostPacketRate: '',
-      sStallRate: '',
+      speed: '',
+      rtt: '',
+      packetLossRate: '',
+      stutterRatio: '',
     })
 
     const pagination = reactive({
@@ -593,6 +600,52 @@ export default {
     const handleCurrentChange = (val) => {
       pagination.current = val
       loadData()
+    }
+
+    const handleEditVmos = (row) => {
+      if (!row || !row.id) {
+        ElMessage.warning('无效的数据')
+        return
+      }
+      vmosEditForm.id = row.id
+      vmosEditForm.speed = row.speed || ''
+      vmosEditForm.rtt = row.rtt || ''
+      vmosEditForm.packetLossRate = row.packetLossRate || ''
+      vmosEditForm.stutterRatio = row.stutterRatio || ''
+      vmosEditDialogVisible.value = true
+    }
+
+    const handleSaveVmos = async () => {
+      if (!vmosEditForm.id) {
+        ElMessage.warning('无效的数据')
+        return
+      }
+
+      vmosSaving.value = true
+      try {
+        const response = await updateVmosData(vmosEditForm.id, {
+          speed: vmosEditForm.speed,
+          rtt: vmosEditForm.rtt,
+          packetLossRate: vmosEditForm.packetLossRate,
+          stutterRatio: vmosEditForm.stutterRatio,
+        })
+
+        if (response.code === 200) {
+          ElMessage.success(t('common.success'))
+          vmosEditDialogVisible.value = false
+          // 刷新当前任务详情
+          if (taskDetail.value.taskInfo && taskDetail.value.taskInfo.taskId) {
+            await handleViewDetail({ taskId: taskDetail.value.taskInfo.taskId })
+          }
+        } else {
+          ElMessage.error(response.message || t('common.error'))
+        }
+      } catch (error) {
+        console.error('Update vmos data error:', error)
+        ElMessage.error(error.message || t('common.error'))
+      } finally {
+        vmosSaving.value = false
+      }
     }
 
     onMounted(() => {
