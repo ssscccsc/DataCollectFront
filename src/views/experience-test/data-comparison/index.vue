@@ -936,6 +936,343 @@ export default {
       })
     }
 
+    // 渲染RTT对比图表
+    const renderRttChart = () => {
+      if (!rttChartRef.value || !rttComparisonData.value) {
+        return
+      }
+      
+      // 销毁旧图表
+      if (rttChart) {
+        rttChart.dispose()
+        rttChart = null
+      }
+      
+      // 创建新图表
+      rttChart = echarts.init(rttChartRef.value)
+      
+      // 准备数据
+      const clientData = rttComparisonData.value.clientRttList || []
+      const networkData = rttComparisonData.value.networkRttList || []
+      
+      // 端侧数据
+      const clientTimeStamps = clientData.map(item => item.timeStamp || item.sequenceNumber || '')
+      const clientRtts = clientData.map(item => {
+        if (typeof item.rtt === 'number') {
+          return item.rtt
+        }
+        if (typeof item.rtt === 'string') {
+          return parseFloat(item.rtt) || 0
+        }
+        return 0
+      })
+      
+      // 网络侧数据
+      const networkTimeStamps = networkData.map(item => item.timeStamp || '')
+      const networkServiceDelays = networkData.map(item => {
+        if (typeof item.serviceDelay === 'number') {
+          return item.serviceDelay
+        }
+        if (typeof item.serviceDelay === 'string') {
+          return parseFloat(item.serviceDelay) || 0
+        }
+        return 0
+      })
+      
+      // 配置图表选项
+      const option = {
+        title: {
+          text: t('experienceTest.dataComparison.rttComparison'),
+          left: 'center',
+        },
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: {
+            type: 'cross',
+          },
+        },
+        legend: {
+          data: [
+            t('experienceTest.dataComparison.clientRtt'),
+            t('experienceTest.dataComparison.networkServiceDelay'),
+          ],
+          top: 30,
+        },
+        grid: {
+          left: '3%',
+          right: '4%',
+          bottom: '3%',
+          containLabel: true,
+        },
+        xAxis: [
+          {
+            type: 'category',
+            boundaryGap: false,
+            data: clientTimeStamps.length > 0 ? clientTimeStamps : networkTimeStamps,
+          },
+        ],
+        yAxis: [
+          {
+            type: 'value',
+            name: 'ms',
+          },
+        ],
+        series: [
+          {
+            name: t('experienceTest.dataComparison.clientRtt'),
+            type: 'line',
+            data: clientRtts,
+            smooth: true,
+            itemStyle: {
+              color: '#409EFF',
+            },
+          },
+          {
+            name: t('experienceTest.dataComparison.networkServiceDelay'),
+            type: 'line',
+            data: networkServiceDelays,
+            smooth: true,
+            itemStyle: {
+              color: '#67C23A',
+            },
+          },
+        ],
+      }
+      
+      rttChart.setOption(option)
+      
+      // 响应式调整
+      window.addEventListener('resize', () => {
+        if (rttChart) {
+          rttChart.resize()
+        }
+      })
+    }
+
+    // 渲染卡顿对比图表
+    const renderStutterChart = () => {
+      if (!stutterChartRef.value || !stutterComparisonData.value) {
+        return
+      }
+      
+      // 销毁旧图表
+      if (stutterChart) {
+        stutterChart.dispose()
+        stutterChart = null
+      }
+      
+      // 创建新图表
+      stutterChart = echarts.init(stutterChartRef.value)
+      
+      // 准备数据
+      const clientData = stutterComparisonData.value.clientStutterList || []
+      const networkData = stutterComparisonData.value.networkStutterList || []
+      
+      // 端侧数据
+      const clientTimeStamps = clientData.map(item => item.timeStamp || item.sequenceNumber || '')
+      const clientStutterRatios = clientData.map(item => {
+        if (typeof item.stutterRatio === 'number') {
+          return item.stutterRatio
+        }
+        if (typeof item.stutterRatio === 'string') {
+          return parseFloat(item.stutterRatio) || 0
+        }
+        return 0
+      })
+      
+      // 网络侧数据
+      const networkTimeStamps = networkData.map(item => item.timeStamp || '')
+      const networkStallingNumbers = networkData.map(item => {
+        if (typeof item.stallingNumberDiv10 === 'number') {
+          return item.stallingNumberDiv10
+        }
+        if (typeof item.stallingNumberDiv10 === 'string') {
+          return parseFloat(item.stallingNumberDiv10) || 0
+        }
+        return 0
+      })
+      
+      // 配置图表选项
+      const option = {
+        title: {
+          text: t('experienceTest.dataComparison.stutterComparison'),
+          left: 'center',
+        },
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: {
+            type: 'cross',
+          },
+        },
+        legend: {
+          data: [
+            t('experienceTest.dataComparison.clientStutterRatio'),
+            t('experienceTest.dataComparison.networkStallingNumberDiv10'),
+          ],
+          top: 30,
+        },
+        grid: {
+          left: '3%',
+          right: '4%',
+          bottom: '3%',
+          containLabel: true,
+        },
+        xAxis: [
+          {
+            type: 'category',
+            boundaryGap: false,
+            data: clientTimeStamps.length > 0 ? clientTimeStamps : networkTimeStamps,
+          },
+        ],
+        yAxis: [
+          {
+            type: 'value',
+          },
+        ],
+        series: [
+          {
+            name: t('experienceTest.dataComparison.clientStutterRatio'),
+            type: 'line',
+            data: clientStutterRatios,
+            smooth: true,
+            itemStyle: {
+              color: '#409EFF',
+            },
+          },
+          {
+            name: t('experienceTest.dataComparison.networkStallingNumberDiv10'),
+            type: 'line',
+            data: networkStallingNumbers,
+            smooth: true,
+            itemStyle: {
+              color: '#67C23A',
+            },
+          },
+        ],
+      }
+      
+      stutterChart.setOption(option)
+      
+      // 响应式调整
+      window.addEventListener('resize', () => {
+        if (stutterChart) {
+          stutterChart.resize()
+        }
+      })
+    }
+
+    // 渲染平均QOE对比图表
+    const renderAvgQoeChart = () => {
+      if (!avgQoeChartRef.value || !avgQoeComparisonData.value) {
+        return
+      }
+      
+      // 销毁旧图表
+      if (avgQoeChart) {
+        avgQoeChart.dispose()
+        avgQoeChart = null
+      }
+      
+      // 创建新图表
+      avgQoeChart = echarts.init(avgQoeChartRef.value)
+      
+      // 准备数据
+      const clientData = avgQoeComparisonData.value.clientAvgQoeList || []
+      const networkData = avgQoeComparisonData.value.networkAvgQoeList || []
+      
+      // 端侧数据
+      const clientTimeStamps = clientData.map(item => item.timeStamp || item.sequenceNumber || '')
+      const clientAvgQoes = clientData.map(item => {
+        if (typeof item.avgQoe === 'number') {
+          return item.avgQoe
+        }
+        if (typeof item.avgQoe === 'string') {
+          return parseFloat(item.avgQoe) || 0
+        }
+        return 0
+      })
+      
+      // 网络侧数据
+      const networkTimeStamps = networkData.map(item => item.timeStamp || '')
+      const networkAvgQoes = networkData.map(item => {
+        if (typeof item.avgQoe === 'number') {
+          return item.avgQoe
+        }
+        if (typeof item.avgQoe === 'string') {
+          return parseFloat(item.avgQoe) || 0
+        }
+        return 0
+      })
+      
+      // 配置图表选项
+      const option = {
+        title: {
+          text: t('experienceTest.dataComparison.avgQoeComparison'),
+          left: 'center',
+        },
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: {
+            type: 'cross',
+          },
+        },
+        legend: {
+          data: [
+            t('experienceTest.dataComparison.clientAvgQoe'),
+            t('experienceTest.dataComparison.networkAvgQoe'),
+          ],
+          top: 30,
+        },
+        grid: {
+          left: '3%',
+          right: '4%',
+          bottom: '3%',
+          containLabel: true,
+        },
+        xAxis: [
+          {
+            type: 'category',
+            boundaryGap: false,
+            data: clientTimeStamps.length > 0 ? clientTimeStamps : networkTimeStamps,
+          },
+        ],
+        yAxis: [
+          {
+            type: 'value',
+          },
+        ],
+        series: [
+          {
+            name: t('experienceTest.dataComparison.clientAvgQoe'),
+            type: 'line',
+            data: clientAvgQoes,
+            smooth: true,
+            itemStyle: {
+              color: '#409EFF',
+            },
+          },
+          {
+            name: t('experienceTest.dataComparison.networkAvgQoe'),
+            type: 'line',
+            data: networkAvgQoes,
+            smooth: true,
+            itemStyle: {
+              color: '#67C23A',
+            },
+          },
+        ],
+      }
+      
+      avgQoeChart.setOption(option)
+      
+      // 响应式调整
+      window.addEventListener('resize', () => {
+        if (avgQoeChart) {
+          avgQoeChart.resize()
+        }
+      })
+    }
+
     // 加载RTT对比数据
     const loadRttComparisonData = async (taskId) => {
       if (!taskId) {
@@ -1257,6 +1594,24 @@ export default {
       }
     }
 
+
+    // 监听对比tab切换，自动加载对应数据
+    watch(activeComparisonTab, (newTab) => {
+      if (!currentTaskId.value) {
+        return
+      }
+      
+      // 根据tab名称加载对应的数据
+      if (newTab === 'rtt' && !rttComparisonData.value) {
+        loadRttComparisonData(currentTaskId.value)
+      } else if (newTab === 'stutter' && !stutterComparisonData.value) {
+        loadStutterComparisonData(currentTaskId.value)
+      } else if (newTab === 'avgQoe' && !avgQoeComparisonData.value) {
+        loadAvgQoeComparisonData(currentTaskId.value)
+      } else if (newTab === 'speed' && !speedComparisonData.value) {
+        loadSpeedComparisonData(currentTaskId.value)
+      }
+    })
 
     const handleSizeChange = (val) => {
       pagination.size = val
