@@ -340,6 +340,11 @@ export default {
         })
       }
 
+      // 根据timeStamp字段排序
+      merged.sort((a, b) => {
+        return compareTimeStamps(a.timeStamp, b.timeStamp)
+      })
+
       return merged
     })
 
