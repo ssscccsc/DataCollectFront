@@ -64,30 +64,23 @@
                       
                       <!-- 数据表格 -->
                       <div class="table-container">
-                        <h3 class="table-title">{{ $t('experienceTest.dataComparison.clientSpeedData') }}</h3>
-                        <el-table :data="speedComparisonData.clientSpeedList" border stripe style="width: 100%" max-height="300">
-                          <el-table-column type="index" label="#" width="60" />
-                          <el-table-column prop="sequenceNumber" :label="$t('experienceTest.clientData.sequenceNumber')" width="120" />
-                          <el-table-column prop="timeStamp" :label="$t('experienceTest.clientData.time')" width="180" />
-                          <el-table-column :label="$t('experienceTest.dataComparison.speedKbps')" width="150">
-                            <template #default="scope">
-                              {{ formatSpeed(scope.row.speed) }}
-                            </template>
-                          </el-table-column>
-                        </el-table>
-                        
-                        <h3 class="table-title" style="margin-top: 20px;">{{ $t('experienceTest.dataComparison.networkSpeedData') }}</h3>
-                        <el-table :data="speedComparisonData.networkSpeedList" border stripe style="width: 100%" max-height="300">
+                        <h3 class="table-title">{{ $t('experienceTest.dataComparison.speedComparisonData') }}</h3>
+                        <el-table :data="mergedSpeedData" border stripe style="width: 100%" max-height="500">
                           <el-table-column type="index" label="#" width="60" />
                           <el-table-column prop="timeStamp" :label="$t('experienceTest.clientData.time')" width="180" />
-                          <el-table-column :label="$t('experienceTest.dataComparison.uplinkBandwidthKbps')" width="200">
+                          <el-table-column :label="$t('experienceTest.dataComparison.clientSpeedKbps')" width="180">
                             <template #default="scope">
-                              {{ formatSpeed(scope.row.uplinkBandwidth) }}
+                              {{ formatSpeed(scope.row.clientSpeed) }}
                             </template>
                           </el-table-column>
-                          <el-table-column :label="$t('experienceTest.dataComparison.downlinkBandwidthKbps')" width="200">
+                          <el-table-column :label="$t('experienceTest.dataComparison.networkUplinkBandwidthKbps')" width="220">
                             <template #default="scope">
-                              {{ formatSpeed(scope.row.downlinkBandwidth) }}
+                              {{ formatSpeed(scope.row.networkUplinkSpeed) }}
+                            </template>
+                          </el-table-column>
+                          <el-table-column :label="$t('experienceTest.dataComparison.networkDownlinkBandwidthKbps')" width="220">
+                            <template #default="scope">
+                              {{ formatSpeed(scope.row.networkDownlinkSpeed) }}
                             </template>
                           </el-table-column>
                         </el-table>
@@ -127,7 +120,7 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted, nextTick, watch, onBeforeUnmount } from 'vue'
+import { ref, reactive, onMounted, nextTick, watch, onBeforeUnmount, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { DataAnalysis, Refresh } from '@element-plus/icons-vue'
@@ -258,6 +251,97 @@ export default {
       }
       return '-'
     }
+
+    // 合并端侧和网络侧速率数据到同一张表
+    const mergedSpeedData = computed(() => {
+      if (!speedComparisonData.value) {
+        return []
+      }
+
+      const clientList = speedComparisonData.value.clientSpeedList || []
+      const networkList = speedComparisonData.value.networkSpeedList || []
+      const merged = []
+
+      // 创建时间戳到数据的映射
+      const clientMap = new Map()
+      const networkMap = new Map()
+
+      // 处理端侧数据
+      clientList.forEach((item) => {
+        const timeStamp = item.timeStamp || item.sequenceNumber || ''
+        clientMap.set(timeStamp, item)
+      })
+
+      // 处理网络侧数据
+      networkList.forEach((item) => {
+        const timeStamp = item.timeStamp || ''
+        networkMap.set(timeStamp, item)
+      })
+
+      // 获取所有唯一的时间戳
+      const allTimeStamps = new Set()
+      clientMap.forEach((_, timeStamp) => {
+        allTimeStamps.add(timeStamp)
+      })
+      networkMap.forEach((_, timeStamp) => {
+        allTimeStamps.add(timeStamp)
+      })
+
+      // 按时间戳排序
+      const sortedTimeStamps = Array.from(allTimeStamps).sort()
+
+      // 合并数据
+      sortedTimeStamps.forEach((timeStamp) => {
+        const clientData = clientMap.get(timeStamp)
+        const networkData = networkMap.get(timeStamp)
+
+        const mergedItem = {
+          timeStamp: timeStamp,
+          clientSpeed: clientData ? clientData.speed : null,
+          networkUplinkSpeed: networkData ? networkData.uplinkBandwidth : null,
+          networkDownlinkSpeed: networkData ? networkData.downlinkBandwidth : null,
+        }
+
+        merged.push(mergedItem)
+      })
+
+      // 如果时间戳无法匹配，则分别添加所有数据
+      if (merged.length === 0) {
+        // 添加所有端侧数据
+        clientList.forEach((item) => {
+          merged.push({
+            timeStamp: item.timeStamp || item.sequenceNumber || '-',
+            clientSpeed: item.speed,
+            networkUplinkSpeed: null,
+            networkDownlinkSpeed: null,
+          })
+        })
+
+        // 添加所有网络侧数据（如果时间戳不重复）
+        networkList.forEach((item) => {
+          const timeStamp = item.timeStamp || '-'
+          // 检查是否已存在该时间戳
+          const exists = merged.some((m) => m.timeStamp === timeStamp)
+          if (!exists) {
+            merged.push({
+              timeStamp: timeStamp,
+              clientSpeed: null,
+              networkUplinkSpeed: item.uplinkBandwidth,
+              networkDownlinkSpeed: item.downlinkBandwidth,
+            })
+          } else {
+            // 如果已存在，更新网络侧数据
+            const existingItem = merged.find((m) => m.timeStamp === timeStamp)
+            if (existingItem) {
+              existingItem.networkUplinkSpeed = item.uplinkBandwidth
+              existingItem.networkDownlinkSpeed = item.downlinkBandwidth
+            }
+          }
+        })
+      }
+
+      return merged
+    })
 
     const renderSpeedChart = () => {
       if (!speedChartRef.value || !speedComparisonData.value) {
@@ -440,6 +524,7 @@ export default {
       speedComparisonLoading,
       speedComparisonData,
       speedChartRef,
+      mergedSpeedData,
       loadData,
       handleCompare,
       handleView,
