@@ -823,37 +823,73 @@ export default {
       const clientData = speedComparisonData.value.clientSpeedList || []
       const networkData = speedComparisonData.value.networkSpeedList || []
       
-      // 端侧数据
-      const clientTimeStamps = clientData.map(item => item.timeStamp || item.sequenceNumber)
-      const clientSpeeds = clientData.map(item => {
-        if (typeof item.speed === 'number') {
-          return item.speed
+      // 合并所有时间戳并排序
+      const allTimeStamps = new Set()
+      clientData.forEach((item) => {
+        const timeStamp = item.timeStamp || item.sequenceNumber
+        if (timeStamp) {
+          allTimeStamps.add(timeStamp)
         }
-        if (typeof item.speed === 'string') {
-          return parseFloat(item.speed) || 0
+      })
+      networkData.forEach((item) => {
+        const timeStamp = item.timeStamp || ''
+        if (timeStamp) {
+          allTimeStamps.add(timeStamp)
         }
-        return 0
       })
       
-      // 网络侧数据
-      const networkTimeStamps = networkData.map(item => item.timeStamp || '')
-      const networkUplinkSpeeds = networkData.map(item => {
-        if (typeof item.uplinkBandwidth === 'number') {
-          return item.uplinkBandwidth
-        }
-        if (typeof item.uplinkBandwidth === 'string') {
-          return parseFloat(item.uplinkBandwidth) || 0
-        }
-        return 0
+      // 按数字顺序排序时间戳
+      const sortedTimeStamps = Array.from(allTimeStamps).sort((a, b) => {
+        return compareTimeStamps(a, b)
       })
-      const networkDownlinkSpeeds = networkData.map(item => {
-        if (typeof item.downlinkBandwidth === 'number') {
-          return item.downlinkBandwidth
+      
+      // 创建时间戳到数据的映射
+      const clientMap = new Map()
+      clientData.forEach((item) => {
+        const timeStamp = item.timeStamp || item.sequenceNumber
+        if (timeStamp) {
+          let speed = 0
+          if (typeof item.speed === 'number') {
+            speed = item.speed
+          } else if (typeof item.speed === 'string') {
+            speed = parseFloat(item.speed) || 0
+          }
+          clientMap.set(timeStamp, speed)
         }
-        if (typeof item.downlinkBandwidth === 'string') {
-          return parseFloat(item.downlinkBandwidth) || 0
+      })
+      
+      const networkUplinkMap = new Map()
+      const networkDownlinkMap = new Map()
+      networkData.forEach((item) => {
+        const timeStamp = item.timeStamp || ''
+        if (timeStamp) {
+          let uplinkSpeed = 0
+          if (typeof item.uplinkBandwidth === 'number') {
+            uplinkSpeed = item.uplinkBandwidth
+          } else if (typeof item.uplinkBandwidth === 'string') {
+            uplinkSpeed = parseFloat(item.uplinkBandwidth) || 0
+          }
+          networkUplinkMap.set(timeStamp, uplinkSpeed)
+          
+          let downlinkSpeed = 0
+          if (typeof item.downlinkBandwidth === 'number') {
+            downlinkSpeed = item.downlinkBandwidth
+          } else if (typeof item.downlinkBandwidth === 'string') {
+            downlinkSpeed = parseFloat(item.downlinkBandwidth) || 0
+          }
+          networkDownlinkMap.set(timeStamp, downlinkSpeed)
         }
-        return 0
+      })
+      
+      // 按照排序后的时间戳顺序提取数据
+      const clientSpeeds = sortedTimeStamps.map((timeStamp) => {
+        return clientMap.get(timeStamp) || null
+      })
+      const networkUplinkSpeeds = sortedTimeStamps.map((timeStamp) => {
+        return networkUplinkMap.get(timeStamp) || null
+      })
+      const networkDownlinkSpeeds = sortedTimeStamps.map((timeStamp) => {
+        return networkDownlinkMap.get(timeStamp) || null
       })
       
       // 配置图表选项
@@ -886,7 +922,7 @@ export default {
           {
             type: 'category',
             boundaryGap: false,
-            data: clientTimeStamps.length > 0 ? clientTimeStamps : networkTimeStamps,
+            data: sortedTimeStamps,
           },
         ],
         yAxis: [
@@ -955,28 +991,61 @@ export default {
       const clientData = rttComparisonData.value.clientRttList || []
       const networkData = rttComparisonData.value.networkRttList || []
       
-      // 端侧数据
-      const clientTimeStamps = clientData.map(item => item.timeStamp || item.sequenceNumber || '')
-      const clientRtts = clientData.map(item => {
-        if (typeof item.rtt === 'number') {
-          return item.rtt
+      // 合并所有时间戳并排序
+      const allTimeStamps = new Set()
+      clientData.forEach((item) => {
+        const timeStamp = item.timeStamp || item.sequenceNumber || ''
+        if (timeStamp) {
+          allTimeStamps.add(timeStamp)
         }
-        if (typeof item.rtt === 'string') {
-          return parseFloat(item.rtt) || 0
+      })
+      networkData.forEach((item) => {
+        const timeStamp = item.timeStamp || ''
+        if (timeStamp) {
+          allTimeStamps.add(timeStamp)
         }
-        return 0
       })
       
-      // 网络侧数据
-      const networkTimeStamps = networkData.map(item => item.timeStamp || '')
-      const networkServiceDelays = networkData.map(item => {
-        if (typeof item.serviceDelay === 'number') {
-          return item.serviceDelay
+      // 按数字顺序排序时间戳
+      const sortedTimeStamps = Array.from(allTimeStamps).sort((a, b) => {
+        return compareTimeStamps(a, b)
+      })
+      
+      // 创建时间戳到数据的映射
+      const clientMap = new Map()
+      clientData.forEach((item) => {
+        const timeStamp = item.timeStamp || item.sequenceNumber || ''
+        if (timeStamp) {
+          let rtt = 0
+          if (typeof item.rtt === 'number') {
+            rtt = item.rtt
+          } else if (typeof item.rtt === 'string') {
+            rtt = parseFloat(item.rtt) || 0
+          }
+          clientMap.set(timeStamp, rtt)
         }
-        if (typeof item.serviceDelay === 'string') {
-          return parseFloat(item.serviceDelay) || 0
+      })
+      
+      const networkMap = new Map()
+      networkData.forEach((item) => {
+        const timeStamp = item.timeStamp || ''
+        if (timeStamp) {
+          let serviceDelay = 0
+          if (typeof item.serviceDelay === 'number') {
+            serviceDelay = item.serviceDelay
+          } else if (typeof item.serviceDelay === 'string') {
+            serviceDelay = parseFloat(item.serviceDelay) || 0
+          }
+          networkMap.set(timeStamp, serviceDelay)
         }
-        return 0
+      })
+      
+      // 按照排序后的时间戳顺序提取数据
+      const clientRtts = sortedTimeStamps.map((timeStamp) => {
+        return clientMap.get(timeStamp) || null
+      })
+      const networkServiceDelays = sortedTimeStamps.map((timeStamp) => {
+        return networkMap.get(timeStamp) || null
       })
       
       // 配置图表选项
@@ -1008,7 +1077,7 @@ export default {
           {
             type: 'category',
             boundaryGap: false,
-            data: clientTimeStamps.length > 0 ? clientTimeStamps : networkTimeStamps,
+            data: sortedTimeStamps,
           },
         ],
         yAxis: [
@@ -1068,28 +1137,61 @@ export default {
       const clientData = stutterComparisonData.value.clientStutterList || []
       const networkData = stutterComparisonData.value.networkStutterList || []
       
-      // 端侧数据
-      const clientTimeStamps = clientData.map(item => item.timeStamp || item.sequenceNumber || '')
-      const clientStutterRatios = clientData.map(item => {
-        if (typeof item.stutterRatio === 'number') {
-          return item.stutterRatio
+      // 合并所有时间戳并排序
+      const allTimeStamps = new Set()
+      clientData.forEach((item) => {
+        const timeStamp = item.timeStamp || item.sequenceNumber || ''
+        if (timeStamp) {
+          allTimeStamps.add(timeStamp)
         }
-        if (typeof item.stutterRatio === 'string') {
-          return parseFloat(item.stutterRatio) || 0
+      })
+      networkData.forEach((item) => {
+        const timeStamp = item.timeStamp || ''
+        if (timeStamp) {
+          allTimeStamps.add(timeStamp)
         }
-        return 0
       })
       
-      // 网络侧数据
-      const networkTimeStamps = networkData.map(item => item.timeStamp || '')
-      const networkStallingNumbers = networkData.map(item => {
-        if (typeof item.stallingNumberDiv10 === 'number') {
-          return item.stallingNumberDiv10
+      // 按数字顺序排序时间戳
+      const sortedTimeStamps = Array.from(allTimeStamps).sort((a, b) => {
+        return compareTimeStamps(a, b)
+      })
+      
+      // 创建时间戳到数据的映射
+      const clientMap = new Map()
+      clientData.forEach((item) => {
+        const timeStamp = item.timeStamp || item.sequenceNumber || ''
+        if (timeStamp) {
+          let stutterRatio = 0
+          if (typeof item.stutterRatio === 'number') {
+            stutterRatio = item.stutterRatio
+          } else if (typeof item.stutterRatio === 'string') {
+            stutterRatio = parseFloat(item.stutterRatio) || 0
+          }
+          clientMap.set(timeStamp, stutterRatio)
         }
-        if (typeof item.stallingNumberDiv10 === 'string') {
-          return parseFloat(item.stallingNumberDiv10) || 0
+      })
+      
+      const networkMap = new Map()
+      networkData.forEach((item) => {
+        const timeStamp = item.timeStamp || ''
+        if (timeStamp) {
+          let stallingNumberDiv10 = 0
+          if (typeof item.stallingNumberDiv10 === 'number') {
+            stallingNumberDiv10 = item.stallingNumberDiv10
+          } else if (typeof item.stallingNumberDiv10 === 'string') {
+            stallingNumberDiv10 = parseFloat(item.stallingNumberDiv10) || 0
+          }
+          networkMap.set(timeStamp, stallingNumberDiv10)
         }
-        return 0
+      })
+      
+      // 按照排序后的时间戳顺序提取数据
+      const clientStutterRatios = sortedTimeStamps.map((timeStamp) => {
+        return clientMap.get(timeStamp) || null
+      })
+      const networkStallingNumbers = sortedTimeStamps.map((timeStamp) => {
+        return networkMap.get(timeStamp) || null
       })
       
       // 配置图表选项
@@ -1121,7 +1223,7 @@ export default {
           {
             type: 'category',
             boundaryGap: false,
-            data: clientTimeStamps.length > 0 ? clientTimeStamps : networkTimeStamps,
+            data: sortedTimeStamps,
           },
         ],
         yAxis: [
@@ -1180,28 +1282,61 @@ export default {
       const clientData = avgQoeComparisonData.value.clientAvgQoeList || []
       const networkData = avgQoeComparisonData.value.networkAvgQoeList || []
       
-      // 端侧数据
-      const clientTimeStamps = clientData.map(item => item.timeStamp || item.sequenceNumber || '')
-      const clientAvgQoes = clientData.map(item => {
-        if (typeof item.avgQoe === 'number') {
-          return item.avgQoe
+      // 合并所有时间戳并排序
+      const allTimeStamps = new Set()
+      clientData.forEach((item) => {
+        const timeStamp = item.timeStamp || item.sequenceNumber || ''
+        if (timeStamp) {
+          allTimeStamps.add(timeStamp)
         }
-        if (typeof item.avgQoe === 'string') {
-          return parseFloat(item.avgQoe) || 0
+      })
+      networkData.forEach((item) => {
+        const timeStamp = item.timeStamp || ''
+        if (timeStamp) {
+          allTimeStamps.add(timeStamp)
         }
-        return 0
       })
       
-      // 网络侧数据
-      const networkTimeStamps = networkData.map(item => item.timeStamp || '')
-      const networkAvgQoes = networkData.map(item => {
-        if (typeof item.avgQoe === 'number') {
-          return item.avgQoe
+      // 按数字顺序排序时间戳
+      const sortedTimeStamps = Array.from(allTimeStamps).sort((a, b) => {
+        return compareTimeStamps(a, b)
+      })
+      
+      // 创建时间戳到数据的映射
+      const clientMap = new Map()
+      clientData.forEach((item) => {
+        const timeStamp = item.timeStamp || item.sequenceNumber || ''
+        if (timeStamp) {
+          let avgQoe = 0
+          if (typeof item.avgQoe === 'number') {
+            avgQoe = item.avgQoe
+          } else if (typeof item.avgQoe === 'string') {
+            avgQoe = parseFloat(item.avgQoe) || 0
+          }
+          clientMap.set(timeStamp, avgQoe)
         }
-        if (typeof item.avgQoe === 'string') {
-          return parseFloat(item.avgQoe) || 0
+      })
+      
+      const networkMap = new Map()
+      networkData.forEach((item) => {
+        const timeStamp = item.timeStamp || ''
+        if (timeStamp) {
+          let avgQoe = 0
+          if (typeof item.avgQoe === 'number') {
+            avgQoe = item.avgQoe
+          } else if (typeof item.avgQoe === 'string') {
+            avgQoe = parseFloat(item.avgQoe) || 0
+          }
+          networkMap.set(timeStamp, avgQoe)
         }
-        return 0
+      })
+      
+      // 按照排序后的时间戳顺序提取数据
+      const clientAvgQoes = sortedTimeStamps.map((timeStamp) => {
+        return clientMap.get(timeStamp) || null
+      })
+      const networkAvgQoes = sortedTimeStamps.map((timeStamp) => {
+        return networkMap.get(timeStamp) || null
       })
       
       // 配置图表选项
@@ -1233,7 +1368,7 @@ export default {
           {
             type: 'category',
             boundaryGap: false,
-            data: clientTimeStamps.length > 0 ? clientTimeStamps : networkTimeStamps,
+            data: sortedTimeStamps,
           },
         ],
         yAxis: [
