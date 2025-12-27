@@ -1218,6 +1218,8 @@ export default {
       clientSpeed: 'Client Speed',
       networkUplinkSpeed: 'Network Uplink Speed',
       networkDownlinkSpeed: 'Network Downlink Speed',
+      selectNetworkStartTime: 'Select Network Start Time',
+      selectNetworkStartTimePlaceholder: 'Please select network start time',
     },
     networkSettings: {
       description: 'Experience Test Settings, including network parameter configuration, etc.',

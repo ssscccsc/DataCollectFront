@@ -57,6 +57,35 @@
                 <el-tab-pane :label="$t('experienceTest.dataComparison.speedComparison')" name="speed">
                   <div class="comparison-content" v-loading="speedComparisonLoading">
                     <div v-if="speedComparisonData">
+                      <!-- 选择网络侧开始时间 -->
+                      <div class="selection-container">
+                        <el-form :inline="true" class="selection-form">
+                          <el-form-item :label="$t('experienceTest.dataComparison.selectNetworkStartTime')">
+                            <el-select
+                              v-model="selectedNetworkStartTime"
+                              :placeholder="$t('experienceTest.dataComparison.selectNetworkStartTimePlaceholder')"
+                              style="width: 250px;"
+                              filterable
+                            >
+                              <el-option
+                                v-for="item in networkStartTimeOptions"
+                                :key="item.value"
+                                :label="item.label"
+                                :value="item.value"
+                              />
+                            </el-select>
+                          </el-form-item>
+                          <el-form-item>
+                            <el-button type="primary" @click="handleSaveNetworkStartTime" :loading="savingNetworkStartTime">
+                              {{ $t('common.save') }}
+                            </el-button>
+                            <el-button @click="handleResetNetworkStartTime">
+                              {{ $t('common.reset') }}
+                            </el-button>
+                          </el-form-item>
+                        </el-form>
+                      </div>
+                      
                       <!-- 图表展示 -->
                       <div class="chart-container">
                         <div ref="speedChartRef" class="speed-chart"></div>
@@ -123,7 +152,7 @@ import { ref, reactive, onMounted, nextTick, watch, onBeforeUnmount, computed } 
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { DataAnalysis, Refresh } from '@element-plus/icons-vue'
-import { getClientDataPage, getSpeedComparison } from '@/api/test-settings'
+import { getClientDataPage, getSpeedComparison, updateNetworkStartTime } from '@/api/test-settings'
 import * as echarts from 'echarts'
 
 export default {
@@ -146,6 +175,9 @@ export default {
     const speedChartRef = ref(null)
     let speedChart = null
     const currentTaskId = ref(null)
+    const selectedNetworkStartTime = ref('')
+    const savingNetworkStartTime = ref(false)
+    const networkStartTimeOptions = ref([])
 
     const pagination = reactive({
       current: 1,
@@ -219,6 +251,17 @@ export default {
         const response = await getSpeedComparison(taskId)
         if (response.code === 200 && response.data) {
           speedComparisonData.value = response.data
+          
+          // 设置当前保存的网络侧开始时间
+          if (response.data.networkStartTime) {
+            selectedNetworkStartTime.value = response.data.networkStartTime
+          } else {
+            selectedNetworkStartTime.value = ''
+          }
+          
+          // 初始化网络侧开始时间选项
+          initNetworkStartTimeOptions()
+          
           // 等待DOM更新后渲染图表
           nextTick(() => {
             renderSpeedChart()
@@ -231,6 +274,80 @@ export default {
         ElMessage.error(error.message || t('common.error'))
       } finally {
         speedComparisonLoading.value = false
+      }
+    }
+
+    // 初始化网络侧开始时间选项
+    const initNetworkStartTimeOptions = () => {
+      if (!speedComparisonData.value || !speedComparisonData.value.networkSpeedList) {
+        networkStartTimeOptions.value = []
+        return
+      }
+      
+      // 从网络侧数据中提取所有唯一的start_time作为选项
+      const timeSet = new Set()
+      speedComparisonData.value.networkSpeedList.forEach((item) => {
+        if (item.startTime) {
+          timeSet.add(item.startTime)
+        }
+      })
+      
+      // 转换为选项数组并排序
+      networkStartTimeOptions.value = Array.from(timeSet)
+        .sort()
+        .map((time) => ({
+          label: time,
+          value: time,
+        }))
+    }
+
+    // 保存网络侧开始时间
+    const handleSaveNetworkStartTime = async () => {
+      if (!currentTaskId.value) {
+        ElMessage.warning('任务ID不存在')
+        return
+      }
+      
+      savingNetworkStartTime.value = true
+      try {
+        const response = await updateNetworkStartTime(currentTaskId.value, selectedNetworkStartTime.value)
+        if (response.code === 200) {
+          ElMessage.success(t('common.success'))
+          // 重新加载数据
+          await loadSpeedComparisonData(currentTaskId.value)
+        } else {
+          ElMessage.error(response.message || t('common.error'))
+        }
+      } catch (error) {
+        console.error('Save network start time error:', error)
+        ElMessage.error(error.message || t('common.error'))
+      } finally {
+        savingNetworkStartTime.value = false
+      }
+    }
+
+    // 重置网络侧开始时间
+    const handleResetNetworkStartTime = async () => {
+      if (!currentTaskId.value) {
+        return
+      }
+      
+      selectedNetworkStartTime.value = ''
+      savingNetworkStartTime.value = true
+      try {
+        const response = await updateNetworkStartTime(currentTaskId.value, '')
+        if (response.code === 200) {
+          ElMessage.success(t('common.success'))
+          // 重新加载数据
+          await loadSpeedComparisonData(currentTaskId.value)
+        } else {
+          ElMessage.error(response.message || t('common.error'))
+        }
+      } catch (error) {
+        console.error('Reset network start time error:', error)
+        ElMessage.error(error.message || t('common.error'))
+      } finally {
+        savingNetworkStartTime.value = false
       }
     }
 
@@ -564,12 +681,17 @@ export default {
       speedComparisonData,
       speedChartRef,
       mergedSpeedData,
+      selectedNetworkStartTime,
+      savingNetworkStartTime,
+      networkStartTimeOptions,
       loadData,
       handleCompare,
       handleView,
       handleSizeChange,
       handleCurrentChange,
       formatSpeed,
+      handleSaveNetworkStartTime,
+      handleResetNetworkStartTime,
     }
   },
 }
@@ -683,6 +805,17 @@ export default {
   font-size: 16px;
   font-weight: 600;
   color: #303133;
+}
+
+.selection-container {
+  margin-bottom: 20px;
+  padding: 16px;
+  background-color: #f5f7fa;
+  border-radius: 4px;
+}
+
+.selection-form {
+  margin: 0;
 }
 </style>
 

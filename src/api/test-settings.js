@@ -143,3 +143,14 @@ export function getSpeedComparison(taskId) {
     method: 'get',
   });
 }
+
+// 更新任务的网络侧开始时间
+export function updateNetworkStartTime(taskId, networkStartTime) {
+  return request({
+    url: `/client-data/network-start-time/${taskId}`,
+    method: 'put',
+    data: {
+      networkStartTime: networkStartTime,
+    },
+  });
+}

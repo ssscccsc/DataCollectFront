@@ -1129,6 +1129,8 @@ export default {
       clientSpeed: '端侧速率',
       networkUplinkSpeed: '网络侧上行速率',
       networkDownlinkSpeed: '网络侧下行速率',
+      selectNetworkStartTime: '选择网络侧开始时间',
+      selectNetworkStartTimePlaceholder: '请选择网络侧开始时间',
     },
     networkSettings: {
       description: '体验测试设置，包括网络参数配置等',
