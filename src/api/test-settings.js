@@ -154,3 +154,27 @@ export function updateNetworkStartTime(taskId, networkStartTime) {
     },
   });
 }
+
+// 获取RTT对比数据
+export function getRttComparison(taskId) {
+  return request({
+    url: `/client-data/rtt-comparison/${taskId}`,
+    method: 'get',
+  });
+}
+
+// 获取卡顿对比数据
+export function getStutterComparison(taskId) {
+  return request({
+    url: `/client-data/stutter-comparison/${taskId}`,
+    method: 'get',
+  });
+}
+
+// 获取平均QOE对比数据
+export function getAvgQoeComparison(taskId) {
+  return request({
+    url: `/client-data/avg-qoe-comparison/${taskId}`,
+    method: 'get',
+  });
+}

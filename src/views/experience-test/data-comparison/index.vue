@@ -120,22 +120,181 @@
 
                 <!-- RTT对比 -->
                 <el-tab-pane :label="$t('experienceTest.dataComparison.rttComparison')" name="rtt">
-                  <div class="comparison-content">
-                    <el-empty :description="$t('experienceTest.dataComparison.detailNotImplemented')" />
+                  <div class="comparison-content" v-loading="rttComparisonLoading">
+                    <div v-if="rttComparisonData">
+                      <!-- 选择网络侧开始时间 -->
+                      <div class="selection-container">
+                        <el-form :inline="true" class="selection-form">
+                          <el-form-item :label="$t('experienceTest.dataComparison.selectNetworkStartTime')">
+                            <el-select
+                              v-model="selectedNetworkStartTimeRtt"
+                              :placeholder="$t('experienceTest.dataComparison.selectNetworkStartTimePlaceholder')"
+                              style="width: 250px;"
+                              filterable
+                            >
+                              <el-option
+                                v-for="item in networkStartTimeOptionsRtt"
+                                :key="item.value"
+                                :label="item.label"
+                                :value="item.value"
+                              />
+                            </el-select>
+                          </el-form-item>
+                          <el-form-item>
+                            <el-button type="primary" @click="handleSaveNetworkStartTimeRtt" :loading="savingNetworkStartTime">
+                              {{ $t('common.save') }}
+                            </el-button>
+                            <el-button @click="handleResetNetworkStartTimeRtt">
+                              {{ $t('common.reset') }}
+                            </el-button>
+                          </el-form-item>
+                        </el-form>
+                      </div>
+                      
+                      <!-- 图表展示 -->
+                      <div class="chart-container">
+                        <div ref="rttChartRef" class="rtt-chart"></div>
+                      </div>
+                      
+                      <!-- 数据表格 -->
+                      <div class="table-container">
+                        <h3 class="table-title">{{ $t('experienceTest.dataComparison.rttComparisonData') }}</h3>
+                        <el-table :data="mergedRttData" border stripe style="width: 100%" max-height="500">
+                          <el-table-column prop="timeStamp" :label="$t('experienceTest.dataComparison.sequenceNumber')" width="180" />
+                          <el-table-column :label="$t('experienceTest.dataComparison.clientRtt')" width="180">
+                            <template #default="scope">
+                              {{ formatValue(scope.row.clientRtt) }}
+                            </template>
+                          </el-table-column>
+                          <el-table-column :label="$t('experienceTest.dataComparison.networkServiceDelay')" width="220">
+                            <template #default="scope">
+                              {{ formatValue(scope.row.networkServiceDelay) }}
+                            </template>
+                          </el-table-column>
+                        </el-table>
+                      </div>
+                    </div>
+                    <el-empty v-else :description="$t('common.noData')" />
                   </div>
                 </el-tab-pane>
 
                 <!-- 卡顿对比 -->
                 <el-tab-pane :label="$t('experienceTest.dataComparison.stutterComparison')" name="stutter">
-                  <div class="comparison-content">
-                    <el-empty :description="$t('experienceTest.dataComparison.detailNotImplemented')" />
+                  <div class="comparison-content" v-loading="stutterComparisonLoading">
+                    <div v-if="stutterComparisonData">
+                      <!-- 选择网络侧开始时间 -->
+                      <div class="selection-container">
+                        <el-form :inline="true" class="selection-form">
+                          <el-form-item :label="$t('experienceTest.dataComparison.selectNetworkStartTime')">
+                            <el-select
+                              v-model="selectedNetworkStartTimeStutter"
+                              :placeholder="$t('experienceTest.dataComparison.selectNetworkStartTimePlaceholder')"
+                              style="width: 250px;"
+                              filterable
+                            >
+                              <el-option
+                                v-for="item in networkStartTimeOptionsStutter"
+                                :key="item.value"
+                                :label="item.label"
+                                :value="item.value"
+                              />
+                            </el-select>
+                          </el-form-item>
+                          <el-form-item>
+                            <el-button type="primary" @click="handleSaveNetworkStartTimeStutter" :loading="savingNetworkStartTime">
+                              {{ $t('common.save') }}
+                            </el-button>
+                            <el-button @click="handleResetNetworkStartTimeStutter">
+                              {{ $t('common.reset') }}
+                            </el-button>
+                          </el-form-item>
+                        </el-form>
+                      </div>
+                      
+                      <!-- 图表展示 -->
+                      <div class="chart-container">
+                        <div ref="stutterChartRef" class="stutter-chart"></div>
+                      </div>
+                      
+                      <!-- 数据表格 -->
+                      <div class="table-container">
+                        <h3 class="table-title">{{ $t('experienceTest.dataComparison.stutterComparisonData') }}</h3>
+                        <el-table :data="mergedStutterData" border stripe style="width: 100%" max-height="500">
+                          <el-table-column prop="timeStamp" :label="$t('experienceTest.dataComparison.sequenceNumber')" width="180" />
+                          <el-table-column :label="$t('experienceTest.dataComparison.clientStutterRatio')" width="180">
+                            <template #default="scope">
+                              {{ formatValue(scope.row.clientStutterRatio) }}
+                            </template>
+                          </el-table-column>
+                          <el-table-column :label="$t('experienceTest.dataComparison.networkStallingNumberDiv10')" width="220">
+                            <template #default="scope">
+                              {{ formatValue(scope.row.networkStallingNumberDiv10) }}
+                            </template>
+                          </el-table-column>
+                        </el-table>
+                      </div>
+                    </div>
+                    <el-empty v-else :description="$t('common.noData')" />
                   </div>
                 </el-tab-pane>
 
                 <!-- 平均QOE对比 -->
                 <el-tab-pane :label="$t('experienceTest.dataComparison.avgQoeComparison')" name="avgQoe">
-                  <div class="comparison-content">
-                    <el-empty :description="$t('experienceTest.dataComparison.detailNotImplemented')" />
+                  <div class="comparison-content" v-loading="avgQoeComparisonLoading">
+                    <div v-if="avgQoeComparisonData">
+                      <!-- 选择网络侧开始时间 -->
+                      <div class="selection-container">
+                        <el-form :inline="true" class="selection-form">
+                          <el-form-item :label="$t('experienceTest.dataComparison.selectNetworkStartTime')">
+                            <el-select
+                              v-model="selectedNetworkStartTimeAvgQoe"
+                              :placeholder="$t('experienceTest.dataComparison.selectNetworkStartTimePlaceholder')"
+                              style="width: 250px;"
+                              filterable
+                            >
+                              <el-option
+                                v-for="item in networkStartTimeOptionsAvgQoe"
+                                :key="item.value"
+                                :label="item.label"
+                                :value="item.value"
+                              />
+                            </el-select>
+                          </el-form-item>
+                          <el-form-item>
+                            <el-button type="primary" @click="handleSaveNetworkStartTimeAvgQoe" :loading="savingNetworkStartTime">
+                              {{ $t('common.save') }}
+                            </el-button>
+                            <el-button @click="handleResetNetworkStartTimeAvgQoe">
+                              {{ $t('common.reset') }}
+                            </el-button>
+                          </el-form-item>
+                        </el-form>
+                      </div>
+                      
+                      <!-- 图表展示 -->
+                      <div class="chart-container">
+                        <div ref="avgQoeChartRef" class="avg-qoe-chart"></div>
+                      </div>
+                      
+                      <!-- 数据表格 -->
+                      <div class="table-container">
+                        <h3 class="table-title">{{ $t('experienceTest.dataComparison.avgQoeComparisonData') }}</h3>
+                        <el-table :data="mergedAvgQoeData" border stripe style="width: 100%" max-height="500">
+                          <el-table-column prop="timeStamp" :label="$t('experienceTest.dataComparison.sequenceNumber')" width="180" />
+                          <el-table-column :label="$t('experienceTest.dataComparison.clientAvgQoe')" width="180">
+                            <template #default="scope">
+                              {{ formatValue(scope.row.clientAvgQoe) }}
+                            </template>
+                          </el-table-column>
+                          <el-table-column :label="$t('experienceTest.dataComparison.networkAvgQoe')" width="220">
+                            <template #default="scope">
+                              {{ formatValue(scope.row.networkAvgQoe) }}
+                            </template>
+                          </el-table-column>
+                        </el-table>
+                      </div>
+                    </div>
+                    <el-empty v-else :description="$t('common.noData')" />
                   </div>
                 </el-tab-pane>
               </el-tabs>
@@ -152,7 +311,7 @@ import { ref, reactive, onMounted, nextTick, watch, onBeforeUnmount, computed } 
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { DataAnalysis, Refresh } from '@element-plus/icons-vue'
-import { getClientDataPage, getSpeedComparison, updateNetworkStartTime } from '@/api/test-settings'
+import { getClientDataPage, getSpeedComparison, updateNetworkStartTime, getRttComparison, getStutterComparison, getAvgQoeComparison } from '@/api/test-settings'
 import * as echarts from 'echarts'
 
 export default {
@@ -178,6 +337,30 @@ export default {
     const selectedNetworkStartTime = ref('')
     const savingNetworkStartTime = ref(false)
     const networkStartTimeOptions = ref([])
+    
+    // RTT对比相关
+    const rttComparisonLoading = ref(false)
+    const rttComparisonData = ref(null)
+    const rttChartRef = ref(null)
+    let rttChart = null
+    const selectedNetworkStartTimeRtt = ref('')
+    const networkStartTimeOptionsRtt = ref([])
+    
+    // 卡顿对比相关
+    const stutterComparisonLoading = ref(false)
+    const stutterComparisonData = ref(null)
+    const stutterChartRef = ref(null)
+    let stutterChart = null
+    const selectedNetworkStartTimeStutter = ref('')
+    const networkStartTimeOptionsStutter = ref([])
+    
+    // 平均QOE对比相关
+    const avgQoeComparisonLoading = ref(false)
+    const avgQoeComparisonData = ref(null)
+    const avgQoeChartRef = ref(null)
+    let avgQoeChart = null
+    const selectedNetworkStartTimeAvgQoe = ref('')
+    const networkStartTimeOptionsAvgQoe = ref([])
 
     const pagination = reactive({
       current: 1,
@@ -228,11 +411,14 @@ export default {
         // 重置详情数据
         comparisonDetail.value = null
         speedComparisonData.value = null
+        rttComparisonData.value = null
+        stutterComparisonData.value = null
+        avgQoeComparisonData.value = null
         
         // 加载速率对比数据
         loadSpeedComparisonData(row.taskId)
         
-        detailLoading.value = false
+          detailLoading.value = false
       } catch (error) {
         console.error('Get detail error:', error)
         ElMessage.error(error.message || t('common.error'))
@@ -368,6 +554,24 @@ export default {
       return '-'
     }
 
+    // 通用格式化方法
+    const formatValue = (value) => {
+      if (value === null || value === undefined) {
+        return '-'
+      }
+      if (typeof value === 'number') {
+        return value.toFixed(2)
+      }
+      if (typeof value === 'string') {
+        const num = parseFloat(value)
+        if (isNaN(num)) {
+          return '-'
+        }
+        return num.toFixed(2)
+      }
+      return '-'
+    }
+
     // 比较时间戳（序列号），按数字大小排序
     const compareTimeStamps = (a, b) => {
       if (!a && !b) {
@@ -489,6 +693,108 @@ export default {
             }
           }
         })
+      }
+
+      // 根据timeStamp字段排序
+      merged.sort((a, b) => {
+        return compareTimeStamps(a.timeStamp, b.timeStamp)
+      })
+
+      return merged
+    })
+
+    // 合并RTT对比数据
+    const mergedRttData = computed(() => {
+      if (!rttComparisonData.value) {
+        return []
+      }
+
+      const clientList = rttComparisonData.value.clientRttList || []
+      const networkList = rttComparisonData.value.networkRttList || []
+      const merged = []
+
+      // 按照顺序依次匹配
+      const maxLength = Math.max(clientList.length, networkList.length)
+
+      for (let i = 0; i < maxLength; i++) {
+        const clientData = clientList[i] || null
+        const networkData = networkList[i] || null
+
+        const mergedItem = {
+          timeStamp: clientData ? (clientData.timeStamp || clientData.sequenceNumber || `序号${i + 1}`) : (networkData ? networkData.timeStamp || `时间${i + 1}` : `第${i + 1}条`),
+          clientRtt: clientData ? clientData.rtt : null,
+          networkServiceDelay: networkData ? networkData.serviceDelay : null,
+        }
+
+        merged.push(mergedItem)
+      }
+
+      // 根据timeStamp字段排序
+      merged.sort((a, b) => {
+        return compareTimeStamps(a.timeStamp, b.timeStamp)
+      })
+
+      return merged
+    })
+
+    // 合并卡顿对比数据
+    const mergedStutterData = computed(() => {
+      if (!stutterComparisonData.value) {
+        return []
+      }
+
+      const clientList = stutterComparisonData.value.clientStutterList || []
+      const networkList = stutterComparisonData.value.networkStutterList || []
+      const merged = []
+
+      // 按照顺序依次匹配
+      const maxLength = Math.max(clientList.length, networkList.length)
+
+      for (let i = 0; i < maxLength; i++) {
+        const clientData = clientList[i] || null
+        const networkData = networkList[i] || null
+
+        const mergedItem = {
+          timeStamp: clientData ? (clientData.timeStamp || clientData.sequenceNumber || `序号${i + 1}`) : (networkData ? networkData.timeStamp || `时间${i + 1}` : `第${i + 1}条`),
+          clientStutterRatio: clientData ? clientData.stutterRatio : null,
+          networkStallingNumberDiv10: networkData ? networkData.stallingNumberDiv10 : null,
+        }
+
+        merged.push(mergedItem)
+      }
+
+      // 根据timeStamp字段排序
+      merged.sort((a, b) => {
+        return compareTimeStamps(a.timeStamp, b.timeStamp)
+      })
+
+      return merged
+    })
+
+    // 合并平均QOE对比数据
+    const mergedAvgQoeData = computed(() => {
+      if (!avgQoeComparisonData.value) {
+        return []
+      }
+
+      const clientList = avgQoeComparisonData.value.clientAvgQoeList || []
+      const networkList = avgQoeComparisonData.value.networkAvgQoeList || []
+      const merged = []
+
+      // 按照顺序依次匹配
+      const maxLength = Math.max(clientList.length, networkList.length)
+
+      for (let i = 0; i < maxLength; i++) {
+        const clientData = clientList[i] || null
+        const networkData = networkList[i] || null
+
+        const mergedItem = {
+          timeStamp: clientData ? (clientData.timeStamp || clientData.sequenceNumber || `序号${i + 1}`) : (networkData ? networkData.timeStamp || `时间${i + 1}` : `第${i + 1}条`),
+          clientAvgQoe: clientData ? clientData.avgQoe : null,
+          networkAvgQoe: networkData ? networkData.avgQoe : null,
+        }
+
+        merged.push(mergedItem)
       }
 
       // 根据timeStamp字段排序
@@ -630,16 +936,326 @@ export default {
       })
     }
 
-    // 监听tab切换，当切换到速率对比tab时加载数据
-    watch(activeComparisonTab, (newTab) => {
-      if (newTab === 'speed' && currentTaskId.value && !speedComparisonData.value) {
-        loadSpeedComparisonData(currentTaskId.value)
-      } else if (newTab === 'speed' && speedComparisonData.value) {
-        nextTick(() => {
-          renderSpeedChart()
-        })
+    // 加载RTT对比数据
+    const loadRttComparisonData = async (taskId) => {
+      if (!taskId) {
+        return
       }
-    })
+      
+      rttComparisonLoading.value = true
+      try {
+        const response = await getRttComparison(taskId)
+        if (response.code === 200 && response.data) {
+          rttComparisonData.value = response.data
+          
+          // 设置当前保存的网络侧开始时间
+          if (response.data.networkStartTime) {
+            selectedNetworkStartTimeRtt.value = response.data.networkStartTime
+          } else {
+            selectedNetworkStartTimeRtt.value = ''
+          }
+          
+          // 初始化网络侧开始时间选项
+          initNetworkStartTimeOptionsRtt()
+          
+          // 等待DOM更新后渲染图表
+          nextTick(() => {
+            renderRttChart()
+          })
+        } else {
+          ElMessage.error(response.message || t('common.error'))
+        }
+      } catch (error) {
+        console.error('Load RTT comparison error:', error)
+        ElMessage.error(error.message || t('common.error'))
+      } finally {
+        rttComparisonLoading.value = false
+      }
+    }
+
+    // 加载卡顿对比数据
+    const loadStutterComparisonData = async (taskId) => {
+      if (!taskId) {
+        return
+      }
+      
+      stutterComparisonLoading.value = true
+      try {
+        const response = await getStutterComparison(taskId)
+        if (response.code === 200 && response.data) {
+          stutterComparisonData.value = response.data
+          
+          // 设置当前保存的网络侧开始时间
+          if (response.data.networkStartTime) {
+            selectedNetworkStartTimeStutter.value = response.data.networkStartTime
+          } else {
+            selectedNetworkStartTimeStutter.value = ''
+          }
+          
+          // 初始化网络侧开始时间选项
+          initNetworkStartTimeOptionsStutter()
+          
+          // 等待DOM更新后渲染图表
+          nextTick(() => {
+            renderStutterChart()
+          })
+        } else {
+          ElMessage.error(response.message || t('common.error'))
+        }
+      } catch (error) {
+        console.error('Load stutter comparison error:', error)
+        ElMessage.error(error.message || t('common.error'))
+      } finally {
+        stutterComparisonLoading.value = false
+      }
+    }
+
+    // 加载平均QOE对比数据
+    const loadAvgQoeComparisonData = async (taskId) => {
+      if (!taskId) {
+        return
+      }
+      
+      avgQoeComparisonLoading.value = true
+      try {
+        const response = await getAvgQoeComparison(taskId)
+        if (response.code === 200 && response.data) {
+          avgQoeComparisonData.value = response.data
+          
+          // 设置当前保存的网络侧开始时间
+          if (response.data.networkStartTime) {
+            selectedNetworkStartTimeAvgQoe.value = response.data.networkStartTime
+          } else {
+            selectedNetworkStartTimeAvgQoe.value = ''
+          }
+          
+          // 初始化网络侧开始时间选项
+          initNetworkStartTimeOptionsAvgQoe()
+          
+          // 等待DOM更新后渲染图表
+          nextTick(() => {
+            renderAvgQoeChart()
+          })
+        } else {
+          ElMessage.error(response.message || t('common.error'))
+        }
+      } catch (error) {
+        console.error('Load avg QOE comparison error:', error)
+        ElMessage.error(error.message || t('common.error'))
+      } finally {
+        avgQoeComparisonLoading.value = false
+      }
+    }
+
+    // 初始化RTT对比的网络侧开始时间选项
+    const initNetworkStartTimeOptionsRtt = () => {
+      if (!rttComparisonData.value || !rttComparisonData.value.networkRttList) {
+        networkStartTimeOptionsRtt.value = []
+        return
+      }
+      
+      const timeSet = new Set()
+      rttComparisonData.value.networkRttList.forEach((item) => {
+        if (item.startTime) {
+          timeSet.add(item.startTime)
+        }
+      })
+      
+      networkStartTimeOptionsRtt.value = Array.from(timeSet)
+        .sort()
+        .map((time) => ({
+          label: time,
+          value: time,
+        }))
+    }
+
+    // 初始化卡顿对比的网络侧开始时间选项
+    const initNetworkStartTimeOptionsStutter = () => {
+      if (!stutterComparisonData.value || !stutterComparisonData.value.networkStutterList) {
+        networkStartTimeOptionsStutter.value = []
+        return
+      }
+      
+      const timeSet = new Set()
+      stutterComparisonData.value.networkStutterList.forEach((item) => {
+        if (item.startTime) {
+          timeSet.add(item.startTime)
+        }
+      })
+      
+      networkStartTimeOptionsStutter.value = Array.from(timeSet)
+        .sort()
+        .map((time) => ({
+          label: time,
+          value: time,
+        }))
+    }
+
+    // 初始化平均QOE对比的网络侧开始时间选项
+    const initNetworkStartTimeOptionsAvgQoe = () => {
+      if (!avgQoeComparisonData.value || !avgQoeComparisonData.value.networkAvgQoeList) {
+        networkStartTimeOptionsAvgQoe.value = []
+        return
+      }
+      
+      const timeSet = new Set()
+      avgQoeComparisonData.value.networkAvgQoeList.forEach((item) => {
+        if (item.startTime) {
+          timeSet.add(item.startTime)
+        }
+      })
+      
+      networkStartTimeOptionsAvgQoe.value = Array.from(timeSet)
+        .sort()
+        .map((time) => ({
+          label: time,
+          value: time,
+        }))
+    }
+
+    // 保存RTT对比的网络侧开始时间
+    const handleSaveNetworkStartTimeRtt = async () => {
+      if (!currentTaskId.value) {
+        ElMessage.warning('任务ID不存在')
+        return
+      }
+      
+      savingNetworkStartTime.value = true
+      try {
+        const response = await updateNetworkStartTime(currentTaskId.value, selectedNetworkStartTimeRtt.value)
+        if (response.code === 200) {
+          ElMessage.success(t('common.success'))
+          await loadRttComparisonData(currentTaskId.value)
+        } else {
+          ElMessage.error(response.message || t('common.error'))
+        }
+      } catch (error) {
+        console.error('Save network start time error:', error)
+        ElMessage.error(error.message || t('common.error'))
+      } finally {
+        savingNetworkStartTime.value = false
+      }
+    }
+
+    // 重置RTT对比的网络侧开始时间
+    const handleResetNetworkStartTimeRtt = async () => {
+      if (!currentTaskId.value) {
+        return
+      }
+      
+      selectedNetworkStartTimeRtt.value = ''
+      savingNetworkStartTime.value = true
+      try {
+        const response = await updateNetworkStartTime(currentTaskId.value, '')
+        if (response.code === 200) {
+          ElMessage.success(t('common.success'))
+          await loadRttComparisonData(currentTaskId.value)
+        } else {
+          ElMessage.error(response.message || t('common.error'))
+        }
+      } catch (error) {
+        console.error('Reset network start time error:', error)
+        ElMessage.error(error.message || t('common.error'))
+      } finally {
+        savingNetworkStartTime.value = false
+      }
+    }
+
+    // 保存卡顿对比的网络侧开始时间
+    const handleSaveNetworkStartTimeStutter = async () => {
+      if (!currentTaskId.value) {
+        ElMessage.warning('任务ID不存在')
+        return
+      }
+      
+      savingNetworkStartTime.value = true
+      try {
+        const response = await updateNetworkStartTime(currentTaskId.value, selectedNetworkStartTimeStutter.value)
+        if (response.code === 200) {
+          ElMessage.success(t('common.success'))
+          await loadStutterComparisonData(currentTaskId.value)
+        } else {
+          ElMessage.error(response.message || t('common.error'))
+        }
+      } catch (error) {
+        console.error('Save network start time error:', error)
+        ElMessage.error(error.message || t('common.error'))
+      } finally {
+        savingNetworkStartTime.value = false
+      }
+    }
+
+    // 重置卡顿对比的网络侧开始时间
+    const handleResetNetworkStartTimeStutter = async () => {
+      if (!currentTaskId.value) {
+        return
+      }
+      
+      selectedNetworkStartTimeStutter.value = ''
+      savingNetworkStartTime.value = true
+      try {
+        const response = await updateNetworkStartTime(currentTaskId.value, '')
+        if (response.code === 200) {
+          ElMessage.success(t('common.success'))
+          await loadStutterComparisonData(currentTaskId.value)
+        } else {
+          ElMessage.error(response.message || t('common.error'))
+        }
+      } catch (error) {
+        console.error('Reset network start time error:', error)
+        ElMessage.error(error.message || t('common.error'))
+      } finally {
+        savingNetworkStartTime.value = false
+      }
+    }
+
+    // 保存平均QOE对比的网络侧开始时间
+    const handleSaveNetworkStartTimeAvgQoe = async () => {
+      if (!currentTaskId.value) {
+        ElMessage.warning('任务ID不存在')
+        return
+      }
+      
+      savingNetworkStartTime.value = true
+      try {
+        const response = await updateNetworkStartTime(currentTaskId.value, selectedNetworkStartTimeAvgQoe.value)
+        if (response.code === 200) {
+          ElMessage.success(t('common.success'))
+          await loadAvgQoeComparisonData(currentTaskId.value)
+        } else {
+          ElMessage.error(response.message || t('common.error'))
+        }
+      } catch (error) {
+        console.error('Save network start time error:', error)
+        ElMessage.error(error.message || t('common.error'))
+      } finally {
+        savingNetworkStartTime.value = false
+      }
+    }
+
+    // 重置平均QOE对比的网络侧开始时间
+    const handleResetNetworkStartTimeAvgQoe = async () => {
+      if (!currentTaskId.value) {
+        return
+      }
+      
+      selectedNetworkStartTimeAvgQoe.value = ''
+      savingNetworkStartTime.value = true
+      try {
+        const response = await updateNetworkStartTime(currentTaskId.value, '')
+        if (response.code === 200) {
+          ElMessage.success(t('common.success'))
+          await loadAvgQoeComparisonData(currentTaskId.value)
+        } else {
+          ElMessage.error(response.message || t('common.error'))
+        }
+      } catch (error) {
+        console.error('Reset network start time error:', error)
+        ElMessage.error(error.message || t('common.error'))
+      } finally {
+        savingNetworkStartTime.value = false
+      }
+    }
 
 
     const handleSizeChange = (val) => {
@@ -667,6 +1283,18 @@ export default {
         speedChart.dispose()
         speedChart = null
       }
+      if (rttChart) {
+        rttChart.dispose()
+        rttChart = null
+      }
+      if (stutterChart) {
+        stutterChart.dispose()
+        stutterChart = null
+      }
+      if (avgQoeChart) {
+        avgQoeChart.dispose()
+        avgQoeChart = null
+      }
     })
 
     return {
@@ -684,14 +1312,39 @@ export default {
       selectedNetworkStartTime,
       savingNetworkStartTime,
       networkStartTimeOptions,
+      rttComparisonLoading,
+      rttComparisonData,
+      rttChartRef,
+      mergedRttData,
+      selectedNetworkStartTimeRtt,
+      networkStartTimeOptionsRtt,
+      stutterComparisonLoading,
+      stutterComparisonData,
+      stutterChartRef,
+      mergedStutterData,
+      selectedNetworkStartTimeStutter,
+      networkStartTimeOptionsStutter,
+      avgQoeComparisonLoading,
+      avgQoeComparisonData,
+      avgQoeChartRef,
+      mergedAvgQoeData,
+      selectedNetworkStartTimeAvgQoe,
+      networkStartTimeOptionsAvgQoe,
       loadData,
       handleCompare,
       handleView,
       handleSizeChange,
       handleCurrentChange,
       formatSpeed,
+      formatValue,
       handleSaveNetworkStartTime,
       handleResetNetworkStartTime,
+      handleSaveNetworkStartTimeRtt,
+      handleResetNetworkStartTimeRtt,
+      handleSaveNetworkStartTimeStutter,
+      handleResetNetworkStartTimeStutter,
+      handleSaveNetworkStartTimeAvgQoe,
+      handleResetNetworkStartTimeAvgQoe,
     }
   },
 }
@@ -791,7 +1444,10 @@ export default {
   margin-bottom: 30px;
 }
 
-.speed-chart {
+.speed-chart,
+.rtt-chart,
+.stutter-chart,
+.avg-qoe-chart {
   width: 100%;
   height: 400px;
 }
