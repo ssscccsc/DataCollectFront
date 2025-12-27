@@ -126,3 +126,20 @@ export function getClientDataDetail(taskId) {
     method: 'get',
   });
 }
+
+// 更新vMOS数据
+export function updateVmosData(id, data) {
+  return request({
+    url: `/client-data/vmos/${id}`,
+    method: 'put',
+    data,
+  });
+}
+
+// 获取速率对比数据
+export function getSpeedComparison(taskId) {
+  return request({
+    url: `/client-data/speed-comparison/${taskId}`,
+    method: 'get',
+  });
+}

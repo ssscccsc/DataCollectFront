@@ -55,8 +55,45 @@
               <el-tabs v-model="activeComparisonTab" type="border-card" class="comparison-tabs">
                 <!-- 速率对比 -->
                 <el-tab-pane :label="$t('experienceTest.dataComparison.speedComparison')" name="speed">
-                  <div class="comparison-content">
-                    <el-empty :description="$t('experienceTest.dataComparison.detailNotImplemented')" />
+                  <div class="comparison-content" v-loading="speedComparisonLoading">
+                    <div v-if="speedComparisonData">
+                      <!-- 图表展示 -->
+                      <div class="chart-container">
+                        <div ref="speedChartRef" class="speed-chart"></div>
+                      </div>
+                      
+                      <!-- 数据表格 -->
+                      <div class="table-container">
+                        <h3 class="table-title">{{ $t('experienceTest.dataComparison.clientSpeedData') }}</h3>
+                        <el-table :data="speedComparisonData.clientSpeedList" border stripe style="width: 100%" max-height="300">
+                          <el-table-column type="index" label="#" width="60" />
+                          <el-table-column prop="sequenceNumber" :label="$t('experienceTest.clientData.sequenceNumber')" width="120" />
+                          <el-table-column prop="timeStamp" :label="$t('experienceTest.clientData.time')" width="180" />
+                          <el-table-column :label="$t('experienceTest.dataComparison.speedKbps')" width="150">
+                            <template #default="scope">
+                              {{ formatSpeed(scope.row.speed) }}
+                            </template>
+                          </el-table-column>
+                        </el-table>
+                        
+                        <h3 class="table-title" style="margin-top: 20px;">{{ $t('experienceTest.dataComparison.networkSpeedData') }}</h3>
+                        <el-table :data="speedComparisonData.networkSpeedList" border stripe style="width: 100%" max-height="300">
+                          <el-table-column type="index" label="#" width="60" />
+                          <el-table-column prop="timeStamp" :label="$t('experienceTest.clientData.time')" width="180" />
+                          <el-table-column :label="$t('experienceTest.dataComparison.uplinkBandwidthKbps')" width="200">
+                            <template #default="scope">
+                              {{ formatSpeed(scope.row.uplinkBandwidth) }}
+                            </template>
+                          </el-table-column>
+                          <el-table-column :label="$t('experienceTest.dataComparison.downlinkBandwidthKbps')" width="200">
+                            <template #default="scope">
+                              {{ formatSpeed(scope.row.downlinkBandwidth) }}
+                            </template>
+                          </el-table-column>
+                        </el-table>
+                      </div>
+                    </div>
+                    <el-empty v-else :description="$t('common.noData')" />
                   </div>
                 </el-tab-pane>
 
@@ -90,11 +127,12 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted, nextTick } from 'vue'
+import { ref, reactive, onMounted, nextTick, watch, onBeforeUnmount } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { DataAnalysis, Refresh } from '@element-plus/icons-vue'
-import { getClientDataPage } from '@/api/test-settings'
+import { getClientDataPage, getSpeedComparison } from '@/api/test-settings'
+import * as echarts from 'echarts'
 
 export default {
   name: 'DataComparison',
@@ -111,6 +149,11 @@ export default {
     const detailLoading = ref(false)
     const comparisonDetail = ref(null)
     const activeComparisonTab = ref('speed')
+    const speedComparisonLoading = ref(false)
+    const speedComparisonData = ref(null)
+    const speedChartRef = ref(null)
+    let speedChart = null
+    const currentTaskId = ref(null)
 
     const pagination = reactive({
       current: 1,
@@ -156,24 +199,16 @@ export default {
         activeMainTab.value = 'detail'
         activeComparisonTab.value = 'speed'
         detailLoading.value = true
+        currentTaskId.value = row.taskId
         
         // 重置详情数据
         comparisonDetail.value = null
+        speedComparisonData.value = null
         
-        // TODO: 实现详情数据加载逻辑
-        // const response = await getComparisonDetail(row.taskId)
-        // if (response.code === 200 && response.data) {
-        //   comparisonDetail.value = response.data
-        // } else {
-        //   ElMessage.error(response.message || t('common.error'))
-        //   activeMainTab.value = 'list'
-        // }
+        // 加载速率对比数据
+        loadSpeedComparisonData(row.taskId)
         
-        // 临时显示提示
-        setTimeout(() => {
-          ElMessage.info(t('experienceTest.dataComparison.viewNotImplemented'))
-          detailLoading.value = false
-        }, 500)
+        detailLoading.value = false
       } catch (error) {
         console.error('Get detail error:', error)
         ElMessage.error(error.message || t('common.error'))
@@ -181,6 +216,190 @@ export default {
         detailLoading.value = false
       }
     }
+
+    const loadSpeedComparisonData = async (taskId) => {
+      if (!taskId) {
+        return
+      }
+      
+      speedComparisonLoading.value = true
+      try {
+        const response = await getSpeedComparison(taskId)
+        if (response.code === 200 && response.data) {
+          speedComparisonData.value = response.data
+          // 等待DOM更新后渲染图表
+          nextTick(() => {
+            renderSpeedChart()
+          })
+        } else {
+          ElMessage.error(response.message || t('common.error'))
+        }
+      } catch (error) {
+        console.error('Load speed comparison error:', error)
+        ElMessage.error(error.message || t('common.error'))
+      } finally {
+        speedComparisonLoading.value = false
+      }
+    }
+
+    const formatSpeed = (speed) => {
+      if (speed === null || speed === undefined) {
+        return '-'
+      }
+      if (typeof speed === 'number') {
+        return speed.toFixed(2) + ' Kbps'
+      }
+      if (typeof speed === 'string') {
+        const num = parseFloat(speed)
+        if (isNaN(num)) {
+          return '-'
+        }
+        return num.toFixed(2) + ' Kbps'
+      }
+      return '-'
+    }
+
+    const renderSpeedChart = () => {
+      if (!speedChartRef.value || !speedComparisonData.value) {
+        return
+      }
+      
+      // 销毁旧图表
+      if (speedChart) {
+        speedChart.dispose()
+        speedChart = null
+      }
+      
+      // 创建新图表
+      speedChart = echarts.init(speedChartRef.value)
+      
+      // 准备数据
+      const clientData = speedComparisonData.value.clientSpeedList || []
+      const networkData = speedComparisonData.value.networkSpeedList || []
+      
+      // 端侧数据
+      const clientTimeStamps = clientData.map(item => item.timeStamp || item.sequenceNumber)
+      const clientSpeeds = clientData.map(item => {
+        if (typeof item.speed === 'number') {
+          return item.speed
+        }
+        if (typeof item.speed === 'string') {
+          return parseFloat(item.speed) || 0
+        }
+        return 0
+      })
+      
+      // 网络侧数据
+      const networkTimeStamps = networkData.map(item => item.timeStamp || '')
+      const networkUplinkSpeeds = networkData.map(item => {
+        if (typeof item.uplinkBandwidth === 'number') {
+          return item.uplinkBandwidth
+        }
+        if (typeof item.uplinkBandwidth === 'string') {
+          return parseFloat(item.uplinkBandwidth) || 0
+        }
+        return 0
+      })
+      const networkDownlinkSpeeds = networkData.map(item => {
+        if (typeof item.downlinkBandwidth === 'number') {
+          return item.downlinkBandwidth
+        }
+        if (typeof item.downlinkBandwidth === 'string') {
+          return parseFloat(item.downlinkBandwidth) || 0
+        }
+        return 0
+      })
+      
+      // 配置图表选项
+      const option = {
+        title: {
+          text: t('experienceTest.dataComparison.speedComparison'),
+          left: 'center',
+        },
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: {
+            type: 'cross',
+          },
+        },
+        legend: {
+          data: [
+            t('experienceTest.dataComparison.clientSpeed'),
+            t('experienceTest.dataComparison.networkUplinkSpeed'),
+            t('experienceTest.dataComparison.networkDownlinkSpeed'),
+          ],
+          top: 30,
+        },
+        grid: {
+          left: '3%',
+          right: '4%',
+          bottom: '3%',
+          containLabel: true,
+        },
+        xAxis: [
+          {
+            type: 'category',
+            boundaryGap: false,
+            data: clientTimeStamps.length > 0 ? clientTimeStamps : networkTimeStamps,
+          },
+        ],
+        yAxis: [
+          {
+            type: 'value',
+            name: 'Kbps',
+          },
+        ],
+        series: [
+          {
+            name: t('experienceTest.dataComparison.clientSpeed'),
+            type: 'line',
+            data: clientSpeeds,
+            smooth: true,
+            itemStyle: {
+              color: '#409EFF',
+            },
+          },
+          {
+            name: t('experienceTest.dataComparison.networkUplinkSpeed'),
+            type: 'line',
+            data: networkUplinkSpeeds,
+            smooth: true,
+            itemStyle: {
+              color: '#67C23A',
+            },
+          },
+          {
+            name: t('experienceTest.dataComparison.networkDownlinkSpeed'),
+            type: 'line',
+            data: networkDownlinkSpeeds,
+            smooth: true,
+            itemStyle: {
+              color: '#E6A23C',
+            },
+          },
+        ],
+      }
+      
+      speedChart.setOption(option)
+      
+      // 响应式调整
+      window.addEventListener('resize', () => {
+        if (speedChart) {
+          speedChart.resize()
+        }
+      })
+    }
+
+    // 监听tab切换，当切换到速率对比tab时加载数据
+    watch(activeComparisonTab, (newTab) => {
+      if (newTab === 'speed' && currentTaskId.value && !speedComparisonData.value) {
+        loadSpeedComparisonData(currentTaskId.value)
+      } else if (newTab === 'speed' && speedComparisonData.value) {
+        nextTick(() => {
+          renderSpeedChart()
+        })
+      }
+    })
 
 
     const handleSizeChange = (val) => {
@@ -202,6 +421,14 @@ export default {
       })
     })
 
+    onBeforeUnmount(() => {
+      // 销毁图表
+      if (speedChart) {
+        speedChart.dispose()
+        speedChart = null
+      }
+    })
+
     return {
       loading,
       tableData,
@@ -210,11 +437,15 @@ export default {
       detailLoading,
       comparisonDetail,
       activeComparisonTab,
+      speedComparisonLoading,
+      speedComparisonData,
+      speedChartRef,
       loadData,
       handleCompare,
       handleView,
       handleSizeChange,
       handleCurrentChange,
+      formatSpeed,
     }
   },
 }
@@ -308,6 +539,26 @@ export default {
 .comparison-content {
   min-height: 400px;
   padding: 20px;
+}
+
+.chart-container {
+  margin-bottom: 30px;
+}
+
+.speed-chart {
+  width: 100%;
+  height: 400px;
+}
+
+.table-container {
+  margin-top: 20px;
+}
+
+.table-title {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
 }
 </style>
 
