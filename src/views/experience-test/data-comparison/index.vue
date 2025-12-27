@@ -66,8 +66,7 @@
                       <div class="table-container">
                         <h3 class="table-title">{{ $t('experienceTest.dataComparison.speedComparisonData') }}</h3>
                         <el-table :data="mergedSpeedData" border stripe style="width: 100%" max-height="500">
-                          <el-table-column type="index" label="#" width="60" />
-                          <el-table-column prop="timeStamp" :label="$t('experienceTest.clientData.time')" width="180" />
+                          <el-table-column prop="timeStamp" :label="$t('experienceTest.dataComparison.sequenceNumber')" width="180" />
                           <el-table-column :label="$t('experienceTest.dataComparison.clientSpeedKbps')" width="180">
                             <template #default="scope">
                               {{ formatSpeed(scope.row.clientSpeed) }}
@@ -252,6 +251,39 @@ export default {
       return '-'
     }
 
+    // 比较时间戳（序列号），按数字大小排序
+    const compareTimeStamps = (a, b) => {
+      if (!a && !b) {
+        return 0
+      }
+      if (!a) {
+        return 1
+      }
+      if (!b) {
+        return -1
+      }
+
+      // 尝试转换为数字进行比较
+      const numA = parseFloat(a)
+      const numB = parseFloat(b)
+
+      // 如果都是有效数字，按数字大小排序
+      if (!isNaN(numA) && !isNaN(numB)) {
+        return numA - numB
+      }
+
+      // 如果只有一个有效数字，数字排在前面
+      if (!isNaN(numA) && isNaN(numB)) {
+        return -1
+      }
+      if (isNaN(numA) && !isNaN(numB)) {
+        return 1
+      }
+
+      // 如果都不是数字，按字符串比较
+      return String(a).localeCompare(String(b))
+    }
+
     // 合并端侧和网络侧速率数据到同一张表
     const mergedSpeedData = computed(() => {
       if (!speedComparisonData.value) {
@@ -287,8 +319,10 @@ export default {
         allTimeStamps.add(timeStamp)
       })
 
-      // 按时间戳排序
-      const sortedTimeStamps = Array.from(allTimeStamps).sort()
+      // 按时间戳（序列号）排序，使用数字排序
+      const sortedTimeStamps = Array.from(allTimeStamps).sort((a, b) => {
+        return compareTimeStamps(a, b)
+      })
 
       // 合并数据
       sortedTimeStamps.forEach((timeStamp) => {

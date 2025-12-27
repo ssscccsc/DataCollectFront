@@ -1119,6 +1119,7 @@ export default {
       clientSpeedData: '端侧速率数据',
       networkSpeedData: '网络侧速率数据',
       speedComparisonData: '速率对比数据',
+      sequenceNumber: '序号',
       speedKbps: '速率(Kbps)',
       clientSpeedKbps: '端侧速率(Kbps)',
       uplinkBandwidthKbps: '上行带宽(Kbps)',
