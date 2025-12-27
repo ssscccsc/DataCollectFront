@@ -252,7 +252,58 @@ export default {
       return '-'
     }
 
-    // 合并端侧和网络侧速率数据到同一张表
+    // 比较时间戳，支持多种格式
+    const compareTimeStamps = (a, b) => {
+      if (!a && !b) {
+        return 0
+      }
+      if (!a) {
+        return 1
+      }
+      if (!b) {
+        return -1
+      }
+
+      // 转换为统一格式进行比较
+      const timeA = normalizeTimeStamp(a)
+      const timeB = normalizeTimeStamp(b)
+
+      if (timeA < timeB) {
+        return -1
+      }
+      if (timeA > timeB) {
+        return 1
+      }
+      return 0
+    }
+
+    // 标准化时间戳为可比较的格式
+    const normalizeTimeStamp = (timeStamp) => {
+      if (!timeStamp) {
+        return ''
+      }
+
+      // 如果是标准格式：2025-10-27 07:08:42
+      if (timeStamp.includes('-') && timeStamp.includes(':')) {
+        // 移除空格和特殊字符，只保留数字
+        return timeStamp.replace(/[^0-9]/g, '')
+      }
+
+      // 如果是14位数字格式：20251027150500
+      if (timeStamp.length === 14 && /^\d{14}$/.test(timeStamp)) {
+        return timeStamp
+      }
+
+      // 如果是序号，尝试转换为数字进行比较
+      if (/^\d+$/.test(timeStamp)) {
+        return timeStamp.padStart(14, '0')
+      }
+
+      // 其他格式，返回原值（字符串比较）
+      return timeStamp
+    }
+
+    // 合并端侧和网络侧速率数据到同一张表，按照顺序依次匹配
     const mergedSpeedData = computed(() => {
       if (!speedComparisonData.value) {
         return []
@@ -262,82 +313,22 @@ export default {
       const networkList = speedComparisonData.value.networkSpeedList || []
       const merged = []
 
-      // 创建时间戳到数据的映射
-      const clientMap = new Map()
-      const networkMap = new Map()
+      // 端侧数据已经按照sequence_number排序，网络侧数据已经按照start_time排序
+      // 按照索引顺序依次匹配
+      const maxLength = Math.max(clientList.length, networkList.length)
 
-      // 处理端侧数据
-      clientList.forEach((item) => {
-        const timeStamp = item.timeStamp || item.sequenceNumber || ''
-        clientMap.set(timeStamp, item)
-      })
-
-      // 处理网络侧数据
-      networkList.forEach((item) => {
-        const timeStamp = item.timeStamp || ''
-        networkMap.set(timeStamp, item)
-      })
-
-      // 获取所有唯一的时间戳
-      const allTimeStamps = new Set()
-      clientMap.forEach((_, timeStamp) => {
-        allTimeStamps.add(timeStamp)
-      })
-      networkMap.forEach((_, timeStamp) => {
-        allTimeStamps.add(timeStamp)
-      })
-
-      // 按时间戳排序
-      const sortedTimeStamps = Array.from(allTimeStamps).sort()
-
-      // 合并数据
-      sortedTimeStamps.forEach((timeStamp) => {
-        const clientData = clientMap.get(timeStamp)
-        const networkData = networkMap.get(timeStamp)
+      for (let i = 0; i < maxLength; i++) {
+        const clientData = clientList[i] || null
+        const networkData = networkList[i] || null
 
         const mergedItem = {
-          timeStamp: timeStamp,
+          timeStamp: clientData ? (clientData.timeStamp || clientData.sequenceNumber || `序号${i + 1}`) : (networkData ? networkData.timeStamp || `时间${i + 1}` : `第${i + 1}条`),
           clientSpeed: clientData ? clientData.speed : null,
           networkUplinkSpeed: networkData ? networkData.uplinkBandwidth : null,
           networkDownlinkSpeed: networkData ? networkData.downlinkBandwidth : null,
         }
 
         merged.push(mergedItem)
-      })
-
-      // 如果时间戳无法匹配，则分别添加所有数据
-      if (merged.length === 0) {
-        // 添加所有端侧数据
-        clientList.forEach((item) => {
-          merged.push({
-            timeStamp: item.timeStamp || item.sequenceNumber || '-',
-            clientSpeed: item.speed,
-            networkUplinkSpeed: null,
-            networkDownlinkSpeed: null,
-          })
-        })
-
-        // 添加所有网络侧数据（如果时间戳不重复）
-        networkList.forEach((item) => {
-          const timeStamp = item.timeStamp || '-'
-          // 检查是否已存在该时间戳
-          const exists = merged.some((m) => m.timeStamp === timeStamp)
-          if (!exists) {
-            merged.push({
-              timeStamp: timeStamp,
-              clientSpeed: null,
-              networkUplinkSpeed: item.uplinkBandwidth,
-              networkDownlinkSpeed: item.downlinkBandwidth,
-            })
-          } else {
-            // 如果已存在，更新网络侧数据
-            const existingItem = merged.find((m) => m.timeStamp === timeStamp)
-            if (existingItem) {
-              existingItem.networkUplinkSpeed = item.uplinkBandwidth
-              existingItem.networkDownlinkSpeed = item.downlinkBandwidth
-            }
-          }
-        })
       }
 
       return merged
