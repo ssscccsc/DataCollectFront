@@ -1112,6 +1112,10 @@ export default {
       viewNotImplemented: '查看功能待实现',
       detailNotImplemented: '详情功能待实现',
       deleteConfirm: '确定要删除该对比记录吗？',
+      speedComparison: '速率对比',
+      rttComparison: 'RTT对比',
+      stutterComparison: '卡顿对比',
+      avgQoeComparison: '平均QOE对比',
     },
     networkSettings: {
       description: '体验测试设置，包括网络参数配置等',

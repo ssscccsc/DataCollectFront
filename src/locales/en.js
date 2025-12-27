@@ -1201,6 +1201,10 @@ export default {
       viewNotImplemented: 'View feature not implemented',
       detailNotImplemented: 'Detail feature not implemented',
       deleteConfirm: 'Are you sure to delete this comparison record?',
+      speedComparison: 'Speed Comparison',
+      rttComparison: 'RTT Comparison',
+      stutterComparison: 'Stutter Comparison',
+      avgQoeComparison: 'Average QOE Comparison',
     },
     networkSettings: {
       description: 'Experience Test Settings, including network parameter configuration, etc.',

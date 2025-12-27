@@ -50,11 +50,38 @@
         <!-- 第二个tab：详情页 -->
         <el-tab-pane :label="$t('experienceTest.dataComparison.detailTitle')" name="detail">
           <div class="detail-container" v-loading="detailLoading">
-            <div v-if="comparisonDetail" class="comparison-detail">
-              <!-- 这里可以展示对比详情内容 -->
-              <el-empty :description="$t('experienceTest.dataComparison.detailNotImplemented')" />
+            <!-- 对比详情子tab -->
+            <div class="comparison-tabs-wrapper">
+              <el-tabs v-model="activeComparisonTab" type="border-card" class="comparison-tabs">
+                <!-- 速率对比 -->
+                <el-tab-pane :label="$t('experienceTest.dataComparison.speedComparison')" name="speed">
+                  <div class="comparison-content">
+                    <el-empty :description="$t('experienceTest.dataComparison.detailNotImplemented')" />
+                  </div>
+                </el-tab-pane>
+
+                <!-- RTT对比 -->
+                <el-tab-pane :label="$t('experienceTest.dataComparison.rttComparison')" name="rtt">
+                  <div class="comparison-content">
+                    <el-empty :description="$t('experienceTest.dataComparison.detailNotImplemented')" />
+                  </div>
+                </el-tab-pane>
+
+                <!-- 卡顿对比 -->
+                <el-tab-pane :label="$t('experienceTest.dataComparison.stutterComparison')" name="stutter">
+                  <div class="comparison-content">
+                    <el-empty :description="$t('experienceTest.dataComparison.detailNotImplemented')" />
+                  </div>
+                </el-tab-pane>
+
+                <!-- 平均QOE对比 -->
+                <el-tab-pane :label="$t('experienceTest.dataComparison.avgQoeComparison')" name="avgQoe">
+                  <div class="comparison-content">
+                    <el-empty :description="$t('experienceTest.dataComparison.detailNotImplemented')" />
+                  </div>
+                </el-tab-pane>
+              </el-tabs>
             </div>
-            <el-empty v-else :description="$t('common.noData')" />
           </div>
         </el-tab-pane>
       </el-tabs>
@@ -83,6 +110,7 @@ export default {
     const activeMainTab = ref('list')
     const detailLoading = ref(false)
     const comparisonDetail = ref(null)
+    const activeComparisonTab = ref('speed')
 
     const pagination = reactive({
       current: 1,
@@ -126,6 +154,7 @@ export default {
       try {
         // 切换到详情tab
         activeMainTab.value = 'detail'
+        activeComparisonTab.value = 'speed'
         detailLoading.value = true
         
         // 重置详情数据
@@ -180,6 +209,7 @@ export default {
       activeMainTab,
       detailLoading,
       comparisonDetail,
+      activeComparisonTab,
       loadData,
       handleCompare,
       handleView,
@@ -263,6 +293,21 @@ export default {
 
 .comparison-detail {
   width: 100%;
+}
+
+.comparison-tabs-wrapper {
+  margin-top: 20px;
+  height: calc(100vh - 300px);
+  overflow-y: auto;
+}
+
+.comparison-tabs {
+  height: 100%;
+}
+
+.comparison-content {
+  min-height: 400px;
+  padding: 20px;
 }
 </style>
 
