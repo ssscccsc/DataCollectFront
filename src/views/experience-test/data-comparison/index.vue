@@ -82,6 +82,10 @@
                             <el-button @click="handleResetNetworkStartTime">
                               {{ $t('common.reset') }}
                             </el-button>
+                            <el-button @click="handleRefreshSpeedComparison">
+                              <el-icon><Refresh /></el-icon>
+                              {{ $t('common.refresh') }}
+                            </el-button>
                           </el-form-item>
                         </el-form>
                       </div>
@@ -147,6 +151,10 @@
                             <el-button @click="handleResetNetworkStartTimeRtt">
                               {{ $t('common.reset') }}
                             </el-button>
+                            <el-button @click="handleRefreshRttComparison">
+                              <el-icon><Refresh /></el-icon>
+                              {{ $t('common.refresh') }}
+                            </el-button>
                           </el-form-item>
                         </el-form>
                       </div>
@@ -207,6 +215,10 @@
                             <el-button @click="handleResetNetworkStartTimeStutter">
                               {{ $t('common.reset') }}
                             </el-button>
+                            <el-button @click="handleRefreshStutterComparison">
+                              <el-icon><Refresh /></el-icon>
+                              {{ $t('common.refresh') }}
+                            </el-button>
                           </el-form-item>
                         </el-form>
                       </div>
@@ -266,6 +278,10 @@
                             </el-button>
                             <el-button @click="handleResetNetworkStartTimeAvgQoe">
                               {{ $t('common.reset') }}
+                            </el-button>
+                            <el-button @click="handleRefreshAvgQoeComparison">
+                              <el-icon><Refresh /></el-icon>
+                              {{ $t('common.refresh') }}
                             </el-button>
                           </el-form-item>
                         </el-form>
@@ -1931,6 +1947,42 @@ export default {
     }
 
 
+    // 刷新速率对比数据
+    const handleRefreshSpeedComparison = () => {
+      if (!currentTaskId.value) {
+        ElMessage.warning('任务ID不存在')
+        return
+      }
+      loadSpeedComparisonData(currentTaskId.value)
+    }
+
+    // 刷新RTT对比数据
+    const handleRefreshRttComparison = () => {
+      if (!currentTaskId.value) {
+        ElMessage.warning('任务ID不存在')
+        return
+      }
+      loadRttComparisonData(currentTaskId.value)
+    }
+
+    // 刷新卡顿对比数据
+    const handleRefreshStutterComparison = () => {
+      if (!currentTaskId.value) {
+        ElMessage.warning('任务ID不存在')
+        return
+      }
+      loadStutterComparisonData(currentTaskId.value)
+    }
+
+    // 刷新平均QOE对比数据
+    const handleRefreshAvgQoeComparison = () => {
+      if (!currentTaskId.value) {
+        ElMessage.warning('任务ID不存在')
+        return
+      }
+      loadAvgQoeComparisonData(currentTaskId.value)
+    }
+
     // 监听对比tab切换，自动加载对应数据
     watch(activeComparisonTab, (newTab) => {
       if (!currentTaskId.value) {
@@ -2036,6 +2088,10 @@ export default {
       handleResetNetworkStartTimeStutter,
       handleSaveNetworkStartTimeAvgQoe,
       handleResetNetworkStartTimeAvgQoe,
+      handleRefreshSpeedComparison,
+      handleRefreshRttComparison,
+      handleRefreshStutterComparison,
+      handleRefreshAvgQoeComparison,
     }
   },
 }
