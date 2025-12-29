@@ -713,8 +713,8 @@ export default {
       // sQuality = s_bitrate
       const sQuality = sBitrate
 
-      // s_RTT = 4/exp(0.0035 * Rtt)
-      const sRtt = 4 / Math.exp(0.0035 * rttNum)
+      // s_RTT = 4/exp(0.0035 * Rtt) + 1
+      const sRtt = 4 / Math.exp(0.0035 * rttNum) + 1
 
       // sInteraction = s_RTT
       const sInteraction = sRtt
@@ -725,8 +725,8 @@ export default {
       // s_stall_rate = -4*卡顿率+5
       const sStallRate = -4 * stutterRatioNum + 5
 
-      // sView = max(min(4*1-0.04*(5-s_lost_packet_rate)-0.25*(5*s_stall_rate) + 1, 5), 1)
-      const sViewValue = 4 * 1 - 0.04 * (5 - sLostPacketRate) - 0.25 * (5 * sStallRate) + 1
+      // sView = max(min(4*(1-0.04*(5-s_lost_packet_rate)-0.25*(5-s_stall_rate)) + 1, 5), 1)
+      const sViewValue = 4 * ( 1 - 0.04 * (5 - sLostPacketRate) - 0.25 * (5 - sStallRate)) + 1
       const sView = Math.max(Math.min(sViewValue, 5), 1)
 
       // α = 0.1*(1+2*exp(-sInteraction/2))
