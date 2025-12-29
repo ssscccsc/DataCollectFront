@@ -142,6 +142,13 @@
         <el-tab-pane :label="$t('experienceTest.clientData.detailTitle')" name="detail">
           <div class="info-right" v-if="summaryData">
           <div class="detail-container" v-loading="detailLoading">
+          <!-- 对比按钮 -->
+            <div class="comparison-button-container" v-if="taskDetail.taskInfo">
+              <el-button type="primary" @click="handleGoToComparison">
+                <el-icon><DataAnalysis /></el-icon>
+                {{ $t('experienceTest.clientData.goToComparison') }}
+              </el-button>
+            </div>
           <!-- 基础信息和Summary信息 -->
             <div class="info-section-header" v-if="taskDetail.taskInfo">
               <h3 class="section-title">{{ $t('experienceTest.clientData.basicInfo') }}</h3>
@@ -378,7 +385,8 @@
 import { ref, reactive, onMounted, nextTick, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useI18n } from 'vue-i18n'
-import { Plus, Refresh, UploadFilled, Search, ArrowUp, ArrowDown } from '@element-plus/icons-vue'
+import { useRouter } from 'vue-router'
+import { Plus, Refresh, UploadFilled, Search, ArrowUp, ArrowDown, DataAnalysis } from '@element-plus/icons-vue'
 import { uploadClientDataFile, getClientDataPage, getClientDataDetail, updateVmosData } from '@/api/test-settings'
 
 export default {
@@ -390,9 +398,11 @@ export default {
     Search,
     ArrowUp,
     ArrowDown,
+    DataAnalysis,
   },
   setup() {
     const { t } = useI18n()
+    const router = useRouter()
     const loading = ref(false)
     const tableData = ref([])
     const uploadDialogVisible = ref(false)
@@ -489,6 +499,23 @@ export default {
       searchForm.app = ''
       pagination.current = 1
       loadData()
+    }
+
+    // 跳转到端网数据对比页面
+    const handleGoToComparison = () => {
+      if (!taskDetail.value.taskInfo || !taskDetail.value.taskInfo.taskId) {
+        ElMessage.warning('任务ID不存在')
+        return
+      }
+      
+      // 跳转到对比页面，并传递taskId参数，自动打开详情页
+      router.push({
+        path: '/experience-test/data-comparison/index',
+        query: {
+          taskId: taskDetail.value.taskInfo.taskId,
+          autoOpenDetail: 'true',
+        },
+      })
     }
 
     const handleViewDetail = async (row) => {
@@ -881,6 +908,7 @@ export default {
       handleSaveVmosRow,
       handleCancelVmosEdit,
       handleVmosFieldChange,
+      handleGoToComparison,
     }
   },
 }
@@ -910,6 +938,11 @@ export default {
   margin: 0;
   color: #909399;
   font-size: 14px;
+}
+
+.comparison-button-container {
+  margin-bottom: 20px;
+  text-align: right;
 }
 
 .client-data-page :deep(.el-card) {

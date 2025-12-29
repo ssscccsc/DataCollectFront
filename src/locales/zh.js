@@ -1010,6 +1010,7 @@ export default {
       detailTitle: '任务详情',
       basicInfo: '基础信息',
       summary: '数据统计',
+      goToComparison: '端网数据对比',
       vmos: 'vMOS数据',
       speedStatistics: '上下行速率统计',
       rttStatistics: '上下行RTT统计',

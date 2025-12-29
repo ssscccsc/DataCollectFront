@@ -326,6 +326,7 @@
 import { ref, reactive, onMounted, nextTick, watch, onBeforeUnmount, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
 import { DataAnalysis, Refresh } from '@element-plus/icons-vue'
 import { getClientDataPage, getSpeedComparison, updateNetworkStartTime, getRttComparison, getStutterComparison, getAvgQoeComparison } from '@/api/test-settings'
 import * as echarts from 'echarts'
@@ -338,6 +339,7 @@ export default {
   },
   setup() {
     const { t } = useI18n()
+    const route = useRoute()
     const loading = ref(false)
     const tableData = ref([])
     // 初始化主tab，默认显示数据列表
@@ -2012,12 +2014,26 @@ export default {
     }
 
     onMounted(() => {
-      // 确保默认显示数据列表tab
-      activeMainTab.value = 'list'
-      // 使用 nextTick 确保 DOM 更新后再加载数据
-      nextTick(() => {
-        loadData()
-      })
+      // 检查路由参数，如果是从端侧数据页面跳转过来的，自动打开详情页
+      const taskId = route.query.taskId
+      const autoOpenDetail = route.query.autoOpenDetail
+      
+      if (taskId && autoOpenDetail === 'true') {
+        // 自动切换到详情tab并加载数据
+        activeMainTab.value = 'detail'
+        activeComparisonTab.value = 'speed'
+        currentTaskId.value = taskId
+        
+        // 加载速率对比数据
+        loadSpeedComparisonData(taskId)
+      } else {
+        // 确保默认显示数据列表tab
+        activeMainTab.value = 'list'
+        // 使用 nextTick 确保 DOM 更新后再加载数据
+        nextTick(() => {
+          loadData()
+        })
+      }
     })
 
     onBeforeUnmount(() => {
