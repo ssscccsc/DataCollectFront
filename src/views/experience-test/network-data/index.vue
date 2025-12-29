@@ -81,14 +81,14 @@
           clearable
         />
         <el-input
-          v-model="searchForm.timeStamp"
-          :placeholder="$t('experienceTest.networkData.searchTimeStamp')"
+          v-model="searchForm.startTime"
+          :placeholder="$t('experienceTest.networkData.searchStartTime')"
           style="width: 200px; margin-right: 10px;"
           clearable
         />
         <el-input
-          v-model="searchForm.startTime"
-          :placeholder="$t('experienceTest.networkData.searchStartTime')"
+          v-model="searchForm.timeStamp"
+          :placeholder="$t('experienceTest.networkData.searchTimeStamp')"
           style="width: 200px; margin-right: 10px;"
           clearable
         />
@@ -111,8 +111,8 @@
       <el-table :data="tableData" v-loading="loading" style="width: 100%" stripe border>
         <el-table-column type="index" label="#" width="60" />
         <el-table-column prop="gpsi" :label="$t('experienceTest.networkData.gpsi')" min-width="150" show-overflow-tooltip />
-        <el-table-column prop="timeStamp" :label="$t('experienceTest.networkData.timeStamp')" min-width="150" show-overflow-tooltip />
         <el-table-column prop="startTime" :label="$t('experienceTest.networkData.startTime')" min-width="150" show-overflow-tooltip />
+        <el-table-column prop="timeStamp" :label="$t('experienceTest.networkData.timeStamp')" min-width="150" show-overflow-tooltip />
         <el-table-column prop="appId" :label="$t('experienceTest.networkData.appId')" min-width="120" show-overflow-tooltip />
         <el-table-column prop="subAppId" :label="$t('experienceTest.networkData.subAppId')" min-width="120" show-overflow-tooltip />
         <el-table-column prop="uplinkBandwidth" :label="$t('experienceTest.networkData.uplinkBandwidth')" min-width="150" show-overflow-tooltip />

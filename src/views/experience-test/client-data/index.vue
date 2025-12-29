@@ -249,6 +249,7 @@
                     v-model="scope.row.speed"
                     size="small"
                     @keyup.enter="handleSaveVmosRow(scope.row)"
+                    @input="handleVmosFieldChange(scope.row)"
                   />
                   <span v-else>{{ scope.row.speed || '-' }}</span>
                 </template>
@@ -261,6 +262,7 @@
                     v-model="scope.row.rtt"
                     size="small"
                     @keyup.enter="handleSaveVmosRow(scope.row)"
+                    @input="handleVmosFieldChange(scope.row)"
                   />
                   <span v-else>{{ scope.row.rtt || '-' }}</span>
                 </template>
@@ -272,6 +274,7 @@
                     v-model="scope.row.packetLossRate"
                     size="small"
                     @keyup.enter="handleSaveVmosRow(scope.row)"
+                    @input="handleVmosFieldChange(scope.row)"
                   />
                   <span v-else>{{ scope.row.packetLossRate || '-' }}</span>
                 </template>
@@ -283,6 +286,7 @@
                     v-model="scope.row.stutterRatio"
                     size="small"
                     @keyup.enter="handleSaveVmosRow(scope.row)"
+                    @input="handleVmosFieldChange(scope.row)"
                   />
                   <span v-else>{{ scope.row.stutterRatio || '-' }}</span>
                 </template>
@@ -651,15 +655,105 @@ export default {
         return
       }
       
-      // 保存原始数据用于取消时恢复
+      // 保存原始数据用于取消时恢复（包括计算字段）
       vmosEditBackup.value = {
         speed: row.speed || '',
         rtt: row.rtt || '',
         packetLossRate: row.packetLossRate || '',
         stutterRatio: row.stutterRatio || '',
+        bitrate: row.bitrate || '',
+        videoExperience: row.videoExperience || '',
+        interactionExperience: row.interactionExperience || '',
+        presentationExperience: row.presentationExperience || '',
+        sLostPacketRate: row.sLostPacketRate || '',
+        sStallRate: row.sStallRate || '',
+        alpha: row.alpha || '',
+        beta: row.beta || '',
+        vmos: row.vmos || '',
       }
       
       editingVmosRowId.value = row.id
+    }
+
+    // 处理vMOS字段变化，实时计算（如果是shortvideo业务大类）
+    const handleVmosFieldChange = (row) => {
+      // 如果业务大类为shortvideo，则实时计算相关字段
+      if (taskDetail.value.taskInfo && taskDetail.value.taskInfo.service === 'shortvideo') {
+        const calculated = calculateShortvideoVmos(
+          row.speed || '0',
+          row.rtt || '0',
+          row.packetLossRate || '0',
+          row.stutterRatio || '0',
+        )
+        
+        // 实时更新计算后的字段到row对象中
+        row.bitrate = calculated.bitrate
+        row.videoExperience = calculated.videoExperience
+        row.interactionExperience = calculated.interactionExperience
+        row.presentationExperience = calculated.presentationExperience
+        row.sLostPacketRate = calculated.sLostPacketRate
+        row.sStallRate = calculated.sStallRate
+        row.alpha = calculated.alpha
+        row.beta = calculated.beta
+        row.vmos = calculated.vmos
+      }
+    }
+
+    // 计算shortvideo业务大类的vMOS数据
+    const calculateShortvideoVmos = (speed, rtt, packetLossRate, stutterRatio) => {
+      // 转换为数字，如果为空或无效则使用0
+      const speedNum = parseFloat(speed) || 0
+      const rttNum = parseFloat(rtt) || 0
+      const packetLossRateNum = parseFloat(packetLossRate) || 0
+      const stutterRatioNum = parseFloat(stutterRatio) || 0
+
+      // s_bitrate = 5/(1+exp(-速率/928.9840))
+      const sBitrate = 5 / (1 + Math.exp(-speedNum / 928.9840))
+
+      // sQuality = s_bitrate
+      const sQuality = sBitrate
+
+      // s_RTT = 4/exp(0.0035 * Rtt)
+      const sRtt = 4 / Math.exp(0.0035 * rttNum)
+
+      // sInteraction = s_RTT
+      const sInteraction = sRtt
+
+      // s_lost_packet_rate = 4/exp(180.94 * 丢包率) + 1
+      const sLostPacketRate = 4 / Math.exp(180.94 * packetLossRateNum) + 1
+
+      // s_stall_rate = -4*卡顿率+5
+      const sStallRate = -4 * stutterRatioNum + 5
+
+      // sView = max(min(4*1-0.04*(5-s_lost_packet_rate)-0.25*(5*s_stall_rate) + 1, 5), 1)
+      const sViewValue = 4 * 1 - 0.04 * (5 - sLostPacketRate) - 0.25 * (5 * sStallRate) + 1
+      const sView = Math.max(Math.min(sViewValue, 5), 1)
+
+      // α = 0.1*(1+2*exp(-sInteraction/2))
+      const alpha = 0.1 * (1 + 2 * Math.exp(-sInteraction / 2))
+
+      // β = 0.1*(1+2*exp(-sView/2))
+      const beta = 0.1 * (1 + 2 * Math.exp(-sView / 2))
+
+      // vMOS数据 = (sQuality-1) * ((α*(sInteraction -1) + β*(sView-1))/(4*(α+β))) +1
+      const denominator = 4 * (alpha + beta)
+      let vmos = 1
+      if (denominator !== 0) {
+        const numerator = alpha * (sInteraction - 1) + beta * (sView - 1)
+        vmos = (sQuality - 1) * (numerator / denominator) + 1
+      }
+
+      return {
+        bitrate: sBitrate.toFixed(4),
+        videoExperience: sQuality.toFixed(4),
+        interactionExperience: sInteraction.toFixed(4),
+        presentationExperience: sView.toFixed(4),
+        sLostPacketRate: sLostPacketRate.toFixed(4),
+        sStallRate: sStallRate.toFixed(4),
+        alpha: alpha.toFixed(4),
+        beta: beta.toFixed(4),
+        vmos: vmos.toFixed(4),
+      }
     }
 
     const handleSaveVmosRow = async (row) => {
@@ -670,12 +764,36 @@ export default {
 
       vmosSaving.value = true
       try {
-        const response = await updateVmosData(row.id, {
+        // 准备要保存的数据
+        const dataToSave = {
           speed: row.speed || '',
           rtt: row.rtt || '',
           packetLossRate: row.packetLossRate || '',
           stutterRatio: row.stutterRatio || '',
-        })
+        }
+
+        // 如果业务大类为shortvideo，则计算vMOS相关字段
+        if (taskDetail.value.taskInfo && taskDetail.value.taskInfo.service === 'shortvideo') {
+          const calculated = calculateShortvideoVmos(
+            row.speed || '0',
+            row.rtt || '0',
+            row.packetLossRate || '0',
+            row.stutterRatio || '0',
+          )
+          
+          // 将计算后的字段添加到保存数据中
+          dataToSave.bitrate = calculated.bitrate
+          dataToSave.videoExperience = calculated.videoExperience
+          dataToSave.interactionExperience = calculated.interactionExperience
+          dataToSave.presentationExperience = calculated.presentationExperience
+          dataToSave.sLostPacketRate = calculated.sLostPacketRate
+          dataToSave.sStallRate = calculated.sStallRate
+          dataToSave.alpha = calculated.alpha
+          dataToSave.beta = calculated.beta
+          dataToSave.vmos = calculated.vmos
+        }
+
+        const response = await updateVmosData(row.id, dataToSave)
 
         if (response.code === 200) {
           ElMessage.success(t('common.success'))
@@ -701,12 +819,21 @@ export default {
         return
       }
       
-      // 恢复原始数据
+      // 恢复原始数据（包括计算字段）
       if (vmosEditBackup.value) {
         row.speed = vmosEditBackup.value.speed
         row.rtt = vmosEditBackup.value.rtt
         row.packetLossRate = vmosEditBackup.value.packetLossRate
         row.stutterRatio = vmosEditBackup.value.stutterRatio
+        row.bitrate = vmosEditBackup.value.bitrate
+        row.videoExperience = vmosEditBackup.value.videoExperience
+        row.interactionExperience = vmosEditBackup.value.interactionExperience
+        row.presentationExperience = vmosEditBackup.value.presentationExperience
+        row.sLostPacketRate = vmosEditBackup.value.sLostPacketRate
+        row.sStallRate = vmosEditBackup.value.sStallRate
+        row.alpha = vmosEditBackup.value.alpha
+        row.beta = vmosEditBackup.value.beta
+        row.vmos = vmosEditBackup.value.vmos
       }
       
       editingVmosRowId.value = null
@@ -753,6 +880,7 @@ export default {
       handleEditVmosRow,
       handleSaveVmosRow,
       handleCancelVmosEdit,
+      handleVmosFieldChange,
     }
   },
 }
