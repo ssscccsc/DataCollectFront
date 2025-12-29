@@ -195,7 +195,7 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { Plus, Refresh } from '@element-plus/icons-vue'
@@ -290,6 +290,17 @@ export default {
         loadNetworkFtpData()
       }
     }
+
+    // 监听tab切换，自动加载对应数据
+    watch(activeTab, (newTab) => {
+      if (newTab === 'deviceIdGpsi') {
+        loadMappingData()
+      } else if (newTab === 'clientFtp') {
+        loadClientFtpData()
+      } else if (newTab === 'networkFtp') {
+        loadNetworkFtpData()
+      }
+    })
 
     // 加载端侧FTP服务器数据
     const loadClientFtpData = async () => {

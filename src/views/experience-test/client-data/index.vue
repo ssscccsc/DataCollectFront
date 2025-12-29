@@ -650,11 +650,15 @@ export default {
           // 刷新数据列表
           loadData()
         } else {
-          ElMessage.error(response.message || t('common.error'))
+          // 显示后端返回的错误信息
+          const errorMsg = response.message || response.data?.error || t('common.error')
+          ElMessage.error(errorMsg)
         }
       } catch (error) {
         console.error('Upload error:', error)
-        ElMessage.error(error.message || t('common.error'))
+        // 优先显示后端返回的错误信息
+        const errorMsg = error.response?.data?.message || error.message || t('common.error')
+        ElMessage.error(errorMsg)
       } finally {
         uploading.value = false
       }
