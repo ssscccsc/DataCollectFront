@@ -713,20 +713,84 @@ export default {
       const networkList = rttComparisonData.value.networkRttList || []
       const merged = []
 
-      // 按照顺序依次匹配
-      const maxLength = Math.max(clientList.length, networkList.length)
+      // 创建时间戳到数据的映射
+      const clientMap = new Map()
+      const networkMap = new Map()
 
-      for (let i = 0; i < maxLength; i++) {
-        const clientData = clientList[i] || null
-        const networkData = networkList[i] || null
+      // 处理端侧数据
+      clientList.forEach((item) => {
+        const timeStamp = item.timeStamp || item.sequenceNumber || ''
+        if (timeStamp) {
+          clientMap.set(timeStamp, item)
+        }
+      })
+
+      // 处理网络侧数据
+      networkList.forEach((item) => {
+        const timeStamp = item.timeStamp || ''
+        if (timeStamp) {
+          networkMap.set(timeStamp, item)
+        }
+      })
+
+      // 获取所有唯一的时间戳
+      const allTimeStamps = new Set()
+      clientMap.forEach((_, timeStamp) => {
+        allTimeStamps.add(timeStamp)
+      })
+      networkMap.forEach((_, timeStamp) => {
+        allTimeStamps.add(timeStamp)
+      })
+
+      // 按时间戳（序列号）排序，使用数字排序
+      const sortedTimeStamps = Array.from(allTimeStamps).sort((a, b) => {
+        return compareTimeStamps(a, b)
+      })
+
+      // 合并数据
+      sortedTimeStamps.forEach((timeStamp) => {
+        const clientData = clientMap.get(timeStamp)
+        const networkData = networkMap.get(timeStamp)
 
         const mergedItem = {
-          timeStamp: clientData ? (clientData.timeStamp || clientData.sequenceNumber || `序号${i + 1}`) : (networkData ? networkData.timeStamp || `时间${i + 1}` : `第${i + 1}条`),
+          timeStamp: timeStamp,
           clientRtt: clientData ? clientData.rtt : null,
           networkServiceDelay: networkData ? networkData.serviceDelay : null,
         }
 
         merged.push(mergedItem)
+      })
+
+      // 如果时间戳无法匹配，则分别添加所有数据
+      if (merged.length === 0) {
+        // 添加所有端侧数据
+        clientList.forEach((item) => {
+          merged.push({
+            timeStamp: item.timeStamp || item.sequenceNumber || '-',
+            clientRtt: item.rtt,
+            networkServiceDelay: null,
+          })
+        })
+
+        // 添加所有网络侧数据（如果时间戳不重复）
+        networkList.forEach((item) => {
+          const timeStamp = item.timeStamp || '-'
+          // 检查是否已存在该时间戳
+          const exists = merged.some((m) => m.timeStamp === timeStamp)
+          if (!exists) {
+            merged.push({
+              timeStamp: timeStamp,
+              clientRtt: null,
+              networkServiceDelay: item.serviceDelay,
+            })
+          } else {
+            // 如果已存在，更新网络侧数据
+            const existingItem = merged.find((m) => m.timeStamp === timeStamp)
+            if (existingItem) {
+              existingItem.networkServiceDelay = item.serviceDelay
+            }
+          }
+        })
       }
 
       // 根据timeStamp字段排序
@@ -747,20 +811,84 @@ export default {
       const networkList = stutterComparisonData.value.networkStutterList || []
       const merged = []
 
-      // 按照顺序依次匹配
-      const maxLength = Math.max(clientList.length, networkList.length)
+      // 创建时间戳到数据的映射
+      const clientMap = new Map()
+      const networkMap = new Map()
 
-      for (let i = 0; i < maxLength; i++) {
-        const clientData = clientList[i] || null
-        const networkData = networkList[i] || null
+      // 处理端侧数据
+      clientList.forEach((item) => {
+        const timeStamp = item.timeStamp || item.sequenceNumber || ''
+        if (timeStamp) {
+          clientMap.set(timeStamp, item)
+        }
+      })
+
+      // 处理网络侧数据
+      networkList.forEach((item) => {
+        const timeStamp = item.timeStamp || ''
+        if (timeStamp) {
+          networkMap.set(timeStamp, item)
+        }
+      })
+
+      // 获取所有唯一的时间戳
+      const allTimeStamps = new Set()
+      clientMap.forEach((_, timeStamp) => {
+        allTimeStamps.add(timeStamp)
+      })
+      networkMap.forEach((_, timeStamp) => {
+        allTimeStamps.add(timeStamp)
+      })
+
+      // 按时间戳（序列号）排序，使用数字排序
+      const sortedTimeStamps = Array.from(allTimeStamps).sort((a, b) => {
+        return compareTimeStamps(a, b)
+      })
+
+      // 合并数据
+      sortedTimeStamps.forEach((timeStamp) => {
+        const clientData = clientMap.get(timeStamp)
+        const networkData = networkMap.get(timeStamp)
 
         const mergedItem = {
-          timeStamp: clientData ? (clientData.timeStamp || clientData.sequenceNumber || `序号${i + 1}`) : (networkData ? networkData.timeStamp || `时间${i + 1}` : `第${i + 1}条`),
+          timeStamp: timeStamp,
           clientStutterRatio: clientData ? clientData.stutterRatio : null,
           networkStallingNumberDiv10: networkData ? networkData.stallingNumberDiv10 : null,
         }
 
         merged.push(mergedItem)
+      })
+
+      // 如果时间戳无法匹配，则分别添加所有数据
+      if (merged.length === 0) {
+        // 添加所有端侧数据
+        clientList.forEach((item) => {
+          merged.push({
+            timeStamp: item.timeStamp || item.sequenceNumber || '-',
+            clientStutterRatio: item.stutterRatio,
+            networkStallingNumberDiv10: null,
+          })
+        })
+
+        // 添加所有网络侧数据（如果时间戳不重复）
+        networkList.forEach((item) => {
+          const timeStamp = item.timeStamp || '-'
+          // 检查是否已存在该时间戳
+          const exists = merged.some((m) => m.timeStamp === timeStamp)
+          if (!exists) {
+            merged.push({
+              timeStamp: timeStamp,
+              clientStutterRatio: null,
+              networkStallingNumberDiv10: item.stallingNumberDiv10,
+            })
+          } else {
+            // 如果已存在，更新网络侧数据
+            const existingItem = merged.find((m) => m.timeStamp === timeStamp)
+            if (existingItem) {
+              existingItem.networkStallingNumberDiv10 = item.stallingNumberDiv10
+            }
+          }
+        })
       }
 
       // 根据timeStamp字段排序
@@ -781,20 +909,84 @@ export default {
       const networkList = avgQoeComparisonData.value.networkAvgQoeList || []
       const merged = []
 
-      // 按照顺序依次匹配
-      const maxLength = Math.max(clientList.length, networkList.length)
+      // 创建时间戳到数据的映射
+      const clientMap = new Map()
+      const networkMap = new Map()
 
-      for (let i = 0; i < maxLength; i++) {
-        const clientData = clientList[i] || null
-        const networkData = networkList[i] || null
+      // 处理端侧数据
+      clientList.forEach((item) => {
+        const timeStamp = item.timeStamp || item.sequenceNumber || ''
+        if (timeStamp) {
+          clientMap.set(timeStamp, item)
+        }
+      })
+
+      // 处理网络侧数据
+      networkList.forEach((item) => {
+        const timeStamp = item.timeStamp || ''
+        if (timeStamp) {
+          networkMap.set(timeStamp, item)
+        }
+      })
+
+      // 获取所有唯一的时间戳
+      const allTimeStamps = new Set()
+      clientMap.forEach((_, timeStamp) => {
+        allTimeStamps.add(timeStamp)
+      })
+      networkMap.forEach((_, timeStamp) => {
+        allTimeStamps.add(timeStamp)
+      })
+
+      // 按时间戳（序列号）排序，使用数字排序
+      const sortedTimeStamps = Array.from(allTimeStamps).sort((a, b) => {
+        return compareTimeStamps(a, b)
+      })
+
+      // 合并数据
+      sortedTimeStamps.forEach((timeStamp) => {
+        const clientData = clientMap.get(timeStamp)
+        const networkData = networkMap.get(timeStamp)
 
         const mergedItem = {
-          timeStamp: clientData ? (clientData.timeStamp || clientData.sequenceNumber || `序号${i + 1}`) : (networkData ? networkData.timeStamp || `时间${i + 1}` : `第${i + 1}条`),
+          timeStamp: timeStamp,
           clientAvgQoe: clientData ? clientData.avgQoe : null,
           networkAvgQoe: networkData ? networkData.avgQoe : null,
         }
 
         merged.push(mergedItem)
+      })
+
+      // 如果时间戳无法匹配，则分别添加所有数据
+      if (merged.length === 0) {
+        // 添加所有端侧数据
+        clientList.forEach((item) => {
+          merged.push({
+            timeStamp: item.timeStamp || item.sequenceNumber || '-',
+            clientAvgQoe: item.avgQoe,
+            networkAvgQoe: null,
+          })
+        })
+
+        // 添加所有网络侧数据（如果时间戳不重复）
+        networkList.forEach((item) => {
+          const timeStamp = item.timeStamp || '-'
+          // 检查是否已存在该时间戳
+          const exists = merged.some((m) => m.timeStamp === timeStamp)
+          if (!exists) {
+            merged.push({
+              timeStamp: timeStamp,
+              clientAvgQoe: null,
+              networkAvgQoe: item.avgQoe,
+            })
+          } else {
+            // 如果已存在，更新网络侧数据
+            const existingItem = merged.find((m) => m.timeStamp === timeStamp)
+            if (existingItem) {
+              existingItem.networkAvgQoe = item.avgQoe
+            }
+          }
+        })
       }
 
       // 根据timeStamp字段排序
