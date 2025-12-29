@@ -881,15 +881,15 @@ export default {
         }
       })
       
-      // 按照排序后的时间戳顺序提取数据
+      // 按照排序后的时间戳顺序提取数据（确保0值也能正确显示）
       const clientSpeeds = sortedTimeStamps.map((timeStamp) => {
-        return clientMap.get(timeStamp) || null
+        return clientMap.has(timeStamp) ? clientMap.get(timeStamp) : null
       })
       const networkUplinkSpeeds = sortedTimeStamps.map((timeStamp) => {
-        return networkUplinkMap.get(timeStamp) || null
+        return networkUplinkMap.has(timeStamp) ? networkUplinkMap.get(timeStamp) : null
       })
       const networkDownlinkSpeeds = sortedTimeStamps.map((timeStamp) => {
-        return networkDownlinkMap.get(timeStamp) || null
+        return networkDownlinkMap.has(timeStamp) ? networkDownlinkMap.get(timeStamp) : null
       })
       
       // 配置图表选项
@@ -937,6 +937,7 @@ export default {
             type: 'line',
             data: clientSpeeds,
             smooth: true,
+            connectNulls: true,
             itemStyle: {
               color: '#409EFF',
             },
@@ -946,6 +947,7 @@ export default {
             type: 'line',
             data: networkUplinkSpeeds,
             smooth: true,
+            connectNulls: true,
             itemStyle: {
               color: '#67C23A',
             },
@@ -955,6 +957,7 @@ export default {
             type: 'line',
             data: networkDownlinkSpeeds,
             smooth: true,
+            connectNulls: true,
             itemStyle: {
               color: '#E6A23C',
             },
@@ -1040,12 +1043,12 @@ export default {
         }
       })
       
-      // 按照排序后的时间戳顺序提取数据
+      // 按照排序后的时间戳顺序提取数据（确保0值也能正确显示）
       const clientRtts = sortedTimeStamps.map((timeStamp) => {
-        return clientMap.get(timeStamp) || null
+        return clientMap.has(timeStamp) ? clientMap.get(timeStamp) : null
       })
       const networkServiceDelays = sortedTimeStamps.map((timeStamp) => {
-        return networkMap.get(timeStamp) || null
+        return networkMap.has(timeStamp) ? networkMap.get(timeStamp) : null
       })
       
       // 配置图表选项
@@ -1092,6 +1095,7 @@ export default {
             type: 'line',
             data: clientRtts,
             smooth: true,
+            connectNulls: true,
             itemStyle: {
               color: '#409EFF',
             },
@@ -1101,6 +1105,7 @@ export default {
             type: 'line',
             data: networkServiceDelays,
             smooth: true,
+            connectNulls: true,
             itemStyle: {
               color: '#67C23A',
             },
@@ -1186,12 +1191,12 @@ export default {
         }
       })
       
-      // 按照排序后的时间戳顺序提取数据
+      // 按照排序后的时间戳顺序提取数据（确保0值也能正确显示）
       const clientStutterRatios = sortedTimeStamps.map((timeStamp) => {
-        return clientMap.get(timeStamp) || null
+        return clientMap.has(timeStamp) ? clientMap.get(timeStamp) : null
       })
       const networkStallingNumbers = sortedTimeStamps.map((timeStamp) => {
-        return networkMap.get(timeStamp) || null
+        return networkMap.has(timeStamp) ? networkMap.get(timeStamp) : null
       })
       
       // 配置图表选项
@@ -1237,6 +1242,7 @@ export default {
             type: 'line',
             data: clientStutterRatios,
             smooth: true,
+            connectNulls: true,
             itemStyle: {
               color: '#409EFF',
             },
@@ -1246,6 +1252,7 @@ export default {
             type: 'line',
             data: networkStallingNumbers,
             smooth: true,
+            connectNulls: true,
             itemStyle: {
               color: '#67C23A',
             },
@@ -1331,12 +1338,12 @@ export default {
         }
       })
       
-      // 按照排序后的时间戳顺序提取数据
+      // 按照排序后的时间戳顺序提取数据（确保0值也能正确显示）
       const clientAvgQoes = sortedTimeStamps.map((timeStamp) => {
-        return clientMap.get(timeStamp) || null
+        return clientMap.has(timeStamp) ? clientMap.get(timeStamp) : null
       })
       const networkAvgQoes = sortedTimeStamps.map((timeStamp) => {
-        return networkMap.get(timeStamp) || null
+        return networkMap.has(timeStamp) ? networkMap.get(timeStamp) : null
       })
       
       // 配置图表选项
@@ -1382,6 +1389,7 @@ export default {
             type: 'line',
             data: clientAvgQoes,
             smooth: true,
+            connectNulls: true,
             itemStyle: {
               color: '#409EFF',
             },
@@ -1391,6 +1399,7 @@ export default {
             type: 'line',
             data: networkAvgQoes,
             smooth: true,
+            connectNulls: true,
             itemStyle: {
               color: '#67C23A',
             },
