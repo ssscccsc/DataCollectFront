@@ -1139,6 +1139,12 @@ export default {
           {
             type: 'value',
             name: 'Kbps',
+            splitLine: {
+              show: true,
+              lineStyle: {
+                type: 'solid',
+              },
+            },
           },
         ],
         series: [
@@ -1297,6 +1303,12 @@ export default {
           {
             type: 'value',
             name: 'ms',
+            splitLine: {
+              show: true,
+              lineStyle: {
+                type: 'solid',
+              },
+            },
           },
         ],
         series: [
@@ -1444,6 +1456,12 @@ export default {
         yAxis: [
           {
             type: 'value',
+            splitLine: {
+              show: true,
+              lineStyle: {
+                type: 'solid',
+              },
+            },
           },
         ],
         series: [
@@ -1591,6 +1609,12 @@ export default {
         yAxis: [
           {
             type: 'value',
+            splitLine: {
+              show: true,
+              lineStyle: {
+                type: 'solid',
+              },
+            },
           },
         ],
         series: [
