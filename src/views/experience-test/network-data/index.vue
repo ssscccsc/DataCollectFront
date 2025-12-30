@@ -118,6 +118,7 @@
               :placeholder="$t('experienceTest.networkData.searchStartTime')"
               format="YYYY-MM-DD HH:mm:ss"
               value-format="YYYY-MM-DD HH:mm:ss"
+              :default-value="getDefaultStartTime()"
               style="width: 200px; margin-right: 10px;"
               clearable
             />
@@ -127,6 +128,7 @@
               :placeholder="$t('experienceTest.networkData.searchEndTime')"
               format="YYYY-MM-DD HH:mm:ss"
               value-format="YYYY-MM-DD HH:mm:ss"
+              :default-value="getDefaultEndTime()"
               style="width: 200px; margin-right: 10px;"
               clearable
             />
@@ -287,6 +289,7 @@ export default {
     const filterFromGroup = reactive({
       gpsi: '',
       subAppId: '',
+      date: '',
     })
 
     // 加载聚合数据
@@ -388,10 +391,28 @@ export default {
       // 设置筛选条件
       filterFromGroup.gpsi = row.gpsi
       filterFromGroup.subAppId = row.subAppId
+      filterFromGroup.date = row.date || ''
       
       // 清空搜索表单中的GPSI和子应用ID，使用筛选条件
       searchForm.gpsi = ''
       searchForm.subAppId = ''
+      
+      // 如果有日期，设置开始时间和结束时间的默认值
+      if (row.date) {
+        // 开始时间设为该日期的 00:00:00
+        searchForm.startTime = `${row.date} 00:00:00`
+        // 结束时间设为该日期的 23:59:59
+        searchForm.endTime = `${row.date} 23:59:59`
+      } else {
+        // 否则使用今天的日期
+        const today = new Date()
+        const year = today.getFullYear()
+        const month = String(today.getMonth() + 1).padStart(2, '0')
+        const day = String(today.getDate()).padStart(2, '0')
+        const todayStr = `${year}-${month}-${day}`
+        searchForm.startTime = `${todayStr} 00:00:00`
+        searchForm.endTime = `${todayStr} 23:59:59`
+      }
       
       // 切换到第二个tab
       activeTab.value = 'detail'
@@ -419,8 +440,35 @@ export default {
       // 清空从第一个tab传递过来的筛选条件
       filterFromGroup.gpsi = ''
       filterFromGroup.subAppId = ''
+      filterFromGroup.date = ''
       pagination.current = 1
       loadData()
+    }
+
+    // 获取默认开始时间
+    const getDefaultStartTime = () => {
+      if (filterFromGroup.date) {
+        // 如果有从聚合列表传递过来的日期，使用该日期的 00:00:00
+        return new Date(`${filterFromGroup.date} 00:00:00`)
+      } else {
+        // 否则使用今天的 00:00:00
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        return today
+      }
+    }
+
+    // 获取默认结束时间
+    const getDefaultEndTime = () => {
+      if (filterFromGroup.date) {
+        // 如果有从聚合列表传递过来的日期，使用该日期的 23:59:59
+        return new Date(`${filterFromGroup.date} 23:59:59`)
+      } else {
+        // 否则使用今天的 23:59:59
+        const today = new Date()
+        today.setHours(23, 59, 59, 999)
+        return today
+      }
     }
 
     const handleReset = () => {
@@ -430,6 +478,7 @@ export default {
       searchForm.subAppId = ''
       filterFromGroup.gpsi = ''
       filterFromGroup.subAppId = ''
+      filterFromGroup.date = ''
       pagination.current = 1
       loadData()
     }
@@ -573,6 +622,8 @@ export default {
       handleGroupReset,
       handleGpsiInput,
       handleSubAppIdInput,
+      getDefaultStartTime,
+      getDefaultEndTime,
       handleSizeChange,
       handleCurrentChange,
       handleGroupSizeChange,
