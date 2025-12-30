@@ -1102,7 +1102,7 @@ export default {
       stallingNumber: '卡顿次数',
       serviceDelay: '业务时延(ms)',
       serviceInitialDuration: '业务初始时长(ms)',
-      groupList: '聚合列表',
+      groupList: '网络侧数据',
       detailList: '详细列表',
       date: '日期',
       dataCount: '数据条数',

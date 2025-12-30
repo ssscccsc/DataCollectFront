@@ -97,16 +97,20 @@
           <!-- 搜索栏 -->
           <div class="search-bar">
             <el-input
-              v-model="searchForm.gpsi"
+              :model-value="filterFromGroup.gpsi || searchForm.gpsi"
+              @input="handleGpsiInput"
               :placeholder="$t('experienceTest.networkData.searchGpsi')"
               style="width: 200px; margin-right: 10px;"
-              clearable
+              :disabled="!!filterFromGroup.gpsi"
+              :clearable="!filterFromGroup.gpsi"
             />
             <el-input
-              v-model="searchForm.subAppId"
+              :model-value="filterFromGroup.subAppId || searchForm.subAppId"
+              @input="handleSubAppIdInput"
               :placeholder="$t('experienceTest.networkData.searchSubAppId')"
               style="width: 200px; margin-right: 10px;"
-              clearable
+              :disabled="!!filterFromGroup.subAppId"
+              :clearable="!filterFromGroup.subAppId"
             />
             <el-input
               v-model="searchForm.startTime"
@@ -391,6 +395,20 @@ export default {
       loadData()
     }
 
+    // 处理GPSI输入
+    const handleGpsiInput = (value) => {
+      if (!filterFromGroup.gpsi) {
+        searchForm.gpsi = value
+      }
+    }
+
+    // 处理子应用ID输入
+    const handleSubAppIdInput = (value) => {
+      if (!filterFromGroup.subAppId) {
+        searchForm.subAppId = value
+      }
+    }
+
     const handleSearch = () => {
       // 清空从第一个tab传递过来的筛选条件
       filterFromGroup.gpsi = ''
@@ -535,6 +553,7 @@ export default {
       groupPagination,
       searchForm,
       groupSearchForm,
+      filterFromGroup,
       uploadDialogVisible,
       uploading,
       selectedFile,
@@ -546,6 +565,8 @@ export default {
       handleReset,
       handleGroupSearch,
       handleGroupReset,
+      handleGpsiInput,
+      handleSubAppIdInput,
       handleSizeChange,
       handleCurrentChange,
       handleGroupSizeChange,

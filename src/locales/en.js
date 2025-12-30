@@ -1119,7 +1119,7 @@ export default {
       stallingNumber: 'Stalling Number',
       serviceDelay: 'Service Delay(ms)',
       serviceInitialDuration: 'Service Initial Duration(ms)',
-      groupList: 'Group List',
+      groupList: 'Network Data',
       detailList: 'Detail List',
       date: 'Date',
       dataCount: 'Data Count',
