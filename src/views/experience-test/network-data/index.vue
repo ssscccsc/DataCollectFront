@@ -112,15 +112,21 @@
               :disabled="!!filterFromGroup.subAppId"
               :clearable="!filterFromGroup.subAppId"
             />
-            <el-input
+            <el-date-picker
               v-model="searchForm.startTime"
+              type="datetime"
               :placeholder="$t('experienceTest.networkData.searchStartTime')"
+              format="YYYY-MM-DD HH:mm:ss"
+              value-format="YYYY-MM-DD HH:mm:ss"
               style="width: 200px; margin-right: 10px;"
               clearable
             />
-            <el-input
-              v-model="searchForm.timeStamp"
-              :placeholder="$t('experienceTest.networkData.searchTimeStamp')"
+            <el-date-picker
+              v-model="searchForm.endTime"
+              type="datetime"
+              :placeholder="$t('experienceTest.networkData.searchEndTime')"
+              format="YYYY-MM-DD HH:mm:ss"
+              value-format="YYYY-MM-DD HH:mm:ss"
               style="width: 200px; margin-right: 10px;"
               clearable
             />
@@ -265,8 +271,8 @@ export default {
 
     const searchForm = reactive({
       gpsi: '',
-      timeStamp: '',
       startTime: '',
+      endTime: '',
       subAppId: '',
     })
 
@@ -355,11 +361,11 @@ export default {
           params.subAppId = searchForm.subAppId
         }
         
-        if (searchForm.timeStamp) {
-          params.timeStamp = searchForm.timeStamp
-        }
         if (searchForm.startTime) {
-          params.startTime = searchForm.startTime
+          params.startTimeBegin = searchForm.startTime
+        }
+        if (searchForm.endTime) {
+          params.startTimeEnd = searchForm.endTime
         }
 
         const response = await getNetworkDataPage(params)
@@ -419,8 +425,8 @@ export default {
 
     const handleReset = () => {
       searchForm.gpsi = ''
-      searchForm.timeStamp = ''
       searchForm.startTime = ''
+      searchForm.endTime = ''
       searchForm.subAppId = ''
       filterFromGroup.gpsi = ''
       filterFromGroup.subAppId = ''
