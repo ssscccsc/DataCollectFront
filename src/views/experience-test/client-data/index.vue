@@ -73,33 +73,56 @@
           </span>
         </template>
       </el-dialog>
-          <!-- 搜索栏 -->
-          <div class="search-bar">
-            <el-input
-              v-model="searchForm.taskId"
-              :placeholder="$t('experienceTest.clientData.searchTaskId')"
-              style="width: 200px; margin-right: 10px;"
-              clearable
-            />
-            <el-input
-              v-model="searchForm.service"
-              :placeholder="$t('experienceTest.clientData.searchService')"
-              style="width: 200px; margin-right: 10px;"
-              clearable
-            />
-            <el-input
-              v-model="searchForm.app"
-              :placeholder="$t('experienceTest.clientData.searchApp')"
-              style="width: 200px; margin-right: 10px;"
-              clearable
-            />
-            <el-button type="primary" @click="handleSearch">
-              <el-icon><Search /></el-icon>
-              {{ $t('common.search') }}
-            </el-button>
-            <el-button @click="handleReset">
-              {{ $t('common.reset') }}
-            </el-button>
+          <!-- 筛选框 -->
+          <div class="filter-container">
+            <el-form :model="searchForm" :inline="true" class="filter-form">
+              <el-form-item :label="$t('experienceTest.clientData.taskId')">
+                <el-input
+                  v-model="searchForm.taskId"
+                  :placeholder="$t('experienceTest.clientData.searchTaskId')"
+                  style="width: 200px;"
+                  clearable
+                />
+              </el-form-item>
+              <el-form-item :label="$t('experienceTest.clientData.service')">
+                <el-input
+                  v-model="searchForm.service"
+                  :placeholder="$t('experienceTest.clientData.searchService')"
+                  style="width: 200px;"
+                  clearable
+                />
+              </el-form-item>
+              <el-form-item :label="$t('experienceTest.clientData.app')">
+                <el-input
+                  v-model="searchForm.app"
+                  :placeholder="$t('experienceTest.clientData.searchApp')"
+                  style="width: 200px;"
+                  clearable
+                />
+              </el-form-item>
+              <el-form-item :label="$t('experienceTest.clientData.startTime')">
+                <el-date-picker
+                  v-model="searchForm.startTimeRange"
+                  type="datetimerange"
+                  :range-separator="$t('common.to')"
+                  :start-placeholder="$t('common.startTime')"
+                  :end-placeholder="$t('common.endTime')"
+                  format="YYYY-MM-DD HH:mm:ss"
+                  value-format="YYYY-MM-DD HH:mm:ss"
+                  style="width: 380px;"
+                  clearable
+                />
+              </el-form-item>
+              <el-form-item>
+                <el-button type="primary" @click="handleSearch">
+                  <el-icon><Search /></el-icon>
+                  {{ $t('common.search') }}
+                </el-button>
+                <el-button @click="handleReset">
+                  {{ $t('common.reset') }}
+                </el-button>
+              </el-form-item>
+            </el-form>
           </div>
 
           <el-table 
@@ -437,6 +460,7 @@ export default {
       taskId: '',
       service: '',
       app: '',
+      startTimeRange: null,
     })
 
     // 解析 summary JSON 字符串
@@ -472,6 +496,11 @@ export default {
         if (searchForm.app) {
           params.app = searchForm.app
         }
+        // 处理日期范围
+        if (searchForm.startTimeRange && searchForm.startTimeRange.length === 2) {
+          params.startTime = searchForm.startTimeRange[0]
+          params.endTime = searchForm.startTimeRange[1]
+        }
 
         const response = await getClientDataPage(params)
         if (response.code === 200) {
@@ -497,6 +526,7 @@ export default {
       searchForm.taskId = ''
       searchForm.service = ''
       searchForm.app = ''
+      searchForm.startTimeRange = null
       pagination.current = 1
       loadData()
     }
@@ -973,11 +1003,26 @@ export default {
   margin-right: 8px;
 }
 
-.search-bar {
+.filter-container {
   margin-bottom: 16px;
-  display: flex;
-  align-items: center;
+  padding: 16px;
+  background: #f5f7fa;
+  border-radius: 4px;
   flex-shrink: 0;
+}
+
+.filter-form {
+  margin: 0;
+}
+
+.filter-form :deep(.el-form-item) {
+  margin-bottom: 16px;
+  margin-right: 16px;
+}
+
+.filter-form :deep(.el-form-item__label) {
+  font-weight: 500;
+  color: #606266;
 }
 
 .client-data-page :deep(.el-table) {

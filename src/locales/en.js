@@ -24,6 +24,9 @@ export default {
     collapse: 'Collapse',
     expand: 'Expand',
     upload: 'Upload',
+    to: 'To',
+    startTime: 'Start Time',
+    endTime: 'End Time',
   },
   
   // Navigation Menu
