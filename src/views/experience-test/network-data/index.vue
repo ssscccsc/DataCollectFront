@@ -6,16 +6,127 @@
     </div>
 
     <el-card>
-      <div class="table-operations">
-        <el-button type="primary" @click="handleAdd">
-          <el-icon><Plus /></el-icon>
-          {{ $t('common.add') }}
-        </el-button>
-        <el-button @click="loadData">
-          <el-icon><Refresh /></el-icon>
-          {{ $t('common.refresh') }}
-        </el-button>
-      </div>
+      <el-tabs v-model="activeTab" type="border-card">
+        <!-- 第一个tab：聚合数据列表 -->
+        <el-tab-pane :label="$t('experienceTest.networkData.groupList')" name="group">
+          <div class="table-operations">
+            <el-button type="primary" @click="handleAdd">
+              <el-icon><Plus /></el-icon>
+              {{ $t('common.add') }}
+            </el-button>
+            <el-button @click="loadGroupData">
+              <el-icon><Refresh /></el-icon>
+              {{ $t('common.refresh') }}
+            </el-button>
+          </div>
+
+          <el-table :data="groupTableData" v-loading="groupLoading" style="width: 100%" stripe border>
+            <el-table-column type="index" label="#" width="60" />
+            <el-table-column prop="gpsi" :label="$t('experienceTest.networkData.gpsi')" min-width="150" show-overflow-tooltip />
+            <el-table-column prop="date" :label="$t('experienceTest.networkData.date')" min-width="120" show-overflow-tooltip />
+            <el-table-column prop="subAppId" :label="$t('experienceTest.networkData.subAppId')" min-width="150" show-overflow-tooltip />
+            <el-table-column prop="count" :label="$t('experienceTest.networkData.dataCount')" width="120" />
+            <el-table-column :label="$t('common.operations')" width="120" fixed="right">
+              <template #default="scope">
+                <el-button type="primary" size="small" @click="handleViewDetail(scope.row)">
+                  {{ $t('common.view') }}
+                </el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+
+          <div class="pagination">
+            <el-pagination
+              v-model:current-page="groupPagination.current"
+              v-model:page-size="groupPagination.size"
+              :page-sizes="[10, 20, 50, 100]"
+              :total="groupPagination.total"
+              layout="total, sizes, prev, pager, next, jumper"
+              @size-change="handleGroupSizeChange"
+              @current-change="handleGroupCurrentChange"
+            />
+          </div>
+        </el-tab-pane>
+
+        <!-- 第二个tab：详细数据列表 -->
+        <el-tab-pane :label="$t('experienceTest.networkData.detailList')" name="detail">
+          <div class="table-operations">
+            <el-button type="primary" @click="handleAdd">
+              <el-icon><Plus /></el-icon>
+              {{ $t('common.add') }}
+            </el-button>
+            <el-button @click="loadData">
+              <el-icon><Refresh /></el-icon>
+              {{ $t('common.refresh') }}
+            </el-button>
+          </div>
+
+          <!-- 搜索栏 -->
+          <div class="search-bar">
+            <el-input
+              v-model="searchForm.gpsi"
+              :placeholder="$t('experienceTest.networkData.searchGpsi')"
+              style="width: 200px; margin-right: 10px;"
+              clearable
+            />
+            <el-input
+              v-model="searchForm.subAppId"
+              :placeholder="$t('experienceTest.networkData.searchSubAppId')"
+              style="width: 200px; margin-right: 10px;"
+              clearable
+            />
+            <el-input
+              v-model="searchForm.startTime"
+              :placeholder="$t('experienceTest.networkData.searchStartTime')"
+              style="width: 200px; margin-right: 10px;"
+              clearable
+            />
+            <el-input
+              v-model="searchForm.timeStamp"
+              :placeholder="$t('experienceTest.networkData.searchTimeStamp')"
+              style="width: 200px; margin-right: 10px;"
+              clearable
+            />
+            <el-button type="primary" @click="handleSearch">
+              <el-icon><Search /></el-icon>
+              {{ $t('common.search') }}
+            </el-button>
+            <el-button @click="handleReset">
+              <el-icon><RefreshLeft /></el-icon>
+              {{ $t('common.reset') }}
+            </el-button>
+          </div>
+
+          <el-table :data="tableData" v-loading="loading" style="width: 100%" stripe border>
+            <el-table-column type="index" label="#" width="60" />
+            <el-table-column prop="gpsi" :label="$t('experienceTest.networkData.gpsi')" min-width="150" show-overflow-tooltip />
+            <el-table-column prop="startTime" :label="$t('experienceTest.networkData.startTime')" min-width="150" show-overflow-tooltip />
+            <el-table-column prop="timeStamp" :label="$t('experienceTest.networkData.timeStamp')" min-width="150" show-overflow-tooltip />
+            <el-table-column prop="appId" :label="$t('experienceTest.networkData.appId')" min-width="120" show-overflow-tooltip />
+            <el-table-column prop="subAppId" :label="$t('experienceTest.networkData.subAppId')" min-width="120" show-overflow-tooltip />
+            <el-table-column prop="uplinkBandwidth" :label="$t('experienceTest.networkData.uplinkBandwidth')" min-width="150" show-overflow-tooltip />
+            <el-table-column prop="downlinkBandwidth" :label="$t('experienceTest.networkData.downlinkBandwidth')" min-width="150" show-overflow-tooltip />
+            <el-table-column prop="avgQoe" :label="$t('experienceTest.networkData.avgQoe')" min-width="120" show-overflow-tooltip />
+            <el-table-column prop="mostResolution" :label="$t('experienceTest.networkData.mostResolution')" min-width="150" show-overflow-tooltip />
+            <el-table-column prop="stallingDuration" :label="$t('experienceTest.networkData.stallingDuration')" min-width="150" show-overflow-tooltip />
+            <el-table-column prop="stallingNumber" :label="$t('experienceTest.networkData.stallingNumber')" min-width="150" show-overflow-tooltip />
+            <el-table-column prop="serviceDelay" :label="$t('experienceTest.networkData.serviceDelay')" min-width="150" show-overflow-tooltip />
+            <el-table-column prop="serviceInitialDuration" :label="$t('experienceTest.networkData.serviceInitialDuration')" min-width="180" show-overflow-tooltip />
+          </el-table>
+
+          <div class="pagination">
+            <el-pagination
+              v-model:current-page="pagination.current"
+              v-model:page-size="pagination.size"
+              :page-sizes="[10, 20, 50, 100]"
+              :total="pagination.total"
+              layout="total, sizes, prev, pager, next, jumper"
+              @size-change="handleSizeChange"
+              @current-change="handleCurrentChange"
+            />
+          </div>
+        </el-tab-pane>
+      </el-tabs>
 
       <!-- 文件上传对话框 -->
       <el-dialog
@@ -71,81 +182,16 @@
           </span>
         </template>
       </el-dialog>
-
-      <!-- 搜索栏 -->
-      <div class="search-bar">
-        <el-input
-          v-model="searchForm.gpsi"
-          :placeholder="$t('experienceTest.networkData.searchGpsi')"
-          style="width: 200px; margin-right: 10px;"
-          clearable
-        />
-        <el-input
-          v-model="searchForm.startTime"
-          :placeholder="$t('experienceTest.networkData.searchStartTime')"
-          style="width: 200px; margin-right: 10px;"
-          clearable
-        />
-        <el-input
-          v-model="searchForm.timeStamp"
-          :placeholder="$t('experienceTest.networkData.searchTimeStamp')"
-          style="width: 200px; margin-right: 10px;"
-          clearable
-        />
-        <el-input
-          v-model="searchForm.subAppId"
-          :placeholder="$t('experienceTest.networkData.searchSubAppId')"
-          style="width: 200px; margin-right: 10px;"
-          clearable
-        />
-        <el-button type="primary" @click="handleSearch">
-          <el-icon><Search /></el-icon>
-          {{ $t('common.search') }}
-        </el-button>
-        <el-button @click="handleReset">
-          <el-icon><RefreshLeft /></el-icon>
-          {{ $t('common.reset') }}
-        </el-button>
-      </div>
-
-      <el-table :data="tableData" v-loading="loading" style="width: 100%" stripe border>
-        <el-table-column type="index" label="#" width="60" />
-        <el-table-column prop="gpsi" :label="$t('experienceTest.networkData.gpsi')" min-width="150" show-overflow-tooltip />
-        <el-table-column prop="startTime" :label="$t('experienceTest.networkData.startTime')" min-width="150" show-overflow-tooltip />
-        <el-table-column prop="timeStamp" :label="$t('experienceTest.networkData.timeStamp')" min-width="150" show-overflow-tooltip />
-        <el-table-column prop="appId" :label="$t('experienceTest.networkData.appId')" min-width="120" show-overflow-tooltip />
-        <el-table-column prop="subAppId" :label="$t('experienceTest.networkData.subAppId')" min-width="120" show-overflow-tooltip />
-        <el-table-column prop="uplinkBandwidth" :label="$t('experienceTest.networkData.uplinkBandwidth')" min-width="150" show-overflow-tooltip />
-        <el-table-column prop="downlinkBandwidth" :label="$t('experienceTest.networkData.downlinkBandwidth')" min-width="150" show-overflow-tooltip />
-        <el-table-column prop="avgQoe" :label="$t('experienceTest.networkData.avgQoe')" min-width="120" show-overflow-tooltip />
-        <el-table-column prop="mostResolution" :label="$t('experienceTest.networkData.mostResolution')" min-width="150" show-overflow-tooltip />
-        <el-table-column prop="stallingDuration" :label="$t('experienceTest.networkData.stallingDuration')" min-width="150" show-overflow-tooltip />
-        <el-table-column prop="stallingNumber" :label="$t('experienceTest.networkData.stallingNumber')" min-width="150" show-overflow-tooltip />
-        <el-table-column prop="serviceDelay" :label="$t('experienceTest.networkData.serviceDelay')" min-width="150" show-overflow-tooltip />
-        <el-table-column prop="serviceInitialDuration" :label="$t('experienceTest.networkData.serviceInitialDuration')" min-width="180" show-overflow-tooltip />
-      </el-table>
-
-      <div class="pagination">
-        <el-pagination
-          v-model:current-page="pagination.current"
-          v-model:page-size="pagination.size"
-          :page-sizes="[10, 20, 50, 100]"
-          :total="pagination.total"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-        />
-      </div>
     </el-card>
   </div>
 </template>
 
 <script>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { Plus, Refresh, UploadFilled, Search, RefreshLeft } from '@element-plus/icons-vue'
-import { uploadNetworkDataFile, getNetworkDataPage } from '@/api/test-settings'
+import { uploadNetworkDataFile, getNetworkDataPage, getGroupedNetworkDataPage } from '@/api/test-settings'
 
 export default {
   name: 'NetworkData',
@@ -158,14 +204,23 @@ export default {
   },
   setup() {
     const { t } = useI18n()
+    const activeTab = ref('group')
     const loading = ref(false)
+    const groupLoading = ref(false)
     const tableData = ref([])
+    const groupTableData = ref([])
     const uploadDialogVisible = ref(false)
     const uploading = ref(false)
     const selectedFile = ref(null)
     const uploadRef = ref(null)
 
     const pagination = reactive({
+      current: 1,
+      size: 10,
+      total: 0,
+    })
+
+    const groupPagination = reactive({
       current: 1,
       size: 10,
       total: 0,
@@ -178,6 +233,37 @@ export default {
       subAppId: '',
     })
 
+    // 从第一个tab传递过来的筛选条件
+    const filterFromGroup = reactive({
+      gpsi: '',
+      subAppId: '',
+    })
+
+    // 加载聚合数据
+    const loadGroupData = async () => {
+      groupLoading.value = true
+      try {
+        const params = {
+          current: groupPagination.current,
+          size: groupPagination.size,
+        }
+
+        const response = await getGroupedNetworkDataPage(params)
+        if (response.code === 200) {
+          groupTableData.value = response.data.records || []
+          groupPagination.total = response.data.total || 0
+        } else {
+          ElMessage.error(response.message || t('common.error'))
+        }
+      } catch (error) {
+        console.error('Load group data error:', error)
+        ElMessage.error(t('common.error'))
+      } finally {
+        groupLoading.value = false
+      }
+    }
+
+    // 加载详细数据
     const loadData = async () => {
       loading.value = true
       try {
@@ -185,17 +271,25 @@ export default {
           current: pagination.current,
           size: pagination.size,
         }
-        if (searchForm.gpsi) {
+        
+        // 优先使用从第一个tab传递过来的筛选条件
+        if (filterFromGroup.gpsi) {
+          params.gpsi = filterFromGroup.gpsi
+        } else if (searchForm.gpsi) {
           params.gpsi = searchForm.gpsi
         }
+        
+        if (filterFromGroup.subAppId) {
+          params.subAppId = filterFromGroup.subAppId
+        } else if (searchForm.subAppId) {
+          params.subAppId = searchForm.subAppId
+        }
+        
         if (searchForm.timeStamp) {
           params.timeStamp = searchForm.timeStamp
         }
         if (searchForm.startTime) {
           params.startTime = searchForm.startTime
-        }
-        if (searchForm.subAppId) {
-          params.subAppId = searchForm.subAppId
         }
 
         const response = await getNetworkDataPage(params)
@@ -213,7 +307,28 @@ export default {
       }
     }
 
+    // 查看详情（从第一个tab跳转到第二个tab）
+    const handleViewDetail = (row) => {
+      // 设置筛选条件
+      filterFromGroup.gpsi = row.gpsi
+      filterFromGroup.subAppId = row.subAppId
+      
+      // 清空搜索表单中的GPSI和子应用ID，使用筛选条件
+      searchForm.gpsi = ''
+      searchForm.subAppId = ''
+      
+      // 切换到第二个tab
+      activeTab.value = 'detail'
+      
+      // 重置分页并加载数据
+      pagination.current = 1
+      loadData()
+    }
+
     const handleSearch = () => {
+      // 清空从第一个tab传递过来的筛选条件
+      filterFromGroup.gpsi = ''
+      filterFromGroup.subAppId = ''
       pagination.current = 1
       loadData()
     }
@@ -223,6 +338,8 @@ export default {
       searchForm.timeStamp = ''
       searchForm.startTime = ''
       searchForm.subAppId = ''
+      filterFromGroup.gpsi = ''
+      filterFromGroup.subAppId = ''
       pagination.current = 1
       loadData()
     }
@@ -289,7 +406,11 @@ export default {
             uploadRef.value.clearFiles()
           }
           // 刷新数据列表
-          loadData()
+          if (activeTab.value === 'group') {
+            loadGroupData()
+          } else {
+            loadData()
+          }
         } else {
           // 显示后端返回的错误信息
           const errorMsg = response.message || response.data?.error || t('common.error')
@@ -305,7 +426,6 @@ export default {
       }
     }
 
-
     const handleSizeChange = (val) => {
       pagination.size = val
       loadData()
@@ -316,28 +436,55 @@ export default {
       loadData()
     }
 
+    const handleGroupSizeChange = (val) => {
+      groupPagination.size = val
+      loadGroupData()
+    }
+
+    const handleGroupCurrentChange = (val) => {
+      groupPagination.current = val
+      loadGroupData()
+    }
+
+    // 监听tab切换，加载对应数据
+    watch(activeTab, (newTab) => {
+      if (newTab === 'group') {
+        loadGroupData()
+      } else if (newTab === 'detail') {
+        loadData()
+      }
+    })
+
     onMounted(() => {
-      loadData()
+      loadGroupData()
     })
 
     return {
+      activeTab,
       loading,
+      groupLoading,
       tableData,
+      groupTableData,
       pagination,
+      groupPagination,
       searchForm,
       uploadDialogVisible,
       uploading,
       selectedFile,
       uploadRef,
       loadData,
+      loadGroupData,
       handleAdd,
       handleSearch,
       handleReset,
       handleSizeChange,
       handleCurrentChange,
+      handleGroupSizeChange,
+      handleGroupCurrentChange,
       handleFileChange,
       handleFileRemove,
       handleUpload,
+      handleViewDetail,
       formatFileSize,
     }
   },
@@ -395,23 +542,3 @@ export default {
   margin-top: 7px;
 }
 </style>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

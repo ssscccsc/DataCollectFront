@@ -95,6 +95,15 @@ export function getNetworkDataPage(params) {
   });
 }
 
+// 获取网络侧数据聚合分页（按GPSI+日期+子应用ID分组）
+export function getGroupedNetworkDataPage(params) {
+  return request({
+    url: '/network-data/group/page',
+    method: 'get',
+    params,
+  });
+}
+
 // 端侧数据文件上传API
 export function uploadClientDataFile(file) {
   const formData = new FormData();
