@@ -7,6 +7,56 @@
 
     <el-card>
       <el-tabs v-model="activeTab" @tab-click="handleTabClick">
+        <!-- 端侧和网络侧时间配置 -->
+        <el-tab-pane :label="$t('experienceTest.testSettings.timeConfig')" name="timeConfig">
+          <div class="tab-content">
+            <el-form
+              ref="timeConfigFormRef"
+              :model="timeConfigForm"
+              :rules="timeConfigRules"
+              label-width="200px"
+              style="max-width: 600px;"
+            >
+              <el-form-item :label="$t('experienceTest.testSettings.timeDiff')" prop="timeDiff">
+                <el-input-number
+                  v-model="timeConfigForm.timeDiff"
+                  :min="0"
+                  :max="10"
+                  :precision="0"
+                  style="width: 200px;"
+                />
+                <span style="margin-left: 10px; color: #909399;">
+                  {{ $t('experienceTest.testSettings.timeDiffTip') }}
+                </span>
+              </el-form-item>
+              <el-form-item :label="$t('experienceTest.testSettings.collectInterval')" prop="collectInterval">
+                <el-select
+                  v-model="timeConfigForm.collectInterval"
+                  :placeholder="$t('experienceTest.testSettings.collectIntervalPlaceholder')"
+                  style="width: 200px;"
+                >
+                  <el-option
+                    :label="$t('experienceTest.testSettings.collectInterval10')"
+                    :value="10"
+                  />
+                  <el-option
+                    :label="$t('experienceTest.testSettings.collectInterval30')"
+                    :value="30"
+                  />
+                </el-select>
+              </el-form-item>
+              <el-form-item>
+                <el-button type="primary" @click="handleSaveTimeConfig">
+                  {{ $t('common.save') }}
+                </el-button>
+                <el-button @click="handleResetTimeConfig">
+                  {{ $t('common.reset') }}
+                </el-button>
+              </el-form-item>
+            </el-form>
+          </div>
+        </el-tab-pane>
+
         <!-- 端侧FTP服务器信息 -->
         <el-tab-pane :label="$t('experienceTest.testSettings.clientFtpServer')" name="clientFtp">
           <div class="tab-content">
@@ -209,15 +259,22 @@ export default {
   },
   setup() {
     const { t } = useI18n()
-    const activeTab = ref('clientFtp')
+    const activeTab = ref('timeConfig')
     const clientFtpFormRef = ref(null)
     const networkFtpFormRef = ref(null)
     const mappingFormRef = ref(null)
+    const timeConfigFormRef = ref(null)
     const mappingLoading = ref(false)
     const mappingDialogVisible = ref(false)
     const mappingDialogTitle = ref('')
     const isEditMapping = ref(false)
     const currentMappingId = ref(null)
+
+    // 时间配置表单
+    const timeConfigForm = reactive({
+      timeDiff: 0,
+      collectInterval: 10,
+    })
 
     // 端侧FTP服务器表单
     const clientFtpForm = reactive({
@@ -245,6 +302,17 @@ export default {
       deviceId: '',
       gpsi: '',
     })
+
+    // 时间配置表单验证规则
+    const timeConfigRules = {
+      timeDiff: [
+        { required: true, message: t('experienceTest.testSettings.timeDiffRequired'), trigger: 'blur' },
+        { type: 'number', min: 0, max: 10, message: t('experienceTest.testSettings.timeDiffRange'), trigger: 'blur' },
+      ],
+      collectInterval: [
+        { required: true, message: t('experienceTest.testSettings.collectIntervalRequired'), trigger: 'change' },
+      ],
+    }
 
     // 表单验证规则
     const clientFtpRules = {
@@ -282,7 +350,9 @@ export default {
 
     // Tab切换
     const handleTabClick = (tab) => {
-      if (tab.name === 'deviceIdGpsi') {
+      if (tab.name === 'timeConfig') {
+        loadTimeConfigData()
+      } else if (tab.name === 'deviceIdGpsi') {
         loadMappingData()
       } else if (tab.name === 'clientFtp') {
         loadClientFtpData()
@@ -293,7 +363,9 @@ export default {
 
     // 监听tab切换，自动加载对应数据
     watch(activeTab, (newTab) => {
-      if (newTab === 'deviceIdGpsi') {
+      if (newTab === 'timeConfig') {
+        loadTimeConfigData()
+      } else if (newTab === 'deviceIdGpsi') {
         loadMappingData()
       } else if (newTab === 'clientFtp') {
         loadClientFtpData()
@@ -301,6 +373,51 @@ export default {
         loadNetworkFtpData()
       }
     })
+
+    // 加载时间配置数据
+    const loadTimeConfigData = async () => {
+      try {
+        const response = await testSettingsApi.getTimeConfig()
+        if (response.data) {
+          timeConfigForm.timeDiff = response.data.timeDiff || 0
+          timeConfigForm.collectInterval = response.data.collectInterval || 10
+        }
+      } catch (error) {
+        // 如果没有数据，不显示错误，保持表单为默认值
+        if (error.response && error.response.status !== 404) {
+          ElMessage.error(t('common.error'))
+        }
+      }
+    }
+
+    // 保存时间配置
+    const handleSaveTimeConfig = async () => {
+      if (!timeConfigFormRef.value) {
+        return
+      }
+      await timeConfigFormRef.value.validate(async (valid) => {
+        if (valid) {
+          try {
+            const data = {
+              timeDiff: timeConfigForm.timeDiff,
+              collectInterval: timeConfigForm.collectInterval,
+            }
+            await testSettingsApi.saveOrUpdateTimeConfig(data)
+            ElMessage.success(t('common.success'))
+          } catch (error) {
+            ElMessage.error(t('common.error'))
+          }
+        }
+      })
+    }
+
+    // 重置时间配置表单
+    const handleResetTimeConfig = () => {
+      if (timeConfigFormRef.value) {
+        timeConfigFormRef.value.resetFields()
+        loadTimeConfigData()
+      }
+    }
 
     // 加载端侧FTP服务器数据
     const loadClientFtpData = async () => {
@@ -495,7 +612,7 @@ export default {
     }
 
     onMounted(() => {
-      loadClientFtpData()
+      loadTimeConfigData()
     })
 
     return {
@@ -503,8 +620,10 @@ export default {
       clientFtpFormRef,
       networkFtpFormRef,
       mappingFormRef,
+      timeConfigFormRef,
       clientFtpForm,
       networkFtpForm,
+      timeConfigForm,
       mappingData,
       mappingForm,
       mappingLoading,
@@ -512,8 +631,12 @@ export default {
       mappingDialogTitle,
       clientFtpRules,
       networkFtpRules,
+      timeConfigRules,
       mappingRules,
       handleTabClick,
+      handleSaveTimeConfig,
+      handleResetTimeConfig,
+      loadTimeConfigData,
       handleSaveClientFtp,
       handleResetClientFtp,
       handleSaveNetworkFtp,

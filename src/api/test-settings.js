@@ -1,5 +1,21 @@
 import request from '@/utils/request'
 
+// 时间配置API
+export function getTimeConfig() {
+  return request({
+    url: '/test-settings/time-config',
+    method: 'get',
+  })
+}
+
+export function saveOrUpdateTimeConfig(data) {
+  return request({
+    url: '/test-settings/time-config',
+    method: 'post',
+    data,
+  })
+}
+
 // 端侧FTP服务器配置API
 export function getClientFtpConfig() {
   return request({
