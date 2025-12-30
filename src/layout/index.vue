@@ -91,6 +91,10 @@
             <el-icon><DataAnalysis /></el-icon>
             <span>{{ $t('menu.experienceTest') }}</span>
           </template>
+          <el-menu-item index="/experience-test/network-settings/index">
+            <el-icon><Setting /></el-icon>
+            <span>{{ $t('menu.networkSettings') }}</span>
+          </el-menu-item>
           <el-menu-item index="/experience-test/client-data/index">
             <el-icon><DataBoard /></el-icon>
             <span>{{ $t('menu.clientData') }}</span>
@@ -102,10 +106,6 @@
           <el-menu-item index="/experience-test/data-comparison/index">
             <el-icon><DataAnalysis /></el-icon>
             <span>{{ $t('menu.dataComparison') }}</span>
-          </el-menu-item>
-          <el-menu-item index="/experience-test/network-settings/index">
-            <el-icon><Setting /></el-icon>
-            <span>{{ $t('menu.networkSettings') }}</span>
           </el-menu-item>
         </el-sub-menu>
       </el-menu>
