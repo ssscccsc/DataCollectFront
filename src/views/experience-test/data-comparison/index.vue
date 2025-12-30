@@ -57,7 +57,7 @@
                 <el-tab-pane :label="$t('experienceTest.dataComparison.speedComparison')" name="speed">
                   <div class="comparison-content" v-loading="speedComparisonLoading">
                     <div v-if="speedComparisonData">
-                      <!-- 选择网络侧开始时间 -->
+                      <!-- 选择网络侧开始时间和端侧开始序号 -->
                       <div class="selection-container">
                         <el-form :inline="true" class="selection-form">
                           <el-form-item :label="$t('experienceTest.dataComparison.selectNetworkStartTime')">
@@ -69,6 +69,22 @@
                             >
                               <el-option
                                 v-for="item in networkStartTimeOptions"
+                                :key="item.value"
+                                :label="item.label"
+                                :value="item.value"
+                              />
+                            </el-select>
+                          </el-form-item>
+                          <el-form-item :label="$t('experienceTest.dataComparison.selectClientStartSequence')">
+                            <el-select
+                              v-model="selectedClientStartSequence"
+                              :placeholder="$t('experienceTest.dataComparison.selectClientStartSequencePlaceholder')"
+                              style="width: 200px;"
+                              filterable
+                              clearable
+                            >
+                              <el-option
+                                v-for="item in clientStartSequenceOptions"
                                 :key="item.value"
                                 :label="item.label"
                                 :value="item.value"
@@ -126,7 +142,7 @@
                 <el-tab-pane :label="$t('experienceTest.dataComparison.rttComparison')" name="rtt">
                   <div class="comparison-content" v-loading="rttComparisonLoading">
                     <div v-if="rttComparisonData">
-                      <!-- 选择网络侧开始时间 -->
+                      <!-- 选择网络侧开始时间和端侧开始序号 -->
                       <div class="selection-container">
                         <el-form :inline="true" class="selection-form">
                           <el-form-item :label="$t('experienceTest.dataComparison.selectNetworkStartTime')">
@@ -138,6 +154,22 @@
                             >
                               <el-option
                                 v-for="item in networkStartTimeOptionsRtt"
+                                :key="item.value"
+                                :label="item.label"
+                                :value="item.value"
+                              />
+                            </el-select>
+                          </el-form-item>
+                          <el-form-item :label="$t('experienceTest.dataComparison.selectClientStartSequence')">
+                            <el-select
+                              v-model="selectedClientStartSequenceRtt"
+                              :placeholder="$t('experienceTest.dataComparison.selectClientStartSequencePlaceholder')"
+                              style="width: 200px;"
+                              filterable
+                              clearable
+                            >
+                              <el-option
+                                v-for="item in clientStartSequenceOptionsRtt"
                                 :key="item.value"
                                 :label="item.label"
                                 :value="item.value"
@@ -190,7 +222,7 @@
                 <el-tab-pane :label="$t('experienceTest.dataComparison.stutterComparison')" name="stutter">
                   <div class="comparison-content" v-loading="stutterComparisonLoading">
                     <div v-if="stutterComparisonData">
-                      <!-- 选择网络侧开始时间 -->
+                      <!-- 选择网络侧开始时间和端侧开始序号 -->
                       <div class="selection-container">
                         <el-form :inline="true" class="selection-form">
                           <el-form-item :label="$t('experienceTest.dataComparison.selectNetworkStartTime')">
@@ -202,6 +234,22 @@
                             >
                               <el-option
                                 v-for="item in networkStartTimeOptionsStutter"
+                                :key="item.value"
+                                :label="item.label"
+                                :value="item.value"
+                              />
+                            </el-select>
+                          </el-form-item>
+                          <el-form-item :label="$t('experienceTest.dataComparison.selectClientStartSequence')">
+                            <el-select
+                              v-model="selectedClientStartSequenceStutter"
+                              :placeholder="$t('experienceTest.dataComparison.selectClientStartSequencePlaceholder')"
+                              style="width: 200px;"
+                              filterable
+                              clearable
+                            >
+                              <el-option
+                                v-for="item in clientStartSequenceOptionsStutter"
                                 :key="item.value"
                                 :label="item.label"
                                 :value="item.value"
@@ -254,7 +302,7 @@
                 <el-tab-pane :label="$t('experienceTest.dataComparison.avgQoeComparison')" name="avgQoe">
                   <div class="comparison-content" v-loading="avgQoeComparisonLoading">
                     <div v-if="avgQoeComparisonData">
-                      <!-- 选择网络侧开始时间 -->
+                      <!-- 选择网络侧开始时间和端侧开始序号 -->
                       <div class="selection-container">
                         <el-form :inline="true" class="selection-form">
                           <el-form-item :label="$t('experienceTest.dataComparison.selectNetworkStartTime')">
@@ -266,6 +314,22 @@
                             >
                               <el-option
                                 v-for="item in networkStartTimeOptionsAvgQoe"
+                                :key="item.value"
+                                :label="item.label"
+                                :value="item.value"
+                              />
+                            </el-select>
+                          </el-form-item>
+                          <el-form-item :label="$t('experienceTest.dataComparison.selectClientStartSequence')">
+                            <el-select
+                              v-model="selectedClientStartSequenceAvgQoe"
+                              :placeholder="$t('experienceTest.dataComparison.selectClientStartSequencePlaceholder')"
+                              style="width: 200px;"
+                              filterable
+                              clearable
+                            >
+                              <el-option
+                                v-for="item in clientStartSequenceOptionsAvgQoe"
                                 :key="item.value"
                                 :label="item.label"
                                 :value="item.value"
@@ -353,8 +417,10 @@ export default {
     let speedChart = null
     const currentTaskId = ref(null)
     const selectedNetworkStartTime = ref('')
+    const selectedClientStartSequence = ref(null)
     const savingNetworkStartTime = ref(false)
     const networkStartTimeOptions = ref([])
+    const clientStartSequenceOptions = ref([])
     
     // RTT对比相关
     const rttComparisonLoading = ref(false)
@@ -362,7 +428,9 @@ export default {
     const rttChartRef = ref(null)
     let rttChart = null
     const selectedNetworkStartTimeRtt = ref('')
+    const selectedClientStartSequenceRtt = ref(null)
     const networkStartTimeOptionsRtt = ref([])
+    const clientStartSequenceOptionsRtt = ref([])
     
     // 卡顿对比相关
     const stutterComparisonLoading = ref(false)
@@ -370,7 +438,9 @@ export default {
     const stutterChartRef = ref(null)
     let stutterChart = null
     const selectedNetworkStartTimeStutter = ref('')
+    const selectedClientStartSequenceStutter = ref(null)
     const networkStartTimeOptionsStutter = ref([])
+    const clientStartSequenceOptionsStutter = ref([])
     
     // 平均QOE对比相关
     const avgQoeComparisonLoading = ref(false)
@@ -378,7 +448,9 @@ export default {
     const avgQoeChartRef = ref(null)
     let avgQoeChart = null
     const selectedNetworkStartTimeAvgQoe = ref('')
+    const selectedClientStartSequenceAvgQoe = ref(null)
     const networkStartTimeOptionsAvgQoe = ref([])
+    const clientStartSequenceOptionsAvgQoe = ref([])
 
     const pagination = reactive({
       current: 1,
@@ -456,15 +528,21 @@ export default {
         if (response.code === 200 && response.data) {
           speedComparisonData.value = response.data
           
-          // 设置当前保存的网络侧开始时间
+          // 设置当前保存的网络侧开始时间和端侧开始序号
           if (response.data.networkStartTime) {
             selectedNetworkStartTime.value = response.data.networkStartTime
           } else {
             selectedNetworkStartTime.value = ''
           }
+          if (response.data.clientStartSequence != null) {
+            selectedClientStartSequence.value = response.data.clientStartSequence
+          } else {
+            selectedClientStartSequence.value = null
+          }
           
-          // 初始化网络侧开始时间选项
+          // 初始化网络侧开始时间选项和端侧开始序号选项
           initNetworkStartTimeOptions()
+          initClientStartSequenceOptions()
           
           // 等待DOM更新后渲染图表
           nextTick(() => {
@@ -505,7 +583,34 @@ export default {
         }))
     }
 
-    // 保存网络侧开始时间
+    // 初始化端侧开始序号选项
+    const initClientStartSequenceOptions = () => {
+      if (!speedComparisonData.value || !speedComparisonData.value.clientSpeedList) {
+        clientStartSequenceOptions.value = []
+        return
+      }
+      
+      // 从端侧数据中提取所有唯一的sequenceNumber作为选项
+      const sequenceSet = new Set()
+      speedComparisonData.value.clientSpeedList.forEach((item) => {
+        if (item.sequenceNumber) {
+          const seqNum = parseInt(item.sequenceNumber)
+          if (!isNaN(seqNum)) {
+            sequenceSet.add(seqNum)
+          }
+        }
+      })
+      
+      // 转换为选项数组并排序
+      clientStartSequenceOptions.value = Array.from(sequenceSet)
+        .sort((a, b) => a - b)
+        .map((seq) => ({
+          label: seq.toString(),
+          value: seq,
+        }))
+    }
+
+    // 保存网络侧开始时间和端侧开始序号
     const handleSaveNetworkStartTime = async () => {
       if (!currentTaskId.value) {
         ElMessage.warning('任务ID不存在')
@@ -514,7 +619,11 @@ export default {
       
       savingNetworkStartTime.value = true
       try {
-        const response = await updateNetworkStartTime(currentTaskId.value, selectedNetworkStartTime.value)
+        const response = await updateNetworkStartTime(
+          currentTaskId.value,
+          selectedNetworkStartTime.value,
+          selectedClientStartSequence.value,
+        )
         if (response.code === 200) {
           ElMessage.success(t('common.success'))
           // 重新加载数据
@@ -523,23 +632,24 @@ export default {
           ElMessage.error(response.message || t('common.error'))
         }
       } catch (error) {
-        console.error('Save network start time error:', error)
+        console.error('Save network start time and client start sequence error:', error)
         ElMessage.error(error.message || t('common.error'))
       } finally {
         savingNetworkStartTime.value = false
       }
     }
 
-    // 重置网络侧开始时间
+    // 重置网络侧开始时间和端侧开始序号
     const handleResetNetworkStartTime = async () => {
       if (!currentTaskId.value) {
         return
       }
       
       selectedNetworkStartTime.value = ''
+      selectedClientStartSequence.value = null
       savingNetworkStartTime.value = true
       try {
-        const response = await updateNetworkStartTime(currentTaskId.value, '')
+        const response = await updateNetworkStartTime(currentTaskId.value, '', null)
         if (response.code === 200) {
           ElMessage.success(t('common.success'))
           // 重新加载数据
@@ -548,7 +658,7 @@ export default {
           ElMessage.error(response.message || t('common.error'))
         }
       } catch (error) {
-        console.error('Reset network start time error:', error)
+        console.error('Reset network start time and client start sequence error:', error)
         ElMessage.error(error.message || t('common.error'))
       } finally {
         savingNetworkStartTime.value = false
@@ -1663,15 +1773,21 @@ export default {
         if (response.code === 200 && response.data) {
           rttComparisonData.value = response.data
           
-          // 设置当前保存的网络侧开始时间
+          // 设置当前保存的网络侧开始时间和端侧开始序号
           if (response.data.networkStartTime) {
             selectedNetworkStartTimeRtt.value = response.data.networkStartTime
           } else {
             selectedNetworkStartTimeRtt.value = ''
           }
+          if (response.data.clientStartSequence != null) {
+            selectedClientStartSequenceRtt.value = response.data.clientStartSequence
+          } else {
+            selectedClientStartSequenceRtt.value = null
+          }
           
-          // 初始化网络侧开始时间选项
+          // 初始化网络侧开始时间选项和端侧开始序号选项
           initNetworkStartTimeOptionsRtt()
+          initClientStartSequenceOptionsRtt()
           
           // 等待DOM更新后渲染图表
           nextTick(() => {
@@ -1700,15 +1816,21 @@ export default {
         if (response.code === 200 && response.data) {
           stutterComparisonData.value = response.data
           
-          // 设置当前保存的网络侧开始时间
+          // 设置当前保存的网络侧开始时间和端侧开始序号
           if (response.data.networkStartTime) {
             selectedNetworkStartTimeStutter.value = response.data.networkStartTime
           } else {
             selectedNetworkStartTimeStutter.value = ''
           }
+          if (response.data.clientStartSequence != null) {
+            selectedClientStartSequenceStutter.value = response.data.clientStartSequence
+          } else {
+            selectedClientStartSequenceStutter.value = null
+          }
           
-          // 初始化网络侧开始时间选项
+          // 初始化网络侧开始时间选项和端侧开始序号选项
           initNetworkStartTimeOptionsStutter()
+          initClientStartSequenceOptionsStutter()
           
           // 等待DOM更新后渲染图表
           nextTick(() => {
@@ -1737,15 +1859,21 @@ export default {
         if (response.code === 200 && response.data) {
           avgQoeComparisonData.value = response.data
           
-          // 设置当前保存的网络侧开始时间
+          // 设置当前保存的网络侧开始时间和端侧开始序号
           if (response.data.networkStartTime) {
             selectedNetworkStartTimeAvgQoe.value = response.data.networkStartTime
           } else {
             selectedNetworkStartTimeAvgQoe.value = ''
           }
+          if (response.data.clientStartSequence != null) {
+            selectedClientStartSequenceAvgQoe.value = response.data.clientStartSequence
+          } else {
+            selectedClientStartSequenceAvgQoe.value = null
+          }
           
-          // 初始化网络侧开始时间选项
+          // 初始化网络侧开始时间选项和端侧开始序号选项
           initNetworkStartTimeOptionsAvgQoe()
+          initClientStartSequenceOptionsAvgQoe()
           
           // 等待DOM更新后渲染图表
           nextTick(() => {
@@ -1784,6 +1912,31 @@ export default {
         }))
     }
 
+    // 初始化RTT对比的端侧开始序号选项
+    const initClientStartSequenceOptionsRtt = () => {
+      if (!rttComparisonData.value || !rttComparisonData.value.clientRttList) {
+        clientStartSequenceOptionsRtt.value = []
+        return
+      }
+      
+      const sequenceSet = new Set()
+      rttComparisonData.value.clientRttList.forEach((item) => {
+        if (item.sequenceNumber) {
+          const seqNum = parseInt(item.sequenceNumber)
+          if (!isNaN(seqNum)) {
+            sequenceSet.add(seqNum)
+          }
+        }
+      })
+      
+      clientStartSequenceOptionsRtt.value = Array.from(sequenceSet)
+        .sort((a, b) => a - b)
+        .map((seq) => ({
+          label: seq.toString(),
+          value: seq,
+        }))
+    }
+
     // 初始化卡顿对比的网络侧开始时间选项
     const initNetworkStartTimeOptionsStutter = () => {
       if (!stutterComparisonData.value || !stutterComparisonData.value.networkStutterList) {
@@ -1803,6 +1956,31 @@ export default {
         .map((time) => ({
           label: time,
           value: time,
+        }))
+    }
+
+    // 初始化卡顿对比的端侧开始序号选项
+    const initClientStartSequenceOptionsStutter = () => {
+      if (!stutterComparisonData.value || !stutterComparisonData.value.clientStutterList) {
+        clientStartSequenceOptionsStutter.value = []
+        return
+      }
+      
+      const sequenceSet = new Set()
+      stutterComparisonData.value.clientStutterList.forEach((item) => {
+        if (item.sequenceNumber) {
+          const seqNum = parseInt(item.sequenceNumber)
+          if (!isNaN(seqNum)) {
+            sequenceSet.add(seqNum)
+          }
+        }
+      })
+      
+      clientStartSequenceOptionsStutter.value = Array.from(sequenceSet)
+        .sort((a, b) => a - b)
+        .map((seq) => ({
+          label: seq.toString(),
+          value: seq,
         }))
     }
 
@@ -1828,7 +2006,32 @@ export default {
         }))
     }
 
-    // 保存RTT对比的网络侧开始时间
+    // 初始化平均QOE对比的端侧开始序号选项
+    const initClientStartSequenceOptionsAvgQoe = () => {
+      if (!avgQoeComparisonData.value || !avgQoeComparisonData.value.clientAvgQoeList) {
+        clientStartSequenceOptionsAvgQoe.value = []
+        return
+      }
+      
+      const sequenceSet = new Set()
+      avgQoeComparisonData.value.clientAvgQoeList.forEach((item) => {
+        if (item.sequenceNumber) {
+          const seqNum = parseInt(item.sequenceNumber)
+          if (!isNaN(seqNum)) {
+            sequenceSet.add(seqNum)
+          }
+        }
+      })
+      
+      clientStartSequenceOptionsAvgQoe.value = Array.from(sequenceSet)
+        .sort((a, b) => a - b)
+        .map((seq) => ({
+          label: seq.toString(),
+          value: seq,
+        }))
+    }
+
+    // 保存RTT对比的网络侧开始时间和端侧开始序号
     const handleSaveNetworkStartTimeRtt = async () => {
       if (!currentTaskId.value) {
         ElMessage.warning('任务ID不存在')
@@ -1837,7 +2040,11 @@ export default {
       
       savingNetworkStartTime.value = true
       try {
-        const response = await updateNetworkStartTime(currentTaskId.value, selectedNetworkStartTimeRtt.value)
+        const response = await updateNetworkStartTime(
+          currentTaskId.value,
+          selectedNetworkStartTimeRtt.value,
+          selectedClientStartSequenceRtt.value,
+        )
         if (response.code === 200) {
           ElMessage.success(t('common.success'))
           await loadRttComparisonData(currentTaskId.value)
@@ -1845,23 +2052,24 @@ export default {
           ElMessage.error(response.message || t('common.error'))
         }
       } catch (error) {
-        console.error('Save network start time error:', error)
+        console.error('Save network start time and client start sequence error:', error)
         ElMessage.error(error.message || t('common.error'))
       } finally {
         savingNetworkStartTime.value = false
       }
     }
 
-    // 重置RTT对比的网络侧开始时间
+    // 重置RTT对比的网络侧开始时间和端侧开始序号
     const handleResetNetworkStartTimeRtt = async () => {
       if (!currentTaskId.value) {
         return
       }
       
       selectedNetworkStartTimeRtt.value = ''
+      selectedClientStartSequenceRtt.value = null
       savingNetworkStartTime.value = true
       try {
-        const response = await updateNetworkStartTime(currentTaskId.value, '')
+        const response = await updateNetworkStartTime(currentTaskId.value, '', null)
         if (response.code === 200) {
           ElMessage.success(t('common.success'))
           await loadRttComparisonData(currentTaskId.value)
@@ -1876,7 +2084,7 @@ export default {
       }
     }
 
-    // 保存卡顿对比的网络侧开始时间
+    // 保存卡顿对比的网络侧开始时间和端侧开始序号
     const handleSaveNetworkStartTimeStutter = async () => {
       if (!currentTaskId.value) {
         ElMessage.warning('任务ID不存在')
@@ -1885,7 +2093,11 @@ export default {
       
       savingNetworkStartTime.value = true
       try {
-        const response = await updateNetworkStartTime(currentTaskId.value, selectedNetworkStartTimeStutter.value)
+        const response = await updateNetworkStartTime(
+          currentTaskId.value,
+          selectedNetworkStartTimeStutter.value,
+          selectedClientStartSequenceStutter.value,
+        )
         if (response.code === 200) {
           ElMessage.success(t('common.success'))
           await loadStutterComparisonData(currentTaskId.value)
@@ -1893,23 +2105,24 @@ export default {
           ElMessage.error(response.message || t('common.error'))
         }
       } catch (error) {
-        console.error('Save network start time error:', error)
+        console.error('Save network start time and client start sequence error:', error)
         ElMessage.error(error.message || t('common.error'))
       } finally {
         savingNetworkStartTime.value = false
       }
     }
 
-    // 重置卡顿对比的网络侧开始时间
+    // 重置卡顿对比的网络侧开始时间和端侧开始序号
     const handleResetNetworkStartTimeStutter = async () => {
       if (!currentTaskId.value) {
         return
       }
       
       selectedNetworkStartTimeStutter.value = ''
+      selectedClientStartSequenceStutter.value = null
       savingNetworkStartTime.value = true
       try {
-        const response = await updateNetworkStartTime(currentTaskId.value, '')
+        const response = await updateNetworkStartTime(currentTaskId.value, '', null)
         if (response.code === 200) {
           ElMessage.success(t('common.success'))
           await loadStutterComparisonData(currentTaskId.value)
@@ -1917,14 +2130,14 @@ export default {
           ElMessage.error(response.message || t('common.error'))
         }
       } catch (error) {
-        console.error('Reset network start time error:', error)
+        console.error('Reset network start time and client start sequence error:', error)
         ElMessage.error(error.message || t('common.error'))
       } finally {
         savingNetworkStartTime.value = false
       }
     }
 
-    // 保存平均QOE对比的网络侧开始时间
+    // 保存平均QOE对比的网络侧开始时间和端侧开始序号
     const handleSaveNetworkStartTimeAvgQoe = async () => {
       if (!currentTaskId.value) {
         ElMessage.warning('任务ID不存在')
@@ -1933,7 +2146,11 @@ export default {
       
       savingNetworkStartTime.value = true
       try {
-        const response = await updateNetworkStartTime(currentTaskId.value, selectedNetworkStartTimeAvgQoe.value)
+        const response = await updateNetworkStartTime(
+          currentTaskId.value,
+          selectedNetworkStartTimeAvgQoe.value,
+          selectedClientStartSequenceAvgQoe.value,
+        )
         if (response.code === 200) {
           ElMessage.success(t('common.success'))
           await loadAvgQoeComparisonData(currentTaskId.value)
@@ -1941,23 +2158,24 @@ export default {
           ElMessage.error(response.message || t('common.error'))
         }
       } catch (error) {
-        console.error('Save network start time error:', error)
+        console.error('Save network start time and client start sequence error:', error)
         ElMessage.error(error.message || t('common.error'))
       } finally {
         savingNetworkStartTime.value = false
       }
     }
 
-    // 重置平均QOE对比的网络侧开始时间
+    // 重置平均QOE对比的网络侧开始时间和端侧开始序号
     const handleResetNetworkStartTimeAvgQoe = async () => {
       if (!currentTaskId.value) {
         return
       }
       
       selectedNetworkStartTimeAvgQoe.value = ''
+      selectedClientStartSequenceAvgQoe.value = null
       savingNetworkStartTime.value = true
       try {
-        const response = await updateNetworkStartTime(currentTaskId.value, '')
+        const response = await updateNetworkStartTime(currentTaskId.value, '', null)
         if (response.code === 200) {
           ElMessage.success(t('common.success'))
           await loadAvgQoeComparisonData(currentTaskId.value)
@@ -1965,7 +2183,7 @@ export default {
           ElMessage.error(response.message || t('common.error'))
         }
       } catch (error) {
-        console.error('Reset network start time error:', error)
+        console.error('Reset network start time and client start sequence error:', error)
         ElMessage.error(error.message || t('common.error'))
       } finally {
         savingNetworkStartTime.value = false
@@ -2093,26 +2311,34 @@ export default {
       speedChartRef,
       mergedSpeedData,
       selectedNetworkStartTime,
+      selectedClientStartSequence,
       savingNetworkStartTime,
       networkStartTimeOptions,
+      clientStartSequenceOptions,
       rttComparisonLoading,
       rttComparisonData,
       rttChartRef,
       mergedRttData,
       selectedNetworkStartTimeRtt,
+      selectedClientStartSequenceRtt,
       networkStartTimeOptionsRtt,
+      clientStartSequenceOptionsRtt,
       stutterComparisonLoading,
       stutterComparisonData,
       stutterChartRef,
       mergedStutterData,
       selectedNetworkStartTimeStutter,
+      selectedClientStartSequenceStutter,
       networkStartTimeOptionsStutter,
+      clientStartSequenceOptionsStutter,
       avgQoeComparisonLoading,
       avgQoeComparisonData,
       avgQoeChartRef,
       mergedAvgQoeData,
       selectedNetworkStartTimeAvgQoe,
+      selectedClientStartSequenceAvgQoe,
       networkStartTimeOptionsAvgQoe,
+      clientStartSequenceOptionsAvgQoe,
       loadData,
       handleCompare,
       handleView,

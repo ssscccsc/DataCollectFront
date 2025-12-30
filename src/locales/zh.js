@@ -1132,6 +1132,8 @@ export default {
       networkDownlinkSpeed: '网络侧下行速率',
       selectNetworkStartTime: '选择网络侧开始时间',
       selectNetworkStartTimePlaceholder: '请选择网络侧开始时间',
+      selectClientStartSequence: '选择端侧开始序号',
+      selectClientStartSequencePlaceholder: '请选择端侧开始序号',
       rttComparisonData: 'RTT对比数据',
       clientRtt: '端侧RTT',
       networkServiceDelay: '网络侧服务时延',

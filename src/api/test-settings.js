@@ -145,12 +145,13 @@ export function getSpeedComparison(taskId) {
 }
 
 // 更新任务的网络侧开始时间
-export function updateNetworkStartTime(taskId, networkStartTime) {
+export function updateNetworkStartTime(taskId, networkStartTime, clientStartSequence) {
   return request({
     url: `/client-data/network-start-time/${taskId}`,
     method: 'put',
     data: {
       networkStartTime: networkStartTime,
+      clientStartSequence: clientStartSequence,
     },
   });
 }

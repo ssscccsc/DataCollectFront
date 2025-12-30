@@ -1222,6 +1222,8 @@ export default {
       networkDownlinkSpeed: 'Network Downlink Speed',
       selectNetworkStartTime: 'Select Network Start Time',
       selectNetworkStartTimePlaceholder: 'Please select network start time',
+      selectClientStartSequence: 'Select Client Start Sequence',
+      selectClientStartSequencePlaceholder: 'Please select client start sequence',
       rttComparisonData: 'RTT Comparison Data',
       clientRtt: 'Client RTT',
       networkServiceDelay: 'Network Service Delay',
