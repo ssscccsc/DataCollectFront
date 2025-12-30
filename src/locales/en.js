@@ -1123,6 +1123,7 @@ export default {
       detailList: 'Detail List',
       date: 'Date',
       dataCount: 'Data Count',
+      searchDate: 'Search Date',
       taskId: 'Task ID',
       service: 'Service',
       app: 'App',

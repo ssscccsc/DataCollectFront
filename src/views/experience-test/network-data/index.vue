@@ -20,6 +20,39 @@
             </el-button>
           </div>
 
+          <!-- 搜索栏 -->
+          <div class="search-bar">
+            <el-input
+              v-model="groupSearchForm.gpsi"
+              :placeholder="$t('experienceTest.networkData.searchGpsi')"
+              style="width: 200px; margin-right: 10px;"
+              clearable
+            />
+            <el-date-picker
+              v-model="groupSearchForm.date"
+              type="date"
+              :placeholder="$t('experienceTest.networkData.searchDate')"
+              format="YYYY-MM-DD"
+              value-format="YYYY-MM-DD"
+              style="width: 200px; margin-right: 10px;"
+              clearable
+            />
+            <el-input
+              v-model="groupSearchForm.subAppId"
+              :placeholder="$t('experienceTest.networkData.searchSubAppId')"
+              style="width: 200px; margin-right: 10px;"
+              clearable
+            />
+            <el-button type="primary" @click="handleGroupSearch">
+              <el-icon><Search /></el-icon>
+              {{ $t('common.search') }}
+            </el-button>
+            <el-button @click="handleGroupReset">
+              <el-icon><RefreshLeft /></el-icon>
+              {{ $t('common.reset') }}
+            </el-button>
+          </div>
+
           <el-table :data="groupTableData" v-loading="groupLoading" style="width: 100%" stripe border>
             <el-table-column type="index" label="#" width="60" />
             <el-table-column prop="gpsi" :label="$t('experienceTest.networkData.gpsi')" min-width="150" show-overflow-tooltip />
@@ -233,6 +266,13 @@ export default {
       subAppId: '',
     })
 
+    // 聚合列表搜索表单
+    const groupSearchForm = reactive({
+      gpsi: '',
+      date: '',
+      subAppId: '',
+    })
+
     // 从第一个tab传递过来的筛选条件
     const filterFromGroup = reactive({
       gpsi: '',
@@ -248,6 +288,17 @@ export default {
           size: groupPagination.size,
         }
 
+        // 添加筛选条件
+        if (groupSearchForm.gpsi) {
+          params.gpsi = groupSearchForm.gpsi
+        }
+        if (groupSearchForm.date) {
+          params.date = groupSearchForm.date
+        }
+        if (groupSearchForm.subAppId) {
+          params.subAppId = groupSearchForm.subAppId
+        }
+
         const response = await getGroupedNetworkDataPage(params)
         if (response.code === 200) {
           groupTableData.value = response.data.records || []
@@ -261,6 +312,21 @@ export default {
       } finally {
         groupLoading.value = false
       }
+    }
+
+    // 聚合列表搜索
+    const handleGroupSearch = () => {
+      groupPagination.current = 1
+      loadGroupData()
+    }
+
+    // 聚合列表重置
+    const handleGroupReset = () => {
+      groupSearchForm.gpsi = ''
+      groupSearchForm.date = ''
+      groupSearchForm.subAppId = ''
+      groupPagination.current = 1
+      loadGroupData()
     }
 
     // 加载详细数据
@@ -468,6 +534,7 @@ export default {
       pagination,
       groupPagination,
       searchForm,
+      groupSearchForm,
       uploadDialogVisible,
       uploading,
       selectedFile,
@@ -477,6 +544,8 @@ export default {
       handleAdd,
       handleSearch,
       handleReset,
+      handleGroupSearch,
+      handleGroupReset,
       handleSizeChange,
       handleCurrentChange,
       handleGroupSizeChange,

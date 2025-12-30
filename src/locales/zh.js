@@ -1106,6 +1106,7 @@ export default {
       detailList: '详细列表',
       date: '日期',
       dataCount: '数据条数',
+      searchDate: '搜索日期',
     },
     dataComparison: {
       description: '端网数据对比分析，支持数据对比和查看',
