@@ -24,9 +24,6 @@ export default {
     collapse: '收起',
     expand: '展开',
     upload: '上传',
-    to: '至',
-    startTime: '开始时间',
-    endTime: '结束时间',
   },
   
   // 导航菜单
