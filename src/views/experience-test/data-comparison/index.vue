@@ -2441,16 +2441,34 @@ export default {
 .comparison-tabs-wrapper {
   margin-top: 20px;
   height: calc(100vh - 300px);
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 .comparison-tabs {
   height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.comparison-tabs :deep(.el-tabs__content) {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.comparison-tabs :deep(.el-tab-pane) {
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .comparison-content {
-  min-height: 400px;
+  flex: 1;
   padding: 20px;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .chart-container {
