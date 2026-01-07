@@ -1,29 +1,29 @@
 <template>
   <div class="network-element-page">
     <div class="page-header">
-      <h2 class="page-title">网元管理</h2>
-      <p class="page-description">管理系统网元及其属性配置</p>
+      <h2 class="page-title">{{ $t('pageTitle.networkElement') }}</h2>
+      <p class="page-description">{{ $t('networkElement.description') }}</p>
     </div>
 
     <el-card>
       <div class="table-operations">
         <el-button type="primary" @click="handleAdd">
           <el-icon><Plus /></el-icon>
-          新增网元
+          {{ $t('networkElement.addNetworkElement') }}
         </el-button>
         <el-button @click="loadData">
           <el-icon><Refresh /></el-icon>
-          刷新
+          {{ $t('networkElement.refresh') }}
         </el-button>
         <div class="search-box">
           <el-input
             v-model="searchForm.name"
-            placeholder="搜索网元名称"
+            :placeholder="$t('networkElement.networkElementNamePlaceholder')"
             style="width: 200px; margin-right: 10px;"
             clearable
             @keyup.enter="loadData"
           />
-          <el-button type="primary" @click="loadData">搜索</el-button>
+          <el-button type="primary" @click="loadData">{{ $t('common.search') }}</el-button>
         </div>
       </div>
 
@@ -46,28 +46,28 @@
                   <span>{{ attr.attributeValue || '-' }}</span>
                 </div>
               </div>
-              <el-empty v-else description="暂无属性" :image-size="50" />
+              <el-empty v-else :description="$t('networkElement.noAttributes')" :image-size="50" />
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="networkElement.name" label="网元" />
-        <el-table-column label="属性数量">
+        <el-table-column prop="networkElement.name" :label="$t('networkElement.networkElementName')" />
+        <el-table-column :label="$t('networkElement.attributeCount')">
           <template #default="{ row }">
             <el-tag>{{ row.attributes ? row.attributes.length : 0 }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="networkElement.status" label="状态">
+        <el-table-column prop="networkElement.status" :label="$t('networkElement.status')">
           <template #default="{ row }">
             <el-tag :type="row.networkElement.status === 1 ? 'success' : 'danger'">
-              {{ row.networkElement.status === 1 ? '启用' : '禁用' }}
+              {{ row.networkElement.status === 1 ? $t('networkElement.enabled') : $t('networkElement.disabled') }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="networkElement.createTime" label="创建时间" />
-        <el-table-column label="操作" width="200">
+        <el-table-column prop="networkElement.createTime" :label="$t('networkElement.createTime')" />
+        <el-table-column :label="$t('networkElement.operations')" width="200">
           <template #default="{ row }">
-            <el-button size="small" @click="handleEdit(row)">编辑</el-button>
-            <el-button size="small" type="danger" @click="handleDelete(row)">删除</el-button>
+            <el-button size="small" @click="handleEdit(row)">{{ $t('networkElement.edit') }}</el-button>
+            <el-button size="small" type="danger" @click="handleDelete(row)">{{ $t('networkElement.delete') }}</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -98,24 +98,24 @@
         :rules="rules"
         label-width="100px"
       >
-        <el-form-item label="网元名称" prop="name">
-          <el-input v-model="form.name" placeholder="请输入网元名称" />
+        <el-form-item :label="$t('networkElement.networkElementNameLabel')" prop="name">
+          <el-input v-model="form.name" :placeholder="$t('networkElement.networkElementNamePlaceholder')" />
         </el-form-item>
-        <el-form-item label="描述" prop="description">
+        <el-form-item :label="$t('networkElement.descriptionLabel')" prop="description">
           <el-input
             v-model="form.description"
             type="textarea"
             :rows="3"
-            placeholder="请输入描述"
+            :placeholder="$t('networkElement.descriptionPlaceholder')"
           />
         </el-form-item>
-        <el-form-item label="状态" prop="status">
+        <el-form-item :label="$t('networkElement.statusLabel')" prop="status">
           <el-radio-group v-model="form.status">
-            <el-radio :label="1">启用</el-radio>
-            <el-radio :label="0">禁用</el-radio>
+            <el-radio :label="1">{{ $t('networkElement.enabled') }}</el-radio>
+            <el-radio :label="0">{{ $t('networkElement.disabled') }}</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="属性配置">
+        <el-form-item :label="$t('networkElement.attributeConfig')">
           <div class="attribute-form-list">
             <div 
               v-for="(attr, index) in form.attributes" 
@@ -124,12 +124,12 @@
             >
               <el-input
                 v-model="attr.attributeName"
-                placeholder="属性名称"
+                :placeholder="$t('networkElement.attributeNamePlaceholder')"
                 style="width: 150px; margin-right: 10px;"
               />
               <el-input
                 v-model="attr.attributeValue"
-                placeholder="属性取值"
+                :placeholder="$t('networkElement.attributeValuePlaceholder')"
                 style="flex: 1; margin-right: 10px;"
               />
               <el-button 
@@ -137,7 +137,7 @@
                 size="small"
                 @click="removeAttribute(index)"
               >
-                删除
+                {{ $t('networkElement.removeAttribute') }}
               </el-button>
             </div>
             <el-button 
@@ -146,15 +146,15 @@
               @click="addAttribute"
               style="margin-top: 10px;"
             >
-              添加属性
+              {{ $t('networkElement.addAttribute') }}
             </el-button>
           </div>
         </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="handleSubmit">确定</el-button>
+          <el-button @click="dialogVisible = false">{{ $t('common.cancel') }}</el-button>
+          <el-button type="primary" @click="handleSubmit">{{ $t('common.confirm') }}</el-button>
         </span>
       </template>
     </el-dialog>
@@ -165,6 +165,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Refresh } from '@element-plus/icons-vue'
+import { useI18n } from 'vue-i18n'
 import request from '@/utils/request'
 
 export default {
@@ -174,6 +175,7 @@ export default {
     Refresh,
   },
   setup() {
+    const { t } = useI18n()
     const loading = ref(false)
     const dialogVisible = ref(false)
     const formRef = ref(null)
@@ -181,7 +183,7 @@ export default {
     const currentId = ref(null)
     
     const dialogTitle = computed(() => {
-      return currentId.value === null ? '新增网元' : '编辑网元'
+      return currentId.value === null ? t('networkElement.addNetworkElement') : t('networkElement.editNetworkElement')
     })
     
     const pagination = reactive({
@@ -203,7 +205,7 @@ export default {
     
     const rules = {
       name: [
-        { required: true, message: '请输入网元名称', trigger: 'blur' },
+        { required: true, message: t('networkElement.networkElementNameRequired'), trigger: 'blur' },
       ],
     }
     
@@ -223,11 +225,11 @@ export default {
           tableData.value = response.data.records || []
           pagination.total = response.data.total || 0
         } else {
-          ElMessage.error(response.msg || '加载数据失败')
+          ElMessage.error(response.msg || t('networkElement.loadDataFailed'))
         }
       } catch (error) {
-        console.error('加载数据失败:', error)
-        ElMessage.error('加载数据失败')
+        console.error(t('networkElement.loadDataFailed'), error)
+        ElMessage.error(t('networkElement.loadDataFailed'))
       } finally {
         loading.value = false
       }
@@ -261,36 +263,36 @@ export default {
           
           dialogVisible.value = true
         } else {
-          ElMessage.error(response.msg || '加载数据失败')
+          ElMessage.error(response.msg || t('networkElement.loadDataFailed'))
         }
       } catch (error) {
-        console.error('加载数据失败:', error)
-        ElMessage.error('加载数据失败')
+        console.error(t('networkElement.loadDataFailed'), error)
+        ElMessage.error(t('networkElement.loadDataFailed'))
       }
     }
     
     // 删除
     const handleDelete = (row) => {
       ElMessageBox.confirm(
-        `确定要删除网元"${row.networkElement.name}"吗？`,
-        '提示',
+        t('networkElement.deleteConfirm', { name: row.networkElement.name }),
+        t('common.info'),
         {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
+          confirmButtonText: t('common.confirm'),
+          cancelButtonText: t('common.cancel'),
           type: 'warning',
         }
       ).then(async () => {
         try {
           const response = await request.delete(`/network-element/${row.networkElement.id}`)
           if (response.code === 200) {
-            ElMessage.success('删除成功')
+            ElMessage.success(t('networkElement.deleteSuccess'))
             loadData()
           } else {
-            ElMessage.error(response.msg || '删除失败')
+            ElMessage.error(response.msg || t('networkElement.deleteFailed'))
           }
         } catch (error) {
-          console.error('删除失败:', error)
-          ElMessage.error('删除失败')
+          console.error(t('networkElement.deleteFailed'), error)
+          ElMessage.error(t('networkElement.deleteFailed'))
         }
       }).catch(() => {})
     }
@@ -330,15 +332,15 @@ export default {
             }
             
             if (response.code === 200) {
-              ElMessage.success(currentId.value === null ? '新增成功' : '更新成功')
+              ElMessage.success(currentId.value === null ? t('networkElement.createSuccess') : t('networkElement.updateSuccess'))
               dialogVisible.value = false
               loadData()
             } else {
-              ElMessage.error(response.msg || '操作失败')
+              ElMessage.error(response.msg || t('networkElement.submitFailed'))
             }
           } catch (error) {
-            console.error('操作失败:', error)
-            ElMessage.error('操作失败')
+            console.error(t('networkElement.submitFailed'), error)
+            ElMessage.error(t('networkElement.submitFailed'))
           }
         }
       })
@@ -366,7 +368,7 @@ export default {
       if (form.attributes.length > 1) {
         form.attributes.splice(index, 1)
       } else {
-        ElMessage.warning('至少保留一个属性')
+        ElMessage.warning(t('networkElement.atLeastOneAttribute'))
       }
     }
     

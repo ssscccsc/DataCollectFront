@@ -82,7 +82,7 @@
           </el-menu-item>
           <el-menu-item index="/network-element/index">
             <el-icon><Connection /></el-icon>
-            <span>网元管理</span>
+            <span>{{ $t('menu.networkElement') }}</span>
           </el-menu-item>
           <el-menu-item index="/user/index">
             <el-icon><User /></el-icon>
@@ -207,6 +207,7 @@ export default {
         '/ue/index': t('pageTitle.ue'),
         '/region/index': t('pageTitle.region'),
         '/network-type/index': t('pageTitle.networkType'),
+        '/network-element/index': t('pageTitle.networkElement'),
         '/user/index': '用户管理',
         '/experience-test/client-data/index': t('pageTitle.clientData'),
         '/experience-test/network-data/index': t('pageTitle.networkData'),

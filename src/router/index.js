@@ -170,7 +170,7 @@ const routes = [
         path: 'index',
         name: 'NetworkElement',
         component: () => import('@/views/network-element/index.vue'),
-        meta: { title: '网元管理', icon: 'Connection', requiresAuth: true },
+        meta: { title: 'pageTitle.networkElement', icon: 'Connection', requiresAuth: true },
       },
     ],
   },
