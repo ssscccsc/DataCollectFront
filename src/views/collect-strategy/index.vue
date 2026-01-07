@@ -2228,6 +2228,11 @@ export default {
       }
     }
 
+    // 获取替换后的URL（根据当前页面IP替换）
+    const getReplacedUrl = (url) => {
+      return replaceUrlHost(url)
+    }
+
     onMounted(() => {
       loadData()
       loadTestCaseSetOptions()
