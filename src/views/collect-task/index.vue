@@ -281,7 +281,7 @@
                             <el-link 
                               v-if="scope.row.logFilePath.startsWith('http')" 
                               type="primary" 
-                              :href="scope.row.logFilePath" 
+                              :href="getReplacedUrl(scope.row.logFilePath)" 
                               target="_blank"
                               :underline="false"
                             >
@@ -1335,6 +1335,7 @@ import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import request from '@/utils/request'
 import * as echarts from 'echarts'
+import { replaceUrlHost } from '@/utils/urlHelper'
 
 export default {
   name: 'CollectTask',
@@ -3938,6 +3939,11 @@ export default {
       }
     })
 
+    // 获取替换后的URL（根据当前页面IP替换）
+    const getReplacedUrl = (url) => {
+      return replaceUrlHost(url)
+    }
+
     return {
       loading,
       tableData,
@@ -4067,6 +4073,7 @@ export default {
       viewInstanceResult,
       openRemoteDesktop,
       openCollectPath,
+      getReplacedUrl,
       
       // 远程登录相关
       remoteLoginDialogVisible,
