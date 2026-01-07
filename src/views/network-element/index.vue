@@ -28,10 +28,12 @@
       </div>
 
       <el-table 
+        ref="tableRef"
         :data="tableData" 
         v-loading="loading" 
         style="width: 100%"
-        row-key="id"
+        :row-key="(row) => row.networkElement ? row.networkElement.id : row.id"
+        @expand-change="handleExpandChange"
       >
         <el-table-column type="expand">
           <template #default="{ row }">
@@ -179,8 +181,10 @@ export default {
     const loading = ref(false)
     const dialogVisible = ref(false)
     const formRef = ref(null)
+    const tableRef = ref(null)
     const tableData = ref([])
     const currentId = ref(null)
+    const expandedRow = ref(null)
     
     const dialogTitle = computed(() => {
       return currentId.value === null ? t('networkElement.addNetworkElement') : t('networkElement.editNetworkElement')
@@ -385,6 +389,30 @@ export default {
       loadData()
     }
     
+    // 处理展开行变化
+    const handleExpandChange = (row, expandedRows) => {
+      if (expandedRows.length > 1) {
+        // 如果展开的行超过1个，收起其他行，只保留当前行
+        const currentRowId = row.networkElement ? row.networkElement.id : row.id
+        expandedRow.value = currentRowId
+        
+        // 收起其他已展开的行
+        tableData.value.forEach((item) => {
+          const itemId = item.networkElement ? item.networkElement.id : item.id
+          if (itemId !== currentRowId && tableRef.value) {
+            tableRef.value.toggleRowExpansion(item, false)
+          }
+        })
+      } else if (expandedRows.length === 1) {
+        // 如果只展开了一行，记录当前展开的行
+        const currentRowId = row.networkElement ? row.networkElement.id : row.id
+        expandedRow.value = currentRowId
+      } else {
+        // 如果全部收起了，清空记录
+        expandedRow.value = null
+      }
+    }
+    
     onMounted(() => {
       loadData()
     })
@@ -409,6 +437,8 @@ export default {
       removeAttribute,
       handleSizeChange,
       handleCurrentChange,
+      handleExpandChange,
+      tableRef,
     }
   },
 }

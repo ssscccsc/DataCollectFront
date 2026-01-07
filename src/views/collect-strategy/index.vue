@@ -51,7 +51,7 @@
                 <el-link 
                   v-if="scope.row.testCaseSetGohttpserverUrl"
                   type="primary" 
-                  :href="scope.row.testCaseSetGohttpserverUrl" 
+                  :href="getReplacedUrl(scope.row.testCaseSetGohttpserverUrl)" 
                   target="_blank"
                   :underline="false"
                   style="margin-left: 8px;"
@@ -925,6 +925,7 @@ import { Link, Plus, Delete, Setting, ArrowRight, Clock, View, InfoFilled } from
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import request from '@/utils/request'
+import { replaceUrlHost } from '@/utils/urlHelper'
 
 export default {
   name: 'CollectStrategy',
@@ -2308,6 +2309,7 @@ export default {
       selectedTestCases,
       testCaseTableRef,
       testCaseInfoCollapse,
+      getReplacedUrl,
     }
   },
 }

@@ -45,7 +45,7 @@
             <div v-if="scope.row.gohttpserverUrl">
               <el-link 
                 type="primary" 
-                :href="scope.row.gohttpserverUrl" 
+                :href="getReplacedUrl(scope.row.gohttpserverUrl)" 
                 target="_blank"
                 :underline="false"
               >
@@ -55,7 +55,7 @@
               <el-button 
                 size="small" 
                 type="text" 
-                @click="copyUrl(scope.row.gohttpserverUrl)"
+                @click="copyUrl(getReplacedUrl(scope.row.gohttpserverUrl))"
                 style="margin-left: 8px;"
               >
                 <el-icon><CopyDocument /></el-icon>
@@ -323,6 +323,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Link, CopyDocument, Setting, Plus, Edit, Delete } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import request from '@/utils/request'
+import { replaceUrlHost, getShortUrl as getShortUrlUtil } from '@/utils/urlHelper'
 
 export default {
   name: 'TestCaseSet',
@@ -408,14 +409,13 @@ export default {
       return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
     }
 
+    // 获取替换后的URL（根据当前页面IP替换）
+    const getReplacedUrl = (url) => {
+      return replaceUrlHost(url)
+    }
+
     const getShortUrl = (url) => {
-      if (!url) return ''
-      try {
-        const urlObj = new URL(url)
-        return `${urlObj.hostname}:${urlObj.port}${urlObj.pathname}`
-      } catch (e) {
-        return url
-      }
+      return getShortUrlUtil(url)
     }
 
     const copyUrl = async (url) => {
@@ -757,6 +757,7 @@ export default {
       uploadForm,
       uploadRules,
       formatFileSize,
+      getReplacedUrl,
       getShortUrl,
       copyUrl,
       loadData,

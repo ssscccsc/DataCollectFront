@@ -39,7 +39,7 @@
         <el-descriptions-item :label="$t('testCaseSet.fileAccess')" :span="2" v-if="testCaseSet.gohttpserverUrl">
           <el-link 
             type="primary" 
-            :href="testCaseSet.gohttpserverUrl" 
+            :href="getReplacedUrl(testCaseSet.gohttpserverUrl)" 
             target="_blank"
             :underline="false"
           >
@@ -49,7 +49,7 @@
           <el-button 
             size="small" 
             type="text" 
-            @click="copyUrl(testCaseSet.gohttpserverUrl)"
+            @click="copyUrl(getReplacedUrl(testCaseSet.gohttpserverUrl))"
             style="margin-left: 8px;"
           >
             <el-icon><CopyDocument /></el-icon>
@@ -255,6 +255,7 @@ import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { ArrowLeft, Link, CopyDocument, Folder, FolderOpened, Document } from '@element-plus/icons-vue'
 import request from '@/utils/request'
+import { replaceUrlHost, getShortUrl as getShortUrlUtil } from '@/utils/urlHelper'
 
 export default {
   name: 'TestCaseSetDetail',
@@ -333,14 +334,13 @@ export default {
       return count
     }
 
+    // 获取替换后的URL（根据当前页面IP替换）
+    const getReplacedUrl = (url) => {
+      return replaceUrlHost(url)
+    }
+
     const getShortUrl = (url) => {
-      if (!url) return ''
-      try {
-        const urlObj = new URL(url)
-        return `${urlObj.hostname}:${urlObj.port}${urlObj.pathname}`
-      } catch (e) {
-        return url
-      }
+      return getShortUrlUtil(url)
     }
 
     const copyUrl = async (url) => {
@@ -419,6 +419,7 @@ export default {
       getCategoryCount,
       formatFileSize,
       formatDateTime,
+      getReplacedUrl,
       getShortUrl,
       copyUrl,
       goBack,
