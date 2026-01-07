@@ -7,19 +7,19 @@
 
     <el-card>
       <div class="table-operations">
-        <el-button type="primary" @click="handleAdd">
-          <el-icon><Plus /></el-icon>
-          {{ $t('networkElement.addNetworkElement') }}
-        </el-button>
-        <el-button @click="loadData">
-          <el-icon><Refresh /></el-icon>
-          {{ $t('networkElement.refresh') }}
-        </el-button>
-        <div class="search-box">
+        <div class="button-group">
+          <el-button type="primary" @click="handleAdd">
+            <el-icon><Plus /></el-icon>
+            {{ $t('networkElement.addNetworkElement') }}
+          </el-button>
+          <el-button @click="loadData">
+            <el-icon><Refresh /></el-icon>
+            {{ $t('networkElement.refresh') }}
+          </el-button>
           <el-input
             v-model="searchForm.name"
             :placeholder="$t('networkElement.networkElementNamePlaceholder')"
-            style="width: 200px; margin-right: 10px;"
+            class="search-input"
             clearable
             @keyup.enter="loadData"
           />
@@ -436,14 +436,18 @@ export default {
 
 .table-operations {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
 }
 
-.search-box {
+.button-group {
   display: flex;
   align-items: center;
+  gap: 10px;
+}
+
+.search-input {
+  width: 200px;
 }
 
 .pagination {
