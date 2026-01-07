@@ -162,6 +162,19 @@ const routes = [
     ],
   },
   {
+    path: '/network-element',
+    component: Layout,
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: 'index',
+        name: 'NetworkElement',
+        component: () => import('@/views/network-element/index.vue'),
+        meta: { title: '网元管理', icon: 'Connection', requiresAuth: true },
+      },
+    ],
+  },
+  {
     path: '/user',
     component: Layout,
     meta: { requiresAuth: true },

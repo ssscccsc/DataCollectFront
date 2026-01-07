@@ -80,6 +80,10 @@
             <el-icon><Connection /></el-icon>
             <span>{{ $t('menu.networkType') }}</span>
           </el-menu-item>
+          <el-menu-item index="/network-element/index">
+            <el-icon><Connection /></el-icon>
+            <span>网元管理</span>
+          </el-menu-item>
           <el-menu-item index="/user/index">
             <el-icon><User /></el-icon>
             <span>用户管理</span>
