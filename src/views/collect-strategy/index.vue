@@ -941,6 +941,7 @@ export default {
     const testCaseTableRef = ref()
     const testCaseSetOptions = ref([])
     const selectedTestCaseSet = ref(null)
+    const previousTestCaseSetId = ref(null) // 保存上一次的用例集ID，用于判断是否更换
     const testCaseList = ref([])
     const showTestCaseList = ref(false)
     const selectedTestCaseIds = ref([]) // 选中的用例ID列表
@@ -1063,13 +1064,9 @@ export default {
         const testCaseSet = testCaseSetOptions.value.find(item => item.id === testCaseSetId)
         
         // 如果更换了用例集，清空已选择的用例
-        // 在 @change 事件触发时，v-model 的值已经更新为新值
-        // 所以我们需要在函数开始时保存 form.testCaseSetId 的旧值
-        // 但由于 @change 事件触发时 v-model 已经更新，我们需要使用 selectedTestCaseSet.value?.id
-        // 或者，我们可以直接比较：如果 selectedTestCaseSet.value 存在且ID不同，说明更换了用例集
-        const previousTestCaseSetId = selectedTestCaseSet.value?.id
+        // 使用 previousTestCaseSetId ref 来保存上一次的用例集ID
         // 如果之前有用例集（不是首次选择），且新选择的用例集ID与之前不同，说明更换了用例集
-        if (previousTestCaseSetId && previousTestCaseSetId !== testCaseSetId) {
+        if (previousTestCaseSetId.value !== null && previousTestCaseSetId.value !== undefined && previousTestCaseSetId.value !== testCaseSetId) {
           selectedTestCaseIds.value = []
           // 清除表格选中状态
           if (testCaseTableRef.value) {
@@ -1077,7 +1074,9 @@ export default {
           }
         }
         
+        // 更新用例集信息和上一次的用例集ID
         selectedTestCaseSet.value = testCaseSet
+        previousTestCaseSetId.value = testCaseSetId
         
         // 加载用例列表
         try {
@@ -1107,6 +1106,7 @@ export default {
         }
         
         selectedTestCaseSet.value = null
+        previousTestCaseSetId.value = null // 清空上一次的用例集ID
         testCaseList.value = []
         showTestCaseList.value = false
         clearFilterOptions()
@@ -1885,10 +1885,13 @@ export default {
       // 编辑策略时从第一步开始
       currentStep.value = 0
       
-      // 如果选择了用例集，先设置 selectedTestCaseSet，避免在 handleTestCaseSetChange 中误判为更换用例集
+      // 如果选择了用例集，先设置 selectedTestCaseSet 和 previousTestCaseSetId，避免在 handleTestCaseSetChange 中误判为更换用例集
       if (row.testCaseSetId) {
         const testCaseSet = testCaseSetOptions.value.find(item => item.id === row.testCaseSetId)
         selectedTestCaseSet.value = testCaseSet
+        previousTestCaseSetId.value = row.testCaseSetId // 设置上一次的用例集ID，这样在用户更换用例集时能正确比较
+      } else {
+        previousTestCaseSetId.value = null
       }
       
       // 如果选择了用例集，加载用例列表
@@ -2166,6 +2169,7 @@ export default {
         status: 1,
       })
       selectedTestCaseSet.value = null
+      previousTestCaseSetId.value = null // 重置上一次的用例集ID
       testCaseList.value = []
       showTestCaseList.value = false
       selectedTestCaseIds.value = []
