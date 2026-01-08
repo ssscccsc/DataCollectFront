@@ -1063,7 +1063,12 @@ export default {
         const testCaseSet = testCaseSetOptions.value.find(item => item.id === testCaseSetId)
         
         // 如果更换了用例集，清空已选择的用例
+        // 在 @change 事件触发时，v-model 的值已经更新为新值
+        // 所以我们需要在函数开始时保存 form.testCaseSetId 的旧值
+        // 但由于 @change 事件触发时 v-model 已经更新，我们需要使用 selectedTestCaseSet.value?.id
+        // 或者，我们可以直接比较：如果 selectedTestCaseSet.value 存在且ID不同，说明更换了用例集
         const previousTestCaseSetId = selectedTestCaseSet.value?.id
+        // 如果之前有用例集（不是首次选择），且新选择的用例集ID与之前不同，说明更换了用例集
         if (previousTestCaseSetId && previousTestCaseSetId !== testCaseSetId) {
           selectedTestCaseIds.value = []
           // 清除表格选中状态
@@ -1879,6 +1884,12 @@ export default {
       
       // 编辑策略时从第一步开始
       currentStep.value = 0
+      
+      // 如果选择了用例集，先设置 selectedTestCaseSet，避免在 handleTestCaseSetChange 中误判为更换用例集
+      if (row.testCaseSetId) {
+        const testCaseSet = testCaseSetOptions.value.find(item => item.id === row.testCaseSetId)
+        selectedTestCaseSet.value = testCaseSet
+      }
       
       // 如果选择了用例集，加载用例列表
       if (row.testCaseSetId) {
