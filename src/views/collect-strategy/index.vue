@@ -1061,6 +1061,17 @@ export default {
       if (testCaseSetId) {
         // 获取选中的用例集信息
         const testCaseSet = testCaseSetOptions.value.find(item => item.id === testCaseSetId)
+        
+        // 如果更换了用例集，清空已选择的用例
+        const previousTestCaseSetId = selectedTestCaseSet.value?.id
+        if (previousTestCaseSetId && previousTestCaseSetId !== testCaseSetId) {
+          selectedTestCaseIds.value = []
+          // 清除表格选中状态
+          if (testCaseTableRef.value) {
+            testCaseTableRef.value.clearSelection()
+          }
+        }
+        
         selectedTestCaseSet.value = testCaseSet
         
         // 加载用例列表
@@ -1083,6 +1094,13 @@ export default {
           return Promise.reject(error)
         }
       } else {
+        // 清空用例集时，也清空已选择的用例
+        selectedTestCaseIds.value = []
+        // 清除表格选中状态
+        if (testCaseTableRef.value) {
+          testCaseTableRef.value.clearSelection()
+        }
+        
         selectedTestCaseSet.value = null
         testCaseList.value = []
         showTestCaseList.value = false
