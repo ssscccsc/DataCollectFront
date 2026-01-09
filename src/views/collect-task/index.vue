@@ -379,6 +379,73 @@
           </el-form>
           </div>
 
+          <!-- 网元选择 -->
+          <div class="sub-step-section">
+            <h3 class="step-title">{{ $t('collectTask.networkElementTitle') }}</h3>
+            <el-form
+              ref="networkElementFormRef"
+              :model="networkElementForm"
+              :rules="networkElementRules"
+              label-width="120px"
+            >
+              <el-form-item :label="$t('collectTask.networkElementLabel')" prop="networkElementId">
+                <el-select 
+                  v-model="networkElementForm.networkElementId" 
+                  :placeholder="$t('collectTask.networkElementPlaceholder')" 
+                  style="width: 100%;" 
+                  filterable
+                  clearable
+                  :loading="networkElementLoading"
+                  @visible-change="handleNetworkElementVisibleChange"
+                >
+                  <el-option
+                    v-for="item in networkElementOptions"
+                    :key="item.networkElement.id"
+                    :label="item.networkElement.name"
+                    :value="item.networkElement.id"
+                  >
+                    <span>{{ item.networkElement.name }}</span>
+                    <span v-if="item.networkElement.description" style="color: #8492a6; font-size: 12px; margin-left: 10px;">
+                      ({{ item.networkElement.description }})
+                    </span>
+                  </el-option>
+                </el-select>
+              </el-form-item>
+              <div v-if="selectedNetworkElement" class="network-element-info">
+                <h4>{{ $t('collectTask.networkElementDetails') }}</h4>
+                <el-descriptions :column="2" border size="small">
+                  <el-descriptions-item :label="$t('collectTask.networkElementName')">
+                    {{ selectedNetworkElement.networkElement.name }}
+                  </el-descriptions-item>
+                  <el-descriptions-item :label="$t('collectTask.networkElementStatus')">
+                    <el-tag v-if="selectedNetworkElement.networkElement.status === 1" size="small" type="success">
+                      {{ $t('networkElement.enabled') }}
+                    </el-tag>
+                    <el-tag v-else size="small" type="danger">
+                      {{ $t('networkElement.disabled') }}
+                    </el-tag>
+                  </el-descriptions-item>
+                  <el-descriptions-item :label="$t('collectTask.networkElementDescription')" :span="2">
+                    {{ selectedNetworkElement.networkElement.description || $t('collectTask.notConfigured') }}
+                  </el-descriptions-item>
+                  <el-descriptions-item :label="$t('networkElement.attributeCount')" :span="2">
+                    {{ selectedNetworkElement.attributes ? selectedNetworkElement.attributes.length : 0 }}
+                    <span v-if="selectedNetworkElement.attributes && selectedNetworkElement.attributes.length > 0" style="margin-left: 10px;">
+                      <el-tag
+                        v-for="attr in selectedNetworkElement.attributes"
+                        :key="attr.id"
+                        size="small"
+                        style="margin-right: 5px;"
+                      >
+                        {{ attr.name }}: {{ attr.value }}
+                      </el-tag>
+                    </span>
+                  </el-descriptions-item>
+                </el-descriptions>
+              </div>
+            </el-form>
+          </div>
+
           <!-- 采集策略 -->
           <div class="sub-step-section">
             <h3 class="step-title">{{ $t('collectTask.collectStrategyTitle') }}</h3>
@@ -2523,6 +2590,7 @@ export default {
         const submitData = {
           name: basicForm.name,
           description: basicForm.description,
+          networkElementId: networkElementForm.networkElementId,
           collectStrategyId: strategyForm.strategyId,
           collectCount: selectedStrategy.value ? selectedStrategy.value.collectCount : 1,
           manufacturer: manufacturerValues,
@@ -2570,6 +2638,10 @@ export default {
         description: '',
       })
       
+      Object.assign(networkElementForm, {
+        networkElementId: null,
+      })
+      
       Object.assign(strategyForm, {
         strategyId: null,
       })
@@ -2584,6 +2656,7 @@ export default {
       })
       
       // 重置选项数据
+      networkElementOptions.value = []
       selectedStrategy.value = null
       countryOptions.value = []
       provinceOptions.value = []
