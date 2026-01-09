@@ -388,13 +388,17 @@
               :rules="networkElementRules"
               label-width="120px"
             >
-              <el-form-item :label="$t('collectTask.networkElementLabel')" prop="networkElementId">
+              <el-form-item :label="$t('collectTask.networkElementLabel')" prop="networkElementIds">
                 <el-select 
-                  v-model="networkElementForm.networkElementId" 
+                  v-model="networkElementForm.networkElementIds" 
                   :placeholder="$t('collectTask.networkElementPlaceholder')" 
                   style="width: 100%;" 
+                  multiple
                   filterable
                   clearable
+                  collapse-tags
+                  collapse-tags-tooltip
+                  :max-collapse-tags="3"
                   :loading="networkElementLoading"
                   @visible-change="handleNetworkElementVisibleChange"
                 >
@@ -411,37 +415,39 @@
                   </el-option>
                 </el-select>
               </el-form-item>
-              <div v-if="selectedNetworkElement" class="network-element-info">
-                <h4>{{ $t('collectTask.networkElementDetails') }}</h4>
-                <el-descriptions :column="2" border size="small">
-                  <el-descriptions-item :label="$t('collectTask.networkElementName')">
-                    {{ selectedNetworkElement.networkElement.name }}
-                  </el-descriptions-item>
-                  <el-descriptions-item :label="$t('collectTask.networkElementStatus')">
-                    <el-tag v-if="selectedNetworkElement.networkElement.status === 1" size="small" type="success">
-                      {{ $t('networkElement.enabled') }}
-                    </el-tag>
-                    <el-tag v-else size="small" type="danger">
-                      {{ $t('networkElement.disabled') }}
-                    </el-tag>
-                  </el-descriptions-item>
-                  <el-descriptions-item :label="$t('collectTask.networkElementDescription')" :span="2">
-                    {{ selectedNetworkElement.networkElement.description || $t('collectTask.notConfigured') }}
-                  </el-descriptions-item>
-                  <el-descriptions-item :label="$t('networkElement.attributeCount')" :span="2">
-                    {{ selectedNetworkElement.attributes ? selectedNetworkElement.attributes.length : 0 }}
-                    <span v-if="selectedNetworkElement.attributes && selectedNetworkElement.attributes.length > 0" style="margin-left: 10px;">
-                      <el-tag
-                        v-for="attr in selectedNetworkElement.attributes"
-                        :key="attr.id"
-                        size="small"
-                        style="margin-right: 5px;"
-                      >
-                        {{ attr.name }}: {{ attr.value }}
+              <div v-if="selectedNetworkElements && selectedNetworkElements.length > 0" class="network-element-info">
+                <h4>{{ $t('collectTask.networkElementDetails') }} ({{ selectedNetworkElements.length }})</h4>
+                <div v-for="(selectedElement, index) in selectedNetworkElements" :key="selectedElement.networkElement.id" style="margin-bottom: 15px;">
+                  <el-descriptions :column="2" border size="small">
+                    <el-descriptions-item :label="$t('collectTask.networkElementName')">
+                      {{ selectedElement.networkElement.name }}
+                    </el-descriptions-item>
+                    <el-descriptions-item :label="$t('collectTask.networkElementStatus')">
+                      <el-tag v-if="selectedElement.networkElement.status === 1" size="small" type="success">
+                        {{ $t('networkElement.enabled') }}
                       </el-tag>
-                    </span>
-                  </el-descriptions-item>
-                </el-descriptions>
+                      <el-tag v-else size="small" type="danger">
+                        {{ $t('networkElement.disabled') }}
+                      </el-tag>
+                    </el-descriptions-item>
+                    <el-descriptions-item :label="$t('collectTask.networkElementDescription')" :span="2">
+                      {{ selectedElement.networkElement.description || $t('collectTask.notConfigured') }}
+                    </el-descriptions-item>
+                    <el-descriptions-item :label="$t('networkElement.attributeCount')" :span="2">
+                      {{ selectedElement.attributes ? selectedElement.attributes.length : 0 }}
+                      <span v-if="selectedElement.attributes && selectedElement.attributes.length > 0" style="margin-left: 10px;">
+                        <el-tag
+                          v-for="attr in selectedElement.attributes"
+                          :key="attr.id"
+                          size="small"
+                          style="margin-right: 5px;"
+                        >
+                          {{ attr.name }}: {{ attr.value }}
+                        </el-tag>
+                      </span>
+                    </el-descriptions-item>
+                  </el-descriptions>
+                </div>
               </div>
             </el-form>
           </div>
@@ -2590,7 +2596,7 @@ export default {
         const submitData = {
           name: basicForm.name,
           description: basicForm.description,
-          networkElementId: networkElementForm.networkElementId,
+          networkElementIds: networkElementForm.networkElementIds,
           collectStrategyId: strategyForm.strategyId,
           collectCount: selectedStrategy.value ? selectedStrategy.value.collectCount : 1,
           manufacturer: manufacturerValues,
@@ -2639,7 +2645,7 @@ export default {
       })
       
       Object.assign(networkElementForm, {
-        networkElementId: null,
+        networkElementIds: [],
       })
       
       Object.assign(strategyForm, {
