@@ -231,6 +231,7 @@ export default {
     networkElementPlaceholder: '请选择网元（可选）',
     networkElementDetails: '网元详情',
     networkElementName: '网元名称',
+    networkElementStatus: '状态',
     networkElementDescription: '网元描述',
     loadNetworkElementListFailed: '加载网元列表失败',
     collectStrategyTitle: '采集策略',

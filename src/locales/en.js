@@ -230,6 +230,7 @@ export default {
     networkElementPlaceholder: 'Please select network element (optional)',
     networkElementDetails: 'Network Element Details',
     networkElementName: 'Network Element Name',
+    networkElementStatus: 'Status',
     networkElementDescription: 'Network Element Description',
     loadNetworkElementListFailed: 'Failed to load network element list',
     collectStrategyTitle: 'Collection Strategy',

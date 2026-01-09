@@ -442,7 +442,7 @@
                           size="small"
                           style="margin-right: 5px;"
                         >
-                          {{ attr.name }}: {{ attr.value }}
+                          {{ attr.attributeName }}: {{ attr.attributeValue || '-' }}
                         </el-tag>
                       </span>
                     </el-descriptions-item>
