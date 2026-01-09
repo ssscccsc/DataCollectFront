@@ -1454,6 +1454,7 @@ export default {
     
     // 表单引用
     const basicFormRef = ref()
+    const networkElementFormRef = ref()
     const strategyFormRef = ref()
     const environmentFormRef = ref()
     
@@ -1640,6 +1641,62 @@ export default {
       name: [
         { required: true, message: t('collectTask.taskNameRequired'), trigger: 'blur' },
       ],
+    }
+
+    // 网元选择表单
+    const networkElementForm = reactive({
+      networkElementIds: [],
+    })
+
+    const networkElementRules = {
+      networkElementIds: [
+        // 网元选择为可选，不设置必填验证
+      ],
+    }
+
+    // 网元选项列表
+    const networkElementOptions = ref([])
+    const networkElementLoading = ref(false)
+    const selectedNetworkElements = computed(() => {
+      if (!networkElementForm.networkElementIds || networkElementForm.networkElementIds.length === 0) {
+        return []
+      }
+      return networkElementOptions.value.filter(item => 
+        networkElementForm.networkElementIds.includes(item.networkElement.id)
+      )
+    })
+
+    // 加载网元列表
+    const loadNetworkElementList = async () => {
+      if (networkElementLoading.value) {
+        return
+      }
+      try {
+        networkElementLoading.value = true
+        const response = await request({
+          url: '/network-element/page',
+          method: 'get',
+          params: {
+            current: 1,
+            size: 1000, // 加载所有网元
+          },
+        })
+        if (response && response.data && response.data.records) {
+          networkElementOptions.value = response.data.records
+        }
+      } catch (error) {
+        console.error('加载网元列表失败:', error)
+        ElMessage.error(t('collectTask.loadNetworkElementListFailed'))
+      } finally {
+        networkElementLoading.value = false
+      }
+    }
+
+    // 网元选择器打开时加载数据
+    const handleNetworkElementVisibleChange = (visible) => {
+      if (visible && networkElementOptions.value.length === 0) {
+        loadNetworkElementList()
+      }
     }
 
     // 步骤2：采集策略表单
@@ -2686,6 +2743,9 @@ export default {
       // 重置表单验证
       if (basicFormRef.value) {
         basicFormRef.value.resetFields()
+      }
+      if (networkElementFormRef.value) {
+        networkElementFormRef.value.resetFields()
       }
       if (strategyFormRef.value) {
         strategyFormRef.value.resetFields()
