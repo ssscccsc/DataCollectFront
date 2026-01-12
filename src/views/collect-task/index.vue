@@ -88,6 +88,55 @@
             </div>
           </el-tab-pane>
 
+          <!-- 采集任务模版Tab -->
+          <el-tab-pane :label="$t('collectTask.templateList')" name="template">
+            <div class="table-operations">
+              <el-button type="primary" @click="handleAddTemplate">
+                <el-icon><Plus /></el-icon>
+                {{ $t('collectTask.addTemplate') }}
+              </el-button>
+              <el-button @click="refreshTemplateData" :loading="templateLoading">
+                <el-icon><Refresh /></el-icon>
+                {{ $t('collectTask.refresh') }}
+              </el-button>
+            </div>
+
+            <el-table :data="templateTableData" v-loading="templateLoading" style="width: 100%">
+              <el-table-column prop="id" :label="$t('collectTask.templateId')" width="80" />
+              <el-table-column prop="name" :label="$t('collectTask.templateName')">
+                <template #default="scope">
+                  <el-button 
+                    type="text" 
+                    @click="handleEditTemplate(scope.row)"
+                    style="color: #409eff; text-decoration: none;"
+                  >
+                    {{ scope.row.name }}
+                  </el-button>
+                </template>
+              </el-table-column>
+              <el-table-column prop="description" :label="$t('collectTask.templateDescription')" />
+              <el-table-column prop="createTime" :label="$t('collectTask.createTime')" />
+              <el-table-column :label="$t('collectTask.operations')" width="150">
+                <template #default="scope">
+                  <el-button size="small" @click="handleEditTemplate(scope.row)">{{ $t('collectTask.editTemplate') }}</el-button>
+                  <el-button size="small" type="danger" @click="handleDeleteTemplate(scope.row)">{{ $t('collectTask.delete') }}</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+
+            <div class="pagination">
+              <el-pagination
+                v-model:current-page="templatePagination.current"
+                v-model:page-size="templatePagination.size"
+                :page-sizes="[10, 20, 50, 100]"
+                :total="templatePagination.total"
+                layout="total, sizes, prev, pager, next, jumper"
+                @size-change="handleTemplateSizeChange"
+                @current-change="handleTemplateCurrentChange"
+              />
+            </div>
+          </el-tab-pane>
+
           <!-- 动态任务详情Tab -->
           <el-tab-pane 
             v-for="task in openedTasks"
@@ -1437,6 +1486,17 @@ export default {
     const fromAppVersion = ref(false) // 是否从app版本变更页面跳转过来
     const appInfo = ref({}) // 保存app信息
     
+    // 模版相关
+    const templateLoading = ref(false)
+    const templateTableData = ref([])
+    const templatePagination = reactive({
+      current: 1,
+      size: 10,
+      total: 0,
+    })
+    const isTemplateMode = ref(false) // 是否为模版模式
+    const editingTemplateId = ref(null) // 正在编辑的模版ID
+    
     // Tab相关
     const activeTab = ref('list')
     const openedTasks = ref([]) // 已打开的任务列表
@@ -2150,12 +2210,211 @@ export default {
     }
 
     const handleAdd = async () => {
+      isTemplateMode.value = false
+      editingTemplateId.value = null
       dialogTitle.value = t('collectTask.createTask')
       dialogVisible.value = true
       // 等待 DOM 更新，确保表单已渲染
       await nextTick()
       resetForm()
       loadRegionOptions()
+    }
+    
+    // 新增模版
+    const handleAddTemplate = async () => {
+      isTemplateMode.value = true
+      editingTemplateId.value = null
+      dialogTitle.value = t('collectTask.createTemplate')
+      dialogVisible.value = true
+      // 等待 DOM 更新，确保表单已渲染
+      await nextTick()
+      resetForm()
+      loadRegionOptions()
+    }
+    
+    // 编辑模版
+    const handleEditTemplate = async (row) => {
+      isTemplateMode.value = true
+      editingTemplateId.value = row.id
+      dialogTitle.value = t('collectTask.editTemplate')
+      dialogVisible.value = true
+      // 等待 DOM 更新，确保表单已渲染
+      await nextTick()
+      resetForm()
+      loadRegionOptions()
+      
+      // 加载模版数据
+      try {
+        const res = await request({
+          url: `/collect-task-template/${row.id}`,
+          method: 'get',
+        })
+        const template = res.data
+        
+        // 填充表单数据
+        basicForm.name = template.name || ''
+        basicForm.description = template.description || ''
+        
+        // 解析网元ID列表
+        if (template.networkElementIds) {
+          try {
+            networkElementForm.networkElementIds = JSON.parse(template.networkElementIds)
+          } catch (e) {
+            networkElementForm.networkElementIds = []
+          }
+        } else {
+          networkElementForm.networkElementIds = []
+        }
+        
+        // 设置策略
+        strategyForm.strategyId = template.collectStrategyId
+        if (template.collectStrategyId) {
+          await handleStrategyChange(template.collectStrategyId)
+        }
+        
+        // 设置环境信息
+        environmentForm.regionId = template.regionId
+        environmentForm.countryId = template.countryId
+        environmentForm.provinceId = template.provinceId
+        environmentForm.cityId = template.cityId
+        environmentForm.network = template.network
+        
+        // 解析厂商列表
+        if (template.manufacturer) {
+          try {
+            environmentForm.manufacturer = JSON.parse(template.manufacturer)
+          } catch (e) {
+            environmentForm.manufacturer = []
+          }
+        } else {
+          environmentForm.manufacturer = []
+        }
+        
+        // 解析逻辑环境ID列表
+        if (template.logicEnvironmentIds) {
+          try {
+            selectedEnvironmentIds.value = JSON.parse(template.logicEnvironmentIds)
+          } catch (e) {
+            selectedEnvironmentIds.value = []
+          }
+        } else {
+          selectedEnvironmentIds.value = []
+        }
+        
+        // 解析任务级别自定义参数
+        if (template.taskCustomParams) {
+          try {
+            editableCustomParams.value = JSON.parse(template.taskCustomParams)
+          } catch (e) {
+            editableCustomParams.value = []
+          }
+        } else {
+          editableCustomParams.value = []
+        }
+        
+        // 解析用例配置
+        if (template.customParams) {
+          try {
+            const customParams = JSON.parse(template.customParams)
+            // 恢复用例配置
+            customParams.forEach(config => {
+              const testCaseId = config.testCaseId
+              taskTestCaseExecutionCounts.value[testCaseId] = config.executionCount || 1
+              taskTestCaseCustomParams.value[testCaseId] = config.customParams || []
+            })
+          } catch (e) {
+            console.error('解析用例配置失败:', e)
+          }
+        }
+        
+        // 加载地域选项
+        if (template.regionId) {
+          await loadCountryOptions(template.regionId)
+        }
+        if (template.countryId) {
+          await loadProvinceOptions(template.countryId)
+        }
+        if (template.provinceId) {
+          await loadCityOptions(template.provinceId)
+        }
+        
+        // 加载可用逻辑环境
+        if (strategyForm.strategyId && environmentForm.regionId) {
+          await loadAvailableEnvironments()
+        }
+        
+        // 初始化用例配置
+        if (selectedStrategy.value) {
+          await initializeTestCaseConfig()
+        }
+      } catch (error) {
+        console.error('加载模版数据失败:', error)
+        ElMessage.error('加载模版数据失败')
+      }
+    }
+    
+    // 删除模版
+    const handleDeleteTemplate = async (row) => {
+      try {
+        await ElMessageBox.confirm(t('collectTask.deleteConfirm'), t('common.warning'), {
+          confirmButtonText: t('common.confirm'),
+          cancelButtonText: t('common.cancel'),
+          type: 'warning',
+        })
+        
+        await request({
+          url: `/collect-task-template/${row.id}`,
+          method: 'delete',
+        })
+        ElMessage.success(t('collectTask.templateDeletedSuccess'))
+        loadTemplateData()
+      } catch (error) {
+        if (error !== 'cancel') {
+          ElMessage.error(t('collectTask.templateDeletedFailed'))
+        }
+      }
+    }
+    
+    // 加载模版数据
+    const loadTemplateData = async () => {
+      templateLoading.value = true
+      try {
+        const res = await request({
+          url: '/collect-task-template/page',
+          method: 'get',
+          params: {
+            current: templatePagination.current,
+            size: templatePagination.size,
+          },
+        })
+        if (res.data) {
+          templateTableData.value = res.data.records || []
+          templatePagination.total = res.data.total || 0
+        }
+      } catch (error) {
+        console.error('加载模版数据失败:', error)
+        ElMessage.error('加载模版数据失败')
+      } finally {
+        templateLoading.value = false
+      }
+    }
+    
+    // 刷新模版数据
+    const refreshTemplateData = () => {
+      loadTemplateData()
+    }
+    
+    // 模版分页大小改变
+    const handleTemplateSizeChange = (size) => {
+      templatePagination.size = size
+      templatePagination.current = 1
+      loadTemplateData()
+    }
+    
+    // 模版当前页改变
+    const handleTemplateCurrentChange = (current) => {
+      templatePagination.current = current
+      loadTemplateData()
     }
 
     // 策略选择事件处理
@@ -2673,15 +2932,39 @@ export default {
           customParams: customParams.length > 0 ? JSON.stringify(customParams) : null,
         }
         
-        await request({
-          url: '/collect-task/create',
-          method: 'post',
-          data: submitData,
-        })
-        
-        ElMessage.success(t('collectTask.taskCreatedSuccess'))
-        dialogVisible.value = false
-        loadData()
+        // 如果是模版模式，保存模版
+        if (isTemplateMode.value) {
+          if (editingTemplateId.value) {
+            // 编辑模版
+            submitData.id = editingTemplateId.value
+            await request({
+              url: '/collect-task-template',
+              method: 'put',
+              data: submitData,
+            })
+            ElMessage.success(t('collectTask.templateUpdatedSuccess'))
+          } else {
+            // 新增模版
+            await request({
+              url: '/collect-task-template',
+              method: 'post',
+              data: submitData,
+            })
+            ElMessage.success(t('collectTask.templateCreatedSuccess'))
+          }
+          dialogVisible.value = false
+          loadTemplateData()
+        } else {
+          // 创建任务
+          await request({
+            url: '/collect-task/create',
+            method: 'post',
+            data: submitData,
+          })
+          ElMessage.success(t('collectTask.taskCreatedSuccess'))
+          dialogVisible.value = false
+          loadData()
+        }
       } catch (error) {
         console.error('提交失败:', error)
         if (error.message) {
@@ -2739,6 +3022,10 @@ export default {
       taskTestCaseCustomParams.value = {}
       testCaseCustomParamList.value = []
       testCaseParamOptions.value = {}
+      
+      // 重置自定义参数
+      editableCustomParams.value = []
+      originalCustomParams.value = []
       
       // 重置表单验证
       if (basicFormRef.value) {
@@ -3171,6 +3458,9 @@ export default {
         // 切换到列表tab时，清空数据
         taskProgress.value = {}
         executionInstances.value = []
+      } else if (tab.props.name === 'template') {
+        // 切换到模版tab时，加载模版数据
+        loadTemplateData()
       } else if (tab.props.name.startsWith('detail-')) {
         // 切换到详情tab时，加载对应任务的数据
         const taskId = parseInt(tab.props.name.replace('detail-', ''))
@@ -4168,6 +4458,9 @@ export default {
       loadProvinceOptions,
       loadCityOptions,
       handleAdd,
+      handleAddTemplate,
+      handleEditTemplate,
+      handleDeleteTemplate,
       handleStop,
       handleDelete,
       handleSubmit,
@@ -4221,6 +4514,16 @@ export default {
       openRemoteDesktop,
       openCollectPath,
       getReplacedUrl,
+      
+      // 模版相关
+      templateLoading,
+      templateTableData,
+      templatePagination,
+      isTemplateMode,
+      loadTemplateData,
+      refreshTemplateData,
+      handleTemplateSizeChange,
+      handleTemplateCurrentChange,
       
       // 远程登录相关
       remoteLoginDialogVisible,
