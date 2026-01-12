@@ -95,6 +95,25 @@
             </span>
           </template>
         </el-table-column>
+        <el-table-column :label="$t('appVersionChange.autoCollect')" width="180" align="center">
+          <template #default="scope">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <el-switch
+                v-model="scope.row.autoCollect"
+                @change="handleAutoCollectChange(scope.row)"
+              />
+              <el-button
+                v-if="scope.row.autoCollect"
+                type="text"
+                size="small"
+                @click="handleSelectTemplate(scope.row)"
+                style="padding: 0; margin-left: 8px;"
+              >
+                {{ getTemplateName(scope.row) || $t('appVersionChange.selectTemplate') }}
+              </el-button>
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column :label="$t('common.operations')" width="200" fixed="right" align="center">
           <template #default="scope">
             <div class="operations-cell">
@@ -212,6 +231,41 @@
         <el-button @click="versionHistoryDialogVisible = false">{{ $t('common.cancel') }}</el-button>
       </template>
     </el-dialog>
+
+    <!-- 选择采集任务模版对话框 -->
+    <el-dialog
+      v-model="templateDialogVisible"
+      :title="$t('appVersionChange.selectTemplate')"
+      width="50%"
+      :close-on-click-modal="false"
+      @close="handleTemplateDialogClose"
+    >
+      <el-select
+        v-model="selectedTemplateId"
+        :placeholder="$t('appVersionChange.selectTemplatePlaceholder')"
+        style="width: 100%;"
+        filterable
+        clearable
+      >
+        <el-option
+          v-for="template in templateOptions"
+          :key="template.id"
+          :label="template.name"
+          :value="template.id"
+        >
+          <div>
+            <div style="font-weight: 500;">{{ template.name }}</div>
+            <div v-if="template.description" style="font-size: 12px; color: #909399; margin-top: 4px;">
+              {{ template.description }}
+            </div>
+          </div>
+        </el-option>
+      </el-select>
+      <template #footer>
+        <el-button @click="templateDialogVisible = false">{{ $t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="handleConfirmTemplate">{{ $t('common.confirm') }}</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -243,6 +297,14 @@ export default {
     const versionHistoryDialogVisible = ref(false)
     const versionHistoryLoading = ref(false)
     const versionHistoryData = ref(null)
+    
+    // 自动采集相关
+    const autoCollectConfigs = ref({}) // 存储自动采集配置 { appName: config }
+    const templateDialogVisible = ref(false)
+    const templateOptions = ref([])
+    const selectedTemplateId = ref(null)
+    const currentEditingRow = ref(null)
+    const isFromSwitchChange = ref(false) // 标记对话框是否由开关变化触发
 
     const pagination = reactive({
       current: 1,
@@ -289,8 +351,12 @@ export default {
       }
       
       return apiData.map((item) => {
+        const appName = item.app_name || '-'
+        // 从配置中获取自动采集信息
+        const config = autoCollectConfigs.value[appName]
+        
         return {
-          appName: item.app_name || '-',
+          appName: appName,
           icon: item.icon || null,
           category: item.app_category || '-',
           description: item.app_description || '-',
@@ -298,6 +364,9 @@ export default {
           updateTime: item.version_update_date || '-',
           changeRecord: item.change_log || '-',
           dialVersion: item.dial_verion || '-',
+          autoCollect: config ? config.autoCollect : false,
+          templateId: config ? config.templateId : null,
+          templateName: config ? config.templateName : null,
         }
       })
     }
@@ -330,6 +399,55 @@ export default {
       pagination.total = filteredData.length
     }
 
+    // 加载自动采集配置
+    const loadAutoCollectConfigs = async (appNames) => {
+      if (!appNames || appNames.length === 0) {
+        return
+      }
+      
+      try {
+        const response = await request.get('/app-version-auto-collect/batch', {
+          params: {
+            appNames: appNames.join(','),
+            platformType: platformType.value,
+          },
+        })
+        
+        if (response.data) {
+          const configMap = response.data
+          // 加载模版名称
+          for (const [appName, config] of Object.entries(configMap)) {
+            if (config.templateId) {
+              try {
+                const templateRes = await request.get(`/collect-task-template/${config.templateId}`)
+                if (templateRes.data) {
+                  config.templateName = templateRes.data.name
+                }
+              } catch (e) {
+                console.error('加载模版名称失败:', e)
+              }
+            }
+            autoCollectConfigs.value[appName] = config
+          }
+        }
+      } catch (error) {
+        console.error('加载自动采集配置失败:', error)
+      }
+    }
+    
+    // 加载采集任务模版列表
+    const loadTemplateOptions = async () => {
+      try {
+        const response = await request.get('/collect-task-template/list')
+        if (response.data) {
+          templateOptions.value = response.data
+        }
+      } catch (error) {
+        console.error('加载模版列表失败:', error)
+        ElMessage.error(t('appVersionChange.loadTemplateFailed') || '加载模版列表失败')
+      }
+    }
+    
     const loadData = async () => {
       loading.value = true
       try {
@@ -338,6 +456,12 @@ export default {
         })
         
         if (response.code === 200 && response.message === 'success' && response.data) {
+          // 提取所有应用名称
+          const appNames = response.data.map(item => item.app_name || '').filter(name => name)
+          
+          // 加载自动采集配置
+          await loadAutoCollectConfigs(appNames)
+          
           // 映射API数据到表格数据并保存
           allData.value = mapApiDataToTableData(response.data)
           
@@ -443,9 +567,130 @@ export default {
         versionHistoryLoading.value = false
       }
     }
+    
+    // 处理自动采集开关变化
+    const handleAutoCollectChange = async (row) => {
+      try {
+        // 如果启用自动采集但未绑定模版，弹出选择模版对话框
+        if (row.autoCollect && !row.templateId) {
+          currentEditingRow.value = row
+          selectedTemplateId.value = null
+          isFromSwitchChange.value = true
+          templateDialogVisible.value = true
+          // 如果模版列表未加载，先加载
+          if (templateOptions.value.length === 0) {
+            await loadTemplateOptions()
+          }
+          return
+        }
+        
+        // 保存配置
+        await saveAutoCollectConfig(row)
+      } catch (error) {
+        console.error('保存自动采集配置失败:', error)
+        // 恢复开关状态
+        row.autoCollect = !row.autoCollect
+        ElMessage.error(t('appVersionChange.saveConfigFailed') || '保存配置失败')
+      }
+    }
+    
+    // 处理模版对话框关闭
+    const handleTemplateDialogClose = () => {
+      // 如果对话框是由开关变化触发的，且用户取消了，需要恢复开关状态
+      if (isFromSwitchChange.value && currentEditingRow.value) {
+        currentEditingRow.value.autoCollect = false
+        isFromSwitchChange.value = false
+      }
+      currentEditingRow.value = null
+      selectedTemplateId.value = null
+    }
+    
+    // 选择模版
+    const handleSelectTemplate = (row) => {
+      currentEditingRow.value = row
+      selectedTemplateId.value = row.templateId || null
+      templateDialogVisible.value = true
+      // 如果模版列表未加载，先加载
+      if (templateOptions.value.length === 0) {
+        loadTemplateOptions()
+      }
+    }
+    
+    // 确认选择模版
+    const handleConfirmTemplate = async () => {
+      if (!currentEditingRow.value) {
+        return
+      }
+      
+      if (!selectedTemplateId.value) {
+        ElMessage.warning(t('appVersionChange.templateRequired') || '请选择采集任务模版')
+        return
+      }
+      
+      try {
+        // 更新当前行的模版信息
+        currentEditingRow.value.templateId = selectedTemplateId.value
+        const selectedTemplate = templateOptions.value.find(t => t.id === selectedTemplateId.value)
+        if (selectedTemplate) {
+          currentEditingRow.value.templateName = selectedTemplate.name
+        }
+        
+        // 保存配置
+        await saveAutoCollectConfig(currentEditingRow.value)
+        
+        templateDialogVisible.value = false
+        isFromSwitchChange.value = false
+        currentEditingRow.value = null
+        selectedTemplateId.value = null
+      } catch (error) {
+        console.error('保存模版配置失败:', error)
+        ElMessage.error(t('appVersionChange.saveConfigFailed') || '保存配置失败')
+      }
+    }
+    
+    // 保存自动采集配置
+    const saveAutoCollectConfig = async (row) => {
+      try {
+        const response = await request.post('/app-version-auto-collect', {
+          appName: row.appName,
+          platformType: platformType.value,
+          autoCollect: row.autoCollect,
+          templateId: row.autoCollect ? row.templateId : null,
+        })
+        
+        if (response.code === 200) {
+          // 更新配置缓存
+          if (row.autoCollect) {
+            autoCollectConfigs.value[row.appName] = {
+              autoCollect: true,
+              templateId: row.templateId,
+              templateName: row.templateName,
+            }
+          } else {
+            delete autoCollectConfigs.value[row.appName]
+          }
+          
+          ElMessage.success(t('appVersionChange.saveConfigSuccess') || '配置保存成功')
+        } else {
+          throw new Error(response.message || '保存失败')
+        }
+      } catch (error) {
+        console.error('保存自动采集配置失败:', error)
+        throw error
+      }
+    }
+    
+    // 获取模版名称
+    const getTemplateName = (row) => {
+      if (row.templateName) {
+        return row.templateName
+      }
+      return null
+    }
 
     onMounted(() => {
       loadData()
+      loadTemplateOptions()
     })
 
     return {
@@ -469,6 +714,14 @@ export default {
       formatDateTime,
       getChangeTypeTag,
       getChangeTypeText,
+      handleAutoCollectChange,
+      handleSelectTemplate,
+      handleConfirmTemplate,
+      handleTemplateDialogClose,
+      getTemplateName,
+      templateDialogVisible,
+      templateOptions,
+      selectedTemplateId,
     }
   },
 }

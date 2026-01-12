@@ -1043,6 +1043,13 @@ export default {
     noVersionHistory: 'No version history',
     viewDetailNotImplemented: 'View detail feature not implemented',
     viewChangeHistoryNotImplemented: 'View change history feature not implemented',
+    autoCollect: 'Auto Collect',
+    selectTemplate: 'Select Template',
+    selectTemplatePlaceholder: 'Please select collection task template',
+    saveConfigSuccess: 'Configuration saved successfully',
+    saveConfigFailed: 'Failed to save configuration',
+    loadTemplateFailed: 'Failed to load template list',
+    templateRequired: 'Please select a collection task template',
   },
   
   // Experience Test

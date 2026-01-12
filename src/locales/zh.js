@@ -1044,6 +1044,13 @@ export default {
     noVersionHistory: '暂无版本历史',
     viewDetailNotImplemented: '查看详情功能待实现',
     viewChangeHistoryNotImplemented: '查看变更历史功能待实现',
+    autoCollect: '自动采集',
+    selectTemplate: '选择模版',
+    selectTemplatePlaceholder: '请选择采集任务模版',
+    saveConfigSuccess: '配置保存成功',
+    saveConfigFailed: '配置保存失败',
+    loadTemplateFailed: '加载模版列表失败',
+    templateRequired: '请选择采集任务模版',
   },
   
   // 体验测试
