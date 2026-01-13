@@ -15,6 +15,13 @@
           <el-icon><Refresh /></el-icon>
           {{ $t('logicEnvironment.refresh') }}
         </el-button>
+        <div style="margin-left: 20px; display: inline-flex; align-items: center;">
+          <span style="margin-right: 8px;">{{ $t('logicEnvironment.disableEnvironmentWhenUeInUse') }}</span>
+          <el-switch
+            v-model="disableEnvironmentWhenUeInUse"
+            @change="handleDisableEnvironmentSettingChange"
+          />
+        </div>
       </div>
 
       <el-table :data="tableData" v-loading="loading" style="width: 100%">
@@ -395,6 +402,9 @@ export default {
     const quickAddNetworkDialogVisible = ref(false)
     const quickAddNetworks = ref([{ name: '', description: '' }])
 
+    // UE使用中禁用环境配置
+    const disableEnvironmentWhenUeInUse = ref(false)
+
     const pagination = reactive({
       current: 1,
       size: 10,
@@ -422,6 +432,38 @@ export default {
       selectedUeIds: [
         { required: true, message: t('logicEnvironment.ueRequired'), trigger: 'change' },
       ],
+    }
+
+    // 加载UE使用中禁用环境配置
+    const loadDisableEnvironmentSetting = async () => {
+      try {
+        const res = await request({
+          url: '/config/ue-disable-environment-when-in-use',
+          method: 'get',
+        })
+        disableEnvironmentWhenUeInUse.value = res.data || false
+      } catch (error) {
+        console.error('加载配置失败:', error)
+        // 如果接口不存在，使用默认值false
+        disableEnvironmentWhenUeInUse.value = false
+      }
+    }
+
+    // 处理禁用环境设置变更
+    const handleDisableEnvironmentSettingChange = async (value) => {
+      try {
+        await request({
+          url: '/config/ue-disable-environment-when-in-use',
+          method: 'put',
+          data: { enabled: value },
+        })
+        ElMessage.success(t('logicEnvironment.configSavedSuccess'))
+      } catch (error) {
+        console.error('保存配置失败:', error)
+        ElMessage.error(t('logicEnvironment.configSavedFailed'))
+        // 恢复原值
+        disableEnvironmentWhenUeInUse.value = !value
+      }
     }
 
     const loadData = async () => {
@@ -939,6 +981,7 @@ export default {
       loadExecutorOptions()
       loadUeOptions()
       loadNetworkOptions()
+      loadDisableEnvironmentSetting()
     })
 
     return {

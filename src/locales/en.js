@@ -621,6 +621,9 @@ export default {
     noNetwork: 'No Network',
     enabled: 'Enabled',
     disabled: 'Disabled',
+    disableEnvironmentWhenUeInUse: 'Disable Environment When UE In Use',
+    configSavedSuccess: 'Configuration saved successfully',
+    configSavedFailed: 'Failed to save configuration',
     // Add/Edit Dialog
     addLogicEnvironment: 'Add Logic Environment',
     editLogicEnvironment: 'Edit Logic Environment',

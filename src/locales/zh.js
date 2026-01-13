@@ -622,6 +622,9 @@ export default {
     noNetwork: '暂无组网',
     enabled: '启用',
     disabled: '禁用',
+    disableEnvironmentWhenUeInUse: 'UE使用中，禁用环境',
+    configSavedSuccess: '配置保存成功',
+    configSavedFailed: '配置保存失败',
     // 新增/编辑对话框
     addLogicEnvironment: '新增逻辑环境',
     editLogicEnvironment: '编辑逻辑环境',
