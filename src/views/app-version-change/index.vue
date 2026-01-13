@@ -447,7 +447,7 @@ export default {
         ElMessage.error(t('appVersionChange.loadTemplateFailed') || '加载模版列表失败')
       }
     }
-    
+
     const loadData = async () => {
       loading.value = true
       try {
@@ -929,4 +929,256 @@ export default {
 }
 </style>
 
+
+
+    }
+    
+    // 获取模版名称
+    const getTemplateName = (row) => {
+      if (row.templateName) {
+        return row.templateName
+      }
+      return null
+    }
+
+    onMounted(() => {
+      loadData()
+      loadTemplateOptions()
+    })
+
+    return {
+      loading,
+      tableData,
+      searchKeyword,
+      platformType,
+      dialVersionLatest,
+      pagination,
+      handlePlatformChange,
+      columnWidths,
+      versionHistoryDialogVisible,
+      versionHistoryLoading,
+      versionHistoryData,
+      loadData,
+      handleSearch,
+      handleSizeChange,
+      handleCurrentChange,
+      handleStartDialTest,
+      handleViewChangeHistory,
+      formatDateTime,
+      getChangeTypeTag,
+      getChangeTypeText,
+      handleAutoCollectChange,
+      handleSelectTemplate,
+      handleConfirmTemplate,
+      handleTemplateDialogClose,
+      getTemplateName,
+      templateDialogVisible,
+      templateOptions,
+      selectedTemplateId,
+    }
+  },
+}
+</script>
+
+<style scoped>
+.app-version-change-page {
+  padding: 0;
+}
+
+.page-header {
+  margin-bottom: 20px;
+}
+
+.page-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #303133;
+  margin: 0 0 8px 0;
+}
+
+.page-description {
+  font-size: 14px;
+  color: #909399;
+  margin: 0;
+}
+
+.table-operations {
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.pagination {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.version-history-dialog :deep(.el-dialog__body) {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.version-history-content {
+  height: 70vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.app-info-section {
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #ebeef5;
+  flex-shrink: 0;
+}
+
+.app-info-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  min-height: 32px;
+}
+
+.app-info-item:last-child {
+  margin-bottom: 0;
+}
+
+.info-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #303133;
+  min-width: 100px;
+  flex-shrink: 0;
+}
+
+.info-value {
+  font-size: 14px;
+  color: #606266;
+  flex: 1;
+}
+
+.info-value-description {
+  flex: 1;
+  max-height: 72px; /* 固定3行的高度 (24px * 3) */
+  overflow-y: auto;
+  overflow-x: hidden;
+  word-wrap: break-word;
+  word-break: break-all;
+  padding: 2px 0;
+}
+
+.info-value-description .info-value {
+  display: block;
+  white-space: normal;
+  line-height: 24px;
+  word-break: break-word;
+  margin: 0;
+}
+
+.app-name-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.app-icon-small {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.app-name-text {
+  font-size: 14px;
+  color: #606266;
+  font-weight: 500;
+}
+
+.version-list-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+  margin: 0 0 16px 0;
+  flex-shrink: 0;
+}
+
+.operations-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.operations-cell .el-button {
+  flex-shrink: 0;
+}
+
+.change-record-cell {
+  height: 72px; /* 固定3行的高度 (24px * 3) */
+  overflow-y: auto;
+  overflow-x: hidden;
+  word-wrap: break-word;
+  word-break: break-all;
+  padding: 2px 0;
+}
+
+.change-record-tag {
+  display: block;
+  white-space: normal;
+  line-height: 24px;
+  word-break: break-word;
+  margin: 0;
+}
+
+/* 自定义滚动条样式 */
+.change-record-cell::-webkit-scrollbar {
+  width: 6px;
+}
+
+.change-record-cell::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.change-record-cell::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.change-record-cell::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* 简介滚动条样式 */
+.info-value-description::-webkit-scrollbar {
+  width: 6px;
+}
+
+.info-value-description::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.info-value-description::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.info-value-description::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+</style>
 

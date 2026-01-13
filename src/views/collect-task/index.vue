@@ -2956,14 +2956,14 @@ export default {
           loadTemplateData()
         } else {
           // 创建任务
-          await request({
-            url: '/collect-task/create',
-            method: 'post',
-            data: submitData,
-          })
-          ElMessage.success(t('collectTask.taskCreatedSuccess'))
-          dialogVisible.value = false
-          loadData()
+        await request({
+          url: '/collect-task/create',
+          method: 'post',
+          data: submitData,
+        })
+        ElMessage.success(t('collectTask.taskCreatedSuccess'))
+        dialogVisible.value = false
+        loadData()
         }
       } catch (error) {
         console.error('提交失败:', error)
