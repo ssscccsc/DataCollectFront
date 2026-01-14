@@ -42,10 +42,25 @@
             </el-tag>
           </template>
         </el-table-column>
+        <el-table-column :label="$t('ue.inUseStatus')" width="120">
+          <template #default="scope">
+            <el-tag :type="scope.row.inUse === 1 ? 'warning' : 'success'">
+              {{ scope.row.inUse === 1 ? $t('ue.inUse') : $t('ue.available') }}
+            </el-tag>
+          </template>
+        </el-table-column>
         <el-table-column prop="createTime" :label="$t('ue.createTime')" />
-        <el-table-column :label="$t('ue.operations')" width="200">
+        <el-table-column :label="$t('ue.operations')" width="280">
           <template #default="scope">
             <el-button size="small" @click="handleEdit(scope.row)">{{ $t('ue.edit') }}</el-button>
+            <el-button 
+              v-if="scope.row.inUse === 1" 
+              size="small" 
+              type="warning" 
+              @click="handleRelease(scope.row)"
+            >
+              {{ $t('ue.release') }}
+            </el-button>
             <el-button size="small" type="danger" @click="handleDelete(scope.row)">{{ $t('ue.delete') }}</el-button>
           </template>
         </el-table-column>
@@ -278,6 +293,31 @@ export default {
       }
     }
 
+    const handleRelease = async (row) => {
+      try {
+        await ElMessageBox.confirm(
+          t('ue.releaseConfirm', { name: row.name || row.ueId }),
+          t('common.info'),
+          {
+            confirmButtonText: t('common.confirm'),
+            cancelButtonText: t('common.cancel'),
+            type: 'warning',
+          }
+        )
+        
+        await request({
+          url: `/ue/${row.id}/release`,
+          method: 'post',
+        })
+        ElMessage.success(t('ue.releaseSuccess'))
+        loadData()
+      } catch (error) {
+        if (error !== 'cancel') {
+          ElMessage.error(t('ue.releaseFailed'))
+        }
+      }
+    }
+
     const handleSubmit = async () => {
       try {
         await formRef.value.validate()
@@ -353,6 +393,7 @@ export default {
       handleAdd,
       handleEdit,
       handleDelete,
+      handleRelease,
       handleSubmit,
       resetForm,
       handleSizeChange,

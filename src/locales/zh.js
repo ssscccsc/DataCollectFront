@@ -826,6 +826,14 @@ export default {
     updateSuccess: '更新成功',
     createSuccess: '创建成功',
     submitFailed: '提交失败',
+    // UE释放相关
+    inUseStatus: '使用状态',
+    inUse: '使用中',
+    available: '可用',
+    release: '释放',
+    releaseConfirm: '确定要释放UE "{name}" 吗？释放后该UE将标记为可用状态。',
+    releaseSuccess: 'UE释放成功',
+    releaseFailed: 'UE释放失败',
   },
   
   // 地域管理

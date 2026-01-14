@@ -825,6 +825,14 @@ export default {
     updateSuccess: 'Update successful',
     createSuccess: 'Create successful',
     submitFailed: 'Submit failed',
+    // UE Release Related
+    inUseStatus: 'Usage Status',
+    inUse: 'In Use',
+    available: 'Available',
+    release: 'Release',
+    releaseConfirm: 'Are you sure to release UE "{name}"? After release, the UE will be marked as available.',
+    releaseSuccess: 'UE released successfully',
+    releaseFailed: 'Failed to release UE',
   },
   
   // Region Management
