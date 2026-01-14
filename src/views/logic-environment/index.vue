@@ -1033,6 +1033,8 @@ export default {
       addQuickAddNetwork,
       removeQuickAddNetwork,
       submitQuickAddNetworks,
+      disableEnvironmentWhenUeInUse,
+      handleDisableEnvironmentSettingChange,
     }
   },
 }
