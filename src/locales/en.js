@@ -210,6 +210,7 @@ export default {
     statusStopped: 'Stopped',
     statusPaused: 'Paused',
     statusFailed: 'Stopped',
+    statusWaiting: 'Waiting',
     statusUnknown: 'Unknown',
     // Execution Status
     statusPending: 'Pending',

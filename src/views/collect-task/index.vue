@@ -1829,6 +1829,7 @@ export default {
         'COMPLETED': 'success',
         'STOPPED': 'info',
         'PAUSED': 'warning',
+        'WAITING': 'warning',
       }
       return typeMap[status] || 'info'
     }
@@ -1840,6 +1841,7 @@ export default {
         'STOPPED': t('collectTask.statusStopped'),
         'PAUSED': t('collectTask.statusPaused'),
         'FAILED': t('collectTask.statusFailed'),
+        'WAITING': t('collectTask.statusWaiting'),
       }
       return textMap[status] || t('collectTask.statusUnknown')
     }

@@ -211,6 +211,7 @@ export default {
     statusStopped: '已停止',
     statusPaused: '已暂停',
     statusFailed: '已停止',
+    statusWaiting: '等待中',
     statusUnknown: '未知',
     // 执行状态
     statusPending: '待执行',
