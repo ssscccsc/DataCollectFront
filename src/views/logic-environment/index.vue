@@ -441,7 +441,8 @@ export default {
           url: '/config/ue-disable-environment-when-in-use',
           method: 'get',
         })
-        disableEnvironmentWhenUeInUse.value = res.data || false
+        // 确保正确处理返回值，即使为null或undefined也使用false
+        disableEnvironmentWhenUeInUse.value = res.data === true
       } catch (error) {
         console.error('加载配置失败:', error)
         // 如果接口不存在，使用默认值false
@@ -480,6 +481,9 @@ export default {
         })
         tableData.value = res.data.records
         pagination.total = res.data.total
+        
+        // 刷新时同时重新加载配置状态
+        loadDisableEnvironmentSetting()
       } catch (error) {
         console.error(t('logicEnvironment.loadDataFailed'), error)
       } finally {
