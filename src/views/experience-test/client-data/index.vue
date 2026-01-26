@@ -82,6 +82,36 @@
               clearable
             />
             <el-input
+              v-model="searchForm.nation"
+              :placeholder="$t('experienceTest.clientData.searchNation')"
+              style="width: 200px; margin-right: 10px;"
+              clearable
+            />
+            <el-input
+              v-model="searchForm.operator"
+              :placeholder="$t('experienceTest.clientData.searchOperator')"
+              style="width: 200px; margin-right: 10px;"
+              clearable
+            />
+            <el-input
+              v-model="searchForm.prb"
+              :placeholder="$t('experienceTest.clientData.searchPrb')"
+              style="width: 200px; margin-right: 10px;"
+              clearable
+            />
+            <el-input
+              v-model="searchForm.rsrp"
+              :placeholder="$t('experienceTest.clientData.searchRsrp')"
+              style="width: 200px; margin-right: 10px;"
+              clearable
+            />
+            <el-input
+              v-model="searchForm.userCategory"
+              :placeholder="$t('experienceTest.clientData.searchUserCategory')"
+              style="width: 200px; margin-right: 10px;"
+              clearable
+            />
+            <el-input
               v-model="searchForm.service"
               :placeholder="$t('experienceTest.clientData.searchService')"
               style="width: 200px; margin-right: 10px;"
@@ -112,6 +142,11 @@
       >
             <el-table-column type="index" label="#" width="60" />
             <el-table-column prop="taskId" :label="$t('experienceTest.clientData.taskId')" min-width="200" show-overflow-tooltip />
+            <el-table-column prop="nation" :label="$t('experienceTest.clientData.nation')" min-width="120" show-overflow-tooltip />
+            <el-table-column prop="operator" :label="$t('experienceTest.clientData.operator')" min-width="120" show-overflow-tooltip />
+            <el-table-column prop="prb" :label="$t('experienceTest.clientData.prb')" min-width="100" show-overflow-tooltip />
+            <el-table-column prop="rsrp" :label="$t('experienceTest.clientData.rsrp')" min-width="100" show-overflow-tooltip />
+            <el-table-column prop="userCategory" :label="$t('experienceTest.clientData.userCategory')" min-width="120" show-overflow-tooltip />
             <el-table-column prop="service" :label="$t('experienceTest.clientData.service')" min-width="150" show-overflow-tooltip />
             <el-table-column prop="app" :label="$t('experienceTest.clientData.app')" min-width="150" show-overflow-tooltip />
             <el-table-column prop="startTime" :label="$t('experienceTest.clientData.startTime')" min-width="180" show-overflow-tooltip />
@@ -435,6 +470,11 @@ export default {
 
     const searchForm = reactive({
       taskId: '',
+      nation: '',
+      operator: '',
+      prb: '',
+      rsrp: '',
+      userCategory: '',
       service: '',
       app: '',
     })
@@ -466,6 +506,21 @@ export default {
         if (searchForm.taskId) {
           params.taskId = searchForm.taskId
         }
+        if (searchForm.nation) {
+          params.nation = searchForm.nation
+        }
+        if (searchForm.operator) {
+          params.operator = searchForm.operator
+        }
+        if (searchForm.prb) {
+          params.prb = searchForm.prb
+        }
+        if (searchForm.rsrp) {
+          params.rsrp = searchForm.rsrp
+        }
+        if (searchForm.userCategory) {
+          params.userCategory = searchForm.userCategory
+        }
         if (searchForm.service) {
           params.service = searchForm.service
         }
@@ -495,6 +550,11 @@ export default {
 
     const handleReset = () => {
       searchForm.taskId = ''
+      searchForm.nation = ''
+      searchForm.operator = ''
+      searchForm.prb = ''
+      searchForm.rsrp = ''
+      searchForm.userCategory = ''
       searchForm.service = ''
       searchForm.app = ''
       pagination.current = 1
