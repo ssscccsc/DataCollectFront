@@ -185,7 +185,8 @@
           :auto-upload="false"
           :on-change="handleFileChange"
           :on-remove="handleFileRemove"
-          :limit="1"
+          :limit="10"
+          :multiple="true"
           accept=".zip,.gz,.tar.gz,.rar"
           drag
         >
@@ -200,15 +201,21 @@
           </template>
         </el-upload>
 
-        <div v-if="selectedFile" class="file-info">
+        <div v-if="selectedFiles && selectedFiles.length > 0" class="file-info">
           <el-descriptions :column="1" border>
-            <el-descriptions-item :label="$t('experienceTest.networkData.fileName')">
-              {{ selectedFile.name }}
-            </el-descriptions-item>
-            <el-descriptions-item :label="$t('experienceTest.networkData.fileSize')">
-              {{ formatFileSize(selectedFile.size) }}
+            <el-descriptions-item :label="$t('experienceTest.networkData.fileCount')">
+              {{ selectedFiles.length }} {{ $t('experienceTest.networkData.files') }}
             </el-descriptions-item>
           </el-descriptions>
+          <el-table :data="selectedFiles" style="margin-top: 10px;" border>
+            <el-table-column type="index" label="#" width="60" />
+            <el-table-column :label="$t('experienceTest.networkData.fileName')" prop="name" min-width="200" show-overflow-tooltip />
+            <el-table-column :label="$t('experienceTest.networkData.fileSize')" width="120">
+              <template #default="scope">
+                {{ formatFileSize(scope.row.size) }}
+              </template>
+            </el-table-column>
+          </el-table>
         </div>
 
         <template #footer>
@@ -220,7 +227,7 @@
               type="primary"
               @click="handleUpload"
               :loading="uploading"
-              :disabled="!selectedFile"
+              :disabled="!selectedFiles || selectedFiles.length === 0"
             >
               {{ $t('common.upload') }}
             </el-button>
@@ -256,7 +263,7 @@ export default {
     const groupTableData = ref([])
     const uploadDialogVisible = ref(false)
     const uploading = ref(false)
-    const selectedFile = ref(null)
+    const selectedFiles = ref([])
     const uploadRef = ref(null)
 
     const pagination = reactive({
@@ -485,18 +492,28 @@ export default {
 
     const handleAdd = () => {
       uploadDialogVisible.value = true
-      selectedFile.value = null
+      selectedFiles.value = []
       if (uploadRef.value) {
         uploadRef.value.clearFiles()
       }
     }
 
-    const handleFileChange = (file) => {
-      selectedFile.value = file.raw
+    const handleFileChange = (file, fileList) => {
+      // 更新选中的文件列表
+      selectedFiles.value = fileList.map(item => ({
+        name: item.name,
+        size: item.size,
+        raw: item.raw,
+      }))
     }
 
-    const handleFileRemove = () => {
-      selectedFile.value = null
+    const handleFileRemove = (file, fileList) => {
+      // 更新选中的文件列表
+      selectedFiles.value = fileList.map(item => ({
+        name: item.name,
+        size: item.size,
+        raw: item.raw,
+      }))
     }
 
     const formatFileSize = (bytes) => {
@@ -510,37 +527,52 @@ export default {
     }
 
     const handleUpload = async () => {
-      if (!selectedFile.value) {
+      if (!selectedFiles.value || selectedFiles.value.length === 0) {
         ElMessage.warning(t('experienceTest.networkData.selectFileFirst'))
         return
       }
 
-      // 验证文件类型
-      const fileName = selectedFile.value.name.toLowerCase()
+      // 验证所有文件类型
       const validExtensions = ['.zip', '.gz', '.tar.gz', '.rar']
-      const isValid = validExtensions.some(ext => fileName.endsWith(ext))
+      const invalidFiles = []
       
-      if (!isValid) {
-        ElMessage.error(t('experienceTest.networkData.invalidFileType'))
+      for (const file of selectedFiles.value) {
+        const fileName = file.name.toLowerCase()
+        const isValid = validExtensions.some(ext => fileName.endsWith(ext))
+        if (!isValid) {
+          invalidFiles.push(file.name)
+        }
+      }
+      
+      if (invalidFiles.length > 0) {
+        ElMessage.error(t('experienceTest.networkData.invalidFileType') + ': ' + invalidFiles.join(', '))
         return
       }
 
       uploading.value = true
       try {
-        const response = await uploadNetworkDataFile(selectedFile.value)
+        // 提取文件对象数组
+        const files = selectedFiles.value.map(file => file.raw)
+        const response = await uploadNetworkDataFile(files)
         
         if (response.code === 200) {
           const result = response.data
           let message = t('experienceTest.networkData.uploadSuccess')
           
           // 显示解析结果
-          if (result.networkDataCount) {
-            message += `\n${t('experienceTest.networkData.networkDataCount')}: ${result.networkDataCount}`
+          if (result.totalNetworkDataCount) {
+            message += `\n${t('experienceTest.networkData.totalNetworkDataCount')}: ${result.totalNetworkDataCount}`
+          }
+          if (result.successCount) {
+            message += `\n${t('experienceTest.networkData.successCount')}: ${result.successCount}`
+          }
+          if (result.failCount && result.failCount > 0) {
+            message += `\n${t('experienceTest.networkData.failCount')}: ${result.failCount}`
           }
           
           ElMessage.success(message)
           uploadDialogVisible.value = false
-          selectedFile.value = null
+          selectedFiles.value = []
           if (uploadRef.value) {
             uploadRef.value.clearFiles()
           }
@@ -611,7 +643,7 @@ export default {
       filterFromGroup,
       uploadDialogVisible,
       uploading,
-      selectedFile,
+      selectedFiles,
       uploadRef,
       loadData,
       loadGroupData,

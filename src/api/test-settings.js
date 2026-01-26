@@ -87,10 +87,15 @@ export function deleteDeviceImsiMapping(id) {
   })
 }
 
-// 网络侧数据文件上传API
-export function uploadNetworkDataFile(file) {
+// 网络侧数据文件上传API（支持多文件上传）
+export function uploadNetworkDataFile(files) {
   const formData = new FormData();
-  formData.append('file', file);
+  // 如果传入的是单个文件，转换为数组
+  const fileArray = Array.isArray(files) ? files : [files];
+  // 添加所有文件到FormData
+  fileArray.forEach((file) => {
+    formData.append('files', file);
+  });
   
   return request({
     url: '/test-settings/network-data/upload',
