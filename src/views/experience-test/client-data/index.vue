@@ -1049,6 +1049,108 @@ export default {
       vmosEditBackup.value = {}
     }
 
+    // 编辑基础信息
+    const handleEditBasicInfo = () => {
+      if (!taskDetail.value.taskInfo) {
+        return
+      }
+      
+      // 保存原始数据
+      editingBasicInfoData.value = {
+        service: taskDetail.value.taskInfo.service || '',
+        app: taskDetail.value.taskInfo.app || '',
+        nation: taskDetail.value.taskInfo.nation || '',
+        operator: taskDetail.value.taskInfo.operator || '',
+        deviceId: taskDetail.value.taskInfo.deviceId || '',
+        startTime: taskDetail.value.taskInfo.startTime || '',
+        endTime: taskDetail.value.taskInfo.endTime || '',
+        prb: taskDetail.value.taskInfo.prb || '',
+        rsrp: taskDetail.value.taskInfo.rsrp || '',
+        userCategory: taskDetail.value.taskInfo.userCategory || '',
+      }
+      
+      editingBasicInfo.value = true
+    }
+
+    // 保存基础信息
+    const handleSaveBasicInfo = async () => {
+      if (!taskDetail.value.taskInfo || !taskDetail.value.taskInfo.taskId) {
+        ElMessage.warning('任务信息不存在')
+        return
+      }
+
+      basicInfoSaving.value = true
+      try {
+        const response = await updateTaskInfo(taskDetail.value.taskInfo.taskId, editingBasicInfoData.value)
+        
+        if (response.code === 200) {
+          ElMessage.success(t('common.success'))
+          editingBasicInfo.value = false
+          // 刷新任务详情
+          await handleViewDetail({ taskId: taskDetail.value.taskInfo.taskId })
+        } else {
+          ElMessage.error(response.message || t('common.error'))
+        }
+      } catch (error) {
+        console.error('Update basic info error:', error)
+        ElMessage.error(error.message || t('common.error'))
+      } finally {
+        basicInfoSaving.value = false
+      }
+    }
+
+    // 取消编辑基础信息
+    const handleCancelBasicInfoEdit = () => {
+      editingBasicInfo.value = false
+      editingBasicInfoData.value = {
+        service: '',
+        app: '',
+        nation: '',
+        operator: '',
+        deviceId: '',
+        startTime: '',
+        endTime: '',
+        prb: '',
+        rsrp: '',
+        userCategory: '',
+      }
+    }
+
+    // 删除任务
+    const handleDelete = async (row) => {
+      if (!row || !row.taskId) {
+        ElMessage.warning('无效的数据')
+        return
+      }
+
+      try {
+        await ElMessageBox.confirm(
+          t('experienceTest.clientData.deleteConfirm'),
+          t('common.warning'),
+          {
+            confirmButtonText: t('common.confirm'),
+            cancelButtonText: t('common.cancel'),
+            type: 'warning',
+          }
+        )
+
+        const response = await deleteTaskInfo(row.taskId)
+        
+        if (response.code === 200) {
+          ElMessage.success(t('common.success'))
+          // 刷新列表
+          loadData()
+        } else {
+          ElMessage.error(response.message || t('common.error'))
+        }
+      } catch (error) {
+        if (error !== 'cancel') {
+          console.error('Delete task error:', error)
+          ElMessage.error(error.message || t('common.error'))
+        }
+      }
+    }
+
     onMounted(() => {
       // 确保默认显示任务列表tab
       activeMainTab.value = 'taskList'
