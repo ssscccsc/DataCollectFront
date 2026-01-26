@@ -157,6 +157,23 @@ export function getClientDataDetail(taskId) {
   });
 }
 
+// 更新任务信息
+export function updateTaskInfo(taskId, data) {
+  return request({
+    url: `/client-data/task-info/${taskId}`,
+    method: 'put',
+    data,
+  });
+}
+
+// 删除任务（逻辑删除）
+export function deleteTaskInfo(taskId) {
+  return request({
+    url: `/client-data/task-info/${taskId}`,
+    method: 'delete',
+  });
+}
+
 // 更新vMOS数据
 export function updateVmosData(id, data) {
   return request({

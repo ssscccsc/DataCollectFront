@@ -151,10 +151,13 @@
             <el-table-column prop="app" :label="$t('experienceTest.clientData.app')" min-width="150" show-overflow-tooltip />
             <el-table-column prop="startTime" :label="$t('experienceTest.clientData.startTime')" min-width="180" show-overflow-tooltip />
             <el-table-column prop="endTime" :label="$t('experienceTest.clientData.endTime')" min-width="180" show-overflow-tooltip />
-            <el-table-column :label="$t('common.operations')" width="120" fixed="right">
+            <el-table-column :label="$t('common.operations')" width="180" fixed="right">
               <template #default="scope">
                 <el-button type="primary" size="small" @click="handleViewDetail(scope.row)">
                   {{ $t('common.view') }}
+                </el-button>
+                <el-button type="danger" size="small" @click="handleDelete(scope.row)">
+                  {{ $t('common.delete') }}
                 </el-button>
               </template>
             </el-table-column>
@@ -187,14 +190,40 @@
           <!-- 基础信息和Summary信息 -->
             <div class="info-section-header" v-if="taskDetail.taskInfo">
               <h3 class="section-title">{{ $t('experienceTest.clientData.basicInfo') }}</h3>
-              <el-button 
-                type="text" 
-                @click="showBasicInfo = !showBasicInfo"
-              >
-                <el-icon v-if="showBasicInfo"><ArrowUp /></el-icon>
-                <el-icon v-else><ArrowDown /></el-icon>
-                <span style="margin-left: 4px;">{{ showBasicInfo ? $t('common.collapse') : $t('common.expand') }}</span>
-              </el-button>
+              <div style="display: flex; gap: 10px;">
+                <el-button 
+                  v-if="!editingBasicInfo"
+                  type="primary"
+                  size="small"
+                  @click="handleEditBasicInfo"
+                >
+                  {{ $t('common.edit') }}
+                </el-button>
+                <template v-else>
+                  <el-button 
+                    type="primary"
+                    size="small"
+                    @click="handleSaveBasicInfo"
+                    :loading="basicInfoSaving"
+                  >
+                    {{ $t('common.save') }}
+                  </el-button>
+                  <el-button 
+                    size="small"
+                    @click="handleCancelBasicInfoEdit"
+                  >
+                    {{ $t('common.cancel') }}
+                  </el-button>
+                </template>
+                <el-button 
+                  type="text" 
+                  @click="showBasicInfo = !showBasicInfo"
+                >
+                  <el-icon v-if="showBasicInfo"><ArrowUp /></el-icon>
+                  <el-icon v-else><ArrowDown /></el-icon>
+                  <span style="margin-left: 4px;">{{ showBasicInfo ? $t('common.collapse') : $t('common.expand') }}</span>
+                </el-button>
+              </div>
             </div>
             <div class="info-section" v-if="taskDetail.taskInfo && showBasicInfo">
               <div class="info-container">
@@ -206,34 +235,94 @@
                       {{ taskDetail.taskInfo.taskId }}
                     </el-descriptions-item>
                     <el-descriptions-item :label="$t('experienceTest.clientData.service')">
-                      {{ taskDetail.taskInfo.service }}
+                      <el-input
+                        v-if="editingBasicInfo"
+                        v-model="editingBasicInfoData.service"
+                        size="small"
+                        style="width: 100%;"
+                      />
+                      <span v-else>{{ taskDetail.taskInfo.service || '-' }}</span>
                     </el-descriptions-item>
                     <el-descriptions-item :label="$t('experienceTest.clientData.app')">
-                      {{ taskDetail.taskInfo.app }}
+                      <el-input
+                        v-if="editingBasicInfo"
+                        v-model="editingBasicInfoData.app"
+                        size="small"
+                        style="width: 100%;"
+                      />
+                      <span v-else>{{ taskDetail.taskInfo.app || '-' }}</span>
                     </el-descriptions-item>
                     <el-descriptions-item :label="$t('experienceTest.clientData.nation')">
-                      {{ taskDetail.taskInfo.nation }}
+                      <el-input
+                        v-if="editingBasicInfo"
+                        v-model="editingBasicInfoData.nation"
+                        size="small"
+                        style="width: 100%;"
+                      />
+                      <span v-else>{{ taskDetail.taskInfo.nation || '-' }}</span>
                     </el-descriptions-item>
                     <el-descriptions-item :label="$t('experienceTest.clientData.operator')">
-                      {{ taskDetail.taskInfo.operator }}
+                      <el-input
+                        v-if="editingBasicInfo"
+                        v-model="editingBasicInfoData.operator"
+                        size="small"
+                        style="width: 100%;"
+                      />
+                      <span v-else>{{ taskDetail.taskInfo.operator || '-' }}</span>
                     </el-descriptions-item>
                     <el-descriptions-item :label="$t('experienceTest.clientData.deviceId')">
-                      {{ taskDetail.taskInfo.deviceId }}
+                      <el-input
+                        v-if="editingBasicInfo"
+                        v-model="editingBasicInfoData.deviceId"
+                        size="small"
+                        style="width: 100%;"
+                      />
+                      <span v-else>{{ taskDetail.taskInfo.deviceId || '-' }}</span>
                     </el-descriptions-item>
                     <el-descriptions-item :label="$t('experienceTest.clientData.startTime')">
-                      {{ taskDetail.taskInfo.startTime }}
+                      <el-input
+                        v-if="editingBasicInfo"
+                        v-model="editingBasicInfoData.startTime"
+                        size="small"
+                        style="width: 100%;"
+                      />
+                      <span v-else>{{ taskDetail.taskInfo.startTime || '-' }}</span>
                     </el-descriptions-item>
                     <el-descriptions-item :label="$t('experienceTest.clientData.endTime')">
-                      {{ taskDetail.taskInfo.endTime }}
+                      <el-input
+                        v-if="editingBasicInfo"
+                        v-model="editingBasicInfoData.endTime"
+                        size="small"
+                        style="width: 100%;"
+                      />
+                      <span v-else>{{ taskDetail.taskInfo.endTime || '-' }}</span>
                     </el-descriptions-item>
                     <el-descriptions-item :label="$t('experienceTest.clientData.prb')">
-                      {{ taskDetail.taskInfo.prb }}
+                      <el-input
+                        v-if="editingBasicInfo"
+                        v-model="editingBasicInfoData.prb"
+                        size="small"
+                        style="width: 100%;"
+                      />
+                      <span v-else>{{ taskDetail.taskInfo.prb || '-' }}</span>
                     </el-descriptions-item>
                     <el-descriptions-item :label="$t('experienceTest.clientData.rsrp')">
-                      {{ taskDetail.taskInfo.rsrp }}
+                      <el-input
+                        v-if="editingBasicInfo"
+                        v-model="editingBasicInfoData.rsrp"
+                        size="small"
+                        style="width: 100%;"
+                      />
+                      <span v-else>{{ taskDetail.taskInfo.rsrp || '-' }}</span>
                     </el-descriptions-item>
                     <el-descriptions-item :label="$t('experienceTest.clientData.userCategory')">
-                      {{ taskDetail.taskInfo.userCategory }}
+                      <el-input
+                        v-if="editingBasicInfo"
+                        v-model="editingBasicInfoData.userCategory"
+                        size="small"
+                        style="width: 100%;"
+                      />
+                      <span v-else>{{ taskDetail.taskInfo.userCategory || '-' }}</span>
                     </el-descriptions-item>
                     <el-descriptions-item :label="$t('common.createTime')">
                       {{ taskDetail.taskInfo.createTime }}
@@ -422,7 +511,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { Plus, Refresh, UploadFilled, Search, ArrowUp, ArrowDown, DataAnalysis } from '@element-plus/icons-vue'
-import { uploadClientDataFile, getClientDataPage, getClientDataDetail, updateVmosData } from '@/api/test-settings'
+import { uploadClientDataFile, getClientDataPage, getClientDataDetail, updateVmosData, updateTaskInfo, deleteTaskInfo } from '@/api/test-settings'
 
 export default {
   name: 'ClientData',
@@ -461,6 +550,22 @@ export default {
     const editingVmosRowId = ref(null)
     const vmosSaving = ref(false)
     const vmosEditBackup = ref({})
+    
+    // 基础信息编辑相关
+    const editingBasicInfo = ref(false)
+    const basicInfoSaving = ref(false)
+    const editingBasicInfoData = ref({
+      service: '',
+      app: '',
+      nation: '',
+      operator: '',
+      deviceId: '',
+      startTime: '',
+      endTime: '',
+      prb: '',
+      rsrp: '',
+      userCategory: '',
+    })
 
     const pagination = reactive({
       current: 1,
@@ -593,6 +698,19 @@ export default {
         // 重置编辑状态
         editingVmosRowId.value = null
         vmosEditBackup.value = {}
+        editingBasicInfo.value = false
+        editingBasicInfoData.value = {
+          service: '',
+          app: '',
+          nation: '',
+          operator: '',
+          deviceId: '',
+          startTime: '',
+          endTime: '',
+          prb: '',
+          rsrp: '',
+          userCategory: '',
+        }
         
         // 重置数据
         taskDetail.value = {
@@ -973,6 +1091,13 @@ export default {
       handleCancelVmosEdit,
       handleVmosFieldChange,
       handleGoToComparison,
+      editingBasicInfo,
+      basicInfoSaving,
+      editingBasicInfoData,
+      handleEditBasicInfo,
+      handleSaveBasicInfo,
+      handleCancelBasicInfoEdit,
+      handleDelete,
     }
   },
 }
