@@ -24,6 +24,8 @@ export default {
     collapse: '收起',
     expand: '展开',
     upload: '上传',
+    batchDelete: '批量删除',
+    selectDataFirst: '请先选择要删除的数据',
   },
   
   // 导航菜单
@@ -1205,6 +1207,8 @@ export default {
       date: '日期',
       dataCount: '数据条数',
       searchDate: '搜索日期',
+      deleteConfirm: '确定要删除GPSI为 {gpsi}、日期为 {date}、子应用ID为 {subAppId} 的所有数据吗？',
+      batchDeleteConfirm: '确定要删除选中的 {count} 条数据吗？',
     },
     dataComparison: {
       description: '端网数据对比分析，支持数据对比和查看',

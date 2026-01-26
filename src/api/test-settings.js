@@ -125,6 +125,24 @@ export function getGroupedNetworkDataPage(params) {
   });
 }
 
+// 删除指定日期下的网络侧数据（逻辑删除）
+export function deleteNetworkDataByDate(gpsi, date, subAppId) {
+  return request({
+    url: '/network-data/by-date',
+    method: 'delete',
+    params: { gpsi, date, subAppId },
+  });
+}
+
+// 批量删除网络侧数据（逻辑删除）
+export function batchDeleteNetworkData(ids) {
+  return request({
+    url: '/network-data/batch',
+    method: 'delete',
+    data: ids,
+  });
+}
+
 // 端侧数据文件上传API
 export function uploadClientDataFile(file) {
   const formData = new FormData();

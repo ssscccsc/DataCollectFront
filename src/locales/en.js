@@ -24,6 +24,8 @@ export default {
     collapse: 'Collapse',
     expand: 'Expand',
     upload: 'Upload',
+    batchDelete: 'Batch Delete',
+    selectDataFirst: 'Please select data to delete first',
   },
   
   // Navigation Menu
@@ -1222,6 +1224,8 @@ export default {
       date: 'Date',
       dataCount: 'Data Count',
       searchDate: 'Search Date',
+      deleteConfirm: 'Are you sure to delete all data with GPSI {gpsi}, date {date}, and sub app ID {subAppId}?',
+      batchDeleteConfirm: 'Are you sure to delete the selected {count} records?',
       taskId: 'Task ID',
       service: 'Service',
       app: 'App',

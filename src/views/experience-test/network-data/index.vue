@@ -59,10 +59,13 @@
             <el-table-column prop="date" :label="$t('experienceTest.networkData.date')" min-width="120" show-overflow-tooltip />
             <el-table-column prop="subAppId" :label="$t('experienceTest.networkData.subAppId')" min-width="150" show-overflow-tooltip />
             <el-table-column prop="count" :label="$t('experienceTest.networkData.dataCount')" width="120" />
-            <el-table-column :label="$t('common.operations')" width="120" fixed="right">
+            <el-table-column :label="$t('common.operations')" width="180" fixed="right">
               <template #default="scope">
                 <el-button type="primary" size="small" @click="handleViewDetail(scope.row)">
                   {{ $t('common.view') }}
+                </el-button>
+                <el-button type="danger" size="small" @click="handleDeleteByDate(scope.row)">
+                  {{ $t('common.delete') }}
                 </el-button>
               </template>
             </el-table-column>
@@ -87,6 +90,10 @@
             <el-button type="primary" @click="handleAdd">
               <el-icon><Plus /></el-icon>
               {{ $t('common.add') }}
+            </el-button>
+            <el-button type="danger" @click="handleBatchDelete" :disabled="selectedIds.length === 0">
+              <el-icon><Delete /></el-icon>
+              {{ $t('common.batchDelete') }}
             </el-button>
             <el-button @click="loadData">
               <el-icon><Refresh /></el-icon>
@@ -142,7 +149,8 @@
             </el-button>
           </div>
 
-          <el-table :data="tableData" v-loading="loading" style="width: 100%" stripe border>
+          <el-table :data="tableData" v-loading="loading" style="width: 100%" stripe border @selection-change="handleSelectionChange">
+            <el-table-column type="selection" width="55" />
             <el-table-column type="index" label="#" width="60" />
             <el-table-column prop="gpsi" :label="$t('experienceTest.networkData.gpsi')" min-width="150" show-overflow-tooltip />
             <el-table-column prop="startTime" :label="$t('experienceTest.networkData.startTime')" min-width="150" show-overflow-tooltip />
@@ -242,8 +250,8 @@
 import { ref, reactive, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useI18n } from 'vue-i18n'
-import { Plus, Refresh, UploadFilled, Search, RefreshLeft } from '@element-plus/icons-vue'
-import { uploadNetworkDataFile, getNetworkDataPage, getGroupedNetworkDataPage } from '@/api/test-settings'
+import { Plus, Refresh, UploadFilled, Search, RefreshLeft, Delete } from '@element-plus/icons-vue'
+import { uploadNetworkDataFile, getNetworkDataPage, getGroupedNetworkDataPage, deleteNetworkDataByDate, batchDeleteNetworkData } from '@/api/test-settings'
 
 export default {
   name: 'NetworkData',
@@ -253,6 +261,7 @@ export default {
     UploadFilled,
     Search,
     RefreshLeft,
+    Delete,
   },
   setup() {
     const { t } = useI18n()
@@ -265,6 +274,7 @@ export default {
     const uploading = ref(false)
     const selectedFiles = ref([])
     const uploadRef = ref(null)
+    const selectedIds = ref([])
 
     const pagination = reactive({
       current: 1,
@@ -617,6 +627,75 @@ export default {
       loadGroupData()
     }
 
+    // 删除指定日期下的数据
+    const handleDeleteByDate = async (row) => {
+      try {
+        await ElMessageBox.confirm(
+          t('experienceTest.networkData.deleteConfirm', { gpsi: row.gpsi, date: row.date, subAppId: row.subAppId }),
+          t('common.warning'),
+          {
+            confirmButtonText: t('common.confirm'),
+            cancelButtonText: t('common.cancel'),
+            type: 'warning',
+          }
+        )
+
+        const response = await deleteNetworkDataByDate(row.gpsi, row.date, row.subAppId)
+        
+        if (response.code === 200) {
+          ElMessage.success(t('common.success'))
+          loadGroupData()
+        } else {
+          ElMessage.error(response.message || t('common.error'))
+        }
+      } catch (error) {
+        if (error !== 'cancel') {
+          console.error('Delete network data by date error:', error)
+          ElMessage.error(error.message || t('common.error'))
+        }
+      }
+    }
+
+    // 处理表格选择变化
+    const handleSelectionChange = (selection) => {
+      selectedIds.value = selection.map(item => item.id)
+    }
+
+    // 批量删除
+    const handleBatchDelete = async () => {
+      if (selectedIds.value.length === 0) {
+        ElMessage.warning(t('common.selectDataFirst'))
+        return
+      }
+
+      try {
+        await ElMessageBox.confirm(
+          t('experienceTest.networkData.batchDeleteConfirm', { count: selectedIds.value.length }),
+          t('common.warning'),
+          {
+            confirmButtonText: t('common.confirm'),
+            cancelButtonText: t('common.cancel'),
+            type: 'warning',
+          }
+        )
+
+        const response = await batchDeleteNetworkData(selectedIds.value)
+        
+        if (response.code === 200) {
+          ElMessage.success(t('common.success'))
+          selectedIds.value = []
+          loadData()
+        } else {
+          ElMessage.error(response.message || t('common.error'))
+        }
+      } catch (error) {
+        if (error !== 'cancel') {
+          console.error('Batch delete network data error:', error)
+          ElMessage.error(error.message || t('common.error'))
+        }
+      }
+    }
+
     // 监听tab切换，加载对应数据
     watch(activeTab, (newTab) => {
       if (newTab === 'group') {
@@ -665,6 +744,10 @@ export default {
       handleUpload,
       handleViewDetail,
       formatFileSize,
+      selectedIds,
+      handleDeleteByDate,
+      handleSelectionChange,
+      handleBatchDelete,
     }
   },
 }
