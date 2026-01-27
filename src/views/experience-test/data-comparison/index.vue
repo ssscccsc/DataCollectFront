@@ -20,9 +20,74 @@
             </el-button>
           </div>
 
+          <!-- 搜索栏 -->
+          <div class="search-bar">
+            <el-input
+              v-model="searchForm.taskId"
+              :placeholder="$t('experienceTest.clientData.searchTaskId')"
+              style="width: 200px; margin-right: 10px;"
+              clearable
+            />
+            <el-input
+              v-model="searchForm.nation"
+              :placeholder="$t('experienceTest.clientData.searchNation')"
+              style="width: 150px; margin-right: 10px;"
+              clearable
+            />
+            <el-input
+              v-model="searchForm.operator"
+              :placeholder="$t('experienceTest.clientData.searchOperator')"
+              style="width: 150px; margin-right: 10px;"
+              clearable
+            />
+            <el-input
+              v-model="searchForm.prb"
+              :placeholder="$t('experienceTest.clientData.searchPrb')"
+              style="width: 120px; margin-right: 10px;"
+              clearable
+            />
+            <el-input
+              v-model="searchForm.rsrp"
+              :placeholder="$t('experienceTest.clientData.searchRsrp')"
+              style="width: 120px; margin-right: 10px;"
+              clearable
+            />
+            <el-input
+              v-model="searchForm.userCategory"
+              :placeholder="$t('experienceTest.clientData.searchUserCategory')"
+              style="width: 150px; margin-right: 10px;"
+              clearable
+            />
+            <el-input
+              v-model="searchForm.service"
+              :placeholder="$t('experienceTest.clientData.searchService')"
+              style="width: 150px; margin-right: 10px;"
+              clearable
+            />
+            <el-input
+              v-model="searchForm.app"
+              :placeholder="$t('experienceTest.clientData.searchApp')"
+              style="width: 150px; margin-right: 10px;"
+              clearable
+            />
+            <el-button type="primary" @click="handleSearch">
+              <el-icon><Search /></el-icon>
+              {{ $t('common.search') }}
+            </el-button>
+            <el-button @click="handleReset">
+              <el-icon><RefreshLeft /></el-icon>
+              {{ $t('common.reset') }}
+            </el-button>
+          </div>
+
           <el-table :data="tableData" v-loading="loading" style="width: 100%" stripe border>
             <el-table-column type="index" label="#" width="60" />
             <el-table-column prop="taskId" :label="$t('experienceTest.clientData.taskId')" min-width="200" show-overflow-tooltip />
+            <el-table-column prop="nation" :label="$t('experienceTest.clientData.nation')" min-width="120" show-overflow-tooltip />
+            <el-table-column prop="operator" :label="$t('experienceTest.clientData.operator')" min-width="120" show-overflow-tooltip />
+            <el-table-column prop="prb" :label="$t('experienceTest.clientData.prb')" min-width="100" show-overflow-tooltip />
+            <el-table-column prop="rsrp" :label="$t('experienceTest.clientData.rsrp')" min-width="100" show-overflow-tooltip />
+            <el-table-column prop="userCategory" :label="$t('experienceTest.clientData.userCategory')" min-width="120" show-overflow-tooltip />
             <el-table-column prop="service" :label="$t('experienceTest.clientData.service')" min-width="150" show-overflow-tooltip />
             <el-table-column prop="app" :label="$t('experienceTest.clientData.app')" min-width="150" show-overflow-tooltip />
             <el-table-column :label="$t('common.operations')" width="120" fixed="right">
@@ -50,6 +115,13 @@
         <!-- 第二个tab：详情页 -->
         <el-tab-pane :label="$t('experienceTest.dataComparison.detailTitle')" name="detail">
           <div class="detail-container" v-loading="detailLoading">
+            <!-- 导出按钮 -->
+            <div class="export-operations">
+              <el-button type="success" @click="handleExportCharts" :loading="exporting">
+                <el-icon><Download /></el-icon>
+                {{ $t('experienceTest.dataComparison.exportCharts') }}
+              </el-button>
+            </div>
             <!-- 对比详情子tab -->
             <div class="comparison-tabs-wrapper">
               <el-tabs v-model="activeComparisonTab" type="border-card" class="comparison-tabs">
@@ -391,7 +463,7 @@ import { ref, reactive, onMounted, nextTick, watch, onBeforeUnmount, computed } 
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
-import { DataAnalysis, Refresh } from '@element-plus/icons-vue'
+import { DataAnalysis, Refresh, Search, RefreshLeft, Download } from '@element-plus/icons-vue'
 import { getClientDataPage, getSpeedComparison, updateNetworkStartTime, getRttComparison, getStutterComparison, getAvgQoeComparison } from '@/api/test-settings'
 import * as echarts from 'echarts'
 
@@ -400,6 +472,9 @@ export default {
   components: {
     DataAnalysis,
     Refresh,
+    Search,
+    RefreshLeft,
+    Download,
   },
   setup() {
     const { t } = useI18n()
@@ -458,12 +533,51 @@ export default {
       total: 0,
     })
 
+    const searchForm = reactive({
+      taskId: '',
+      nation: '',
+      operator: '',
+      prb: '',
+      rsrp: '',
+      userCategory: '',
+      service: '',
+      app: '',
+    })
+
+    const exporting = ref(false)
+
     const loadData = async () => {
       loading.value = true
       try {
         const params = {
           current: pagination.current,
           size: pagination.size,
+        }
+
+        // 添加搜索条件
+        if (searchForm.taskId) {
+          params.taskId = searchForm.taskId
+        }
+        if (searchForm.nation) {
+          params.nation = searchForm.nation
+        }
+        if (searchForm.operator) {
+          params.operator = searchForm.operator
+        }
+        if (searchForm.prb) {
+          params.prb = searchForm.prb
+        }
+        if (searchForm.rsrp) {
+          params.rsrp = searchForm.rsrp
+        }
+        if (searchForm.userCategory) {
+          params.userCategory = searchForm.userCategory
+        }
+        if (searchForm.service) {
+          params.service = searchForm.service
+        }
+        if (searchForm.app) {
+          params.app = searchForm.app
         }
 
         const response = await getClientDataPage(params)
@@ -483,6 +597,138 @@ export default {
 
     const handleCompare = () => {
       ElMessage.info(t('experienceTest.dataComparison.compareNotImplemented'))
+    }
+
+    const handleSearch = () => {
+      pagination.current = 1
+      loadData()
+    }
+
+    const handleReset = () => {
+      searchForm.taskId = ''
+      searchForm.nation = ''
+      searchForm.operator = ''
+      searchForm.prb = ''
+      searchForm.rsrp = ''
+      searchForm.userCategory = ''
+      searchForm.service = ''
+      searchForm.app = ''
+      pagination.current = 1
+      loadData()
+    }
+
+    // 导出所有图表为zip文件
+    const handleExportCharts = async () => {
+      if (!currentTaskId.value) {
+        ElMessage.warning('请先选择要导出的任务')
+        return
+      }
+
+      exporting.value = true
+      try {
+        // 动态导入jszip库
+        let JSZip
+        try {
+          JSZip = (await import('jszip')).default
+        } catch (importError) {
+          ElMessage.error('请先安装jszip库: npm install jszip')
+          return
+        }
+
+        const zip = new JSZip()
+        let hasAnyChart = false
+
+        // 导出速率对比图表
+        if (speedChart && speedChartRef.value) {
+          try {
+            const speedImage = speedChart.getDataURL({
+              type: 'png',
+              pixelRatio: 2,
+              backgroundColor: '#fff',
+            })
+            if (speedImage) {
+              zip.file('speed-comparison.png', speedImage.split(',')[1], { base64: true })
+              hasAnyChart = true
+            }
+          } catch (error) {
+            console.warn('Failed to export speed chart:', error)
+          }
+        }
+
+        // 导出RTT对比图表
+        if (rttChart && rttChartRef.value) {
+          try {
+            const rttImage = rttChart.getDataURL({
+              type: 'png',
+              pixelRatio: 2,
+              backgroundColor: '#fff',
+            })
+            if (rttImage) {
+              zip.file('rtt-comparison.png', rttImage.split(',')[1], { base64: true })
+              hasAnyChart = true
+            }
+          } catch (error) {
+            console.warn('Failed to export rtt chart:', error)
+          }
+        }
+
+        // 导出卡顿对比图表
+        if (stutterChart && stutterChartRef.value) {
+          try {
+            const stutterImage = stutterChart.getDataURL({
+              type: 'png',
+              pixelRatio: 2,
+              backgroundColor: '#fff',
+            })
+            if (stutterImage) {
+              zip.file('stutter-comparison.png', stutterImage.split(',')[1], { base64: true })
+              hasAnyChart = true
+            }
+          } catch (error) {
+            console.warn('Failed to export stutter chart:', error)
+          }
+        }
+
+        // 导出平均QOE对比图表
+        if (avgQoeChart && avgQoeChartRef.value) {
+          try {
+            const avgQoeImage = avgQoeChart.getDataURL({
+              type: 'png',
+              pixelRatio: 2,
+              backgroundColor: '#fff',
+            })
+            if (avgQoeImage) {
+              zip.file('avg-qoe-comparison.png', avgQoeImage.split(',')[1], { base64: true })
+              hasAnyChart = true
+            }
+          } catch (error) {
+            console.warn('Failed to export avg qoe chart:', error)
+          }
+        }
+
+        if (!hasAnyChart) {
+          ElMessage.warning('没有可导出的图表')
+          return
+        }
+
+        // 生成zip文件并下载
+        const content = await zip.generateAsync({ type: 'blob' })
+        const url = window.URL.createObjectURL(content)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `comparison-charts-${currentTaskId.value}-${Date.now()}.zip`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+
+        ElMessage.success(t('experienceTest.dataComparison.exportSuccess'))
+      } catch (error) {
+        console.error('Export charts error:', error)
+        ElMessage.error(t('experienceTest.dataComparison.exportFailed') + ': ' + (error.message || '未知错误'))
+      } finally {
+        exporting.value = false
+      }
     }
 
     const handleView = (row) => {
@@ -2302,6 +2548,8 @@ export default {
       loading,
       tableData,
       pagination,
+      searchForm,
+      exporting,
       activeMainTab,
       detailLoading,
       comparisonDetail,
@@ -2342,6 +2590,9 @@ export default {
       loadData,
       handleCompare,
       handleView,
+      handleSearch,
+      handleReset,
+      handleExportCharts,
       handleSizeChange,
       handleCurrentChange,
       formatSpeed,
@@ -2421,6 +2672,19 @@ export default {
 .data-comparison-page :deep(.el-table__body-wrapper) {
   max-height: calc(100vh - 400px);
   overflow-y: auto;
+}
+
+.search-bar {
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.export-operations {
+  margin-bottom: 16px;
+  text-align: right;
 }
 
 .pagination {

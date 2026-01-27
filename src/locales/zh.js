@@ -1250,6 +1250,9 @@ export default {
       avgQoeComparisonData: '平均QOE对比数据',
       clientAvgQoe: '端侧平均QOE',
       networkAvgQoe: '网络侧平均QOE',
+      exportCharts: '导出图表',
+      exportSuccess: '图表导出成功',
+      exportFailed: '图表导出失败',
     },
     networkSettings: {
       description: '体验测试设置，包括网络参数配置等',

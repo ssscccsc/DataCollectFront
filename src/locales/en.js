@@ -1340,6 +1340,9 @@ export default {
       avgQoeComparisonData: 'Average QOE Comparison Data',
       clientAvgQoe: 'Client Average QOE',
       networkAvgQoe: 'Network Average QOE',
+      exportCharts: 'Export Charts',
+      exportSuccess: 'Charts exported successfully',
+      exportFailed: 'Failed to export charts',
     },
     networkSettings: {
       description: 'Experience Test Settings, including network parameter configuration, etc.',
