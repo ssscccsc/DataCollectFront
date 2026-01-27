@@ -90,10 +90,13 @@
             <el-table-column prop="userCategory" :label="$t('experienceTest.clientData.userCategory')" min-width="120" show-overflow-tooltip />
             <el-table-column prop="service" :label="$t('experienceTest.clientData.service')" min-width="150" show-overflow-tooltip />
             <el-table-column prop="app" :label="$t('experienceTest.clientData.app')" min-width="150" show-overflow-tooltip />
-            <el-table-column :label="$t('common.operations')" width="120" fixed="right">
+            <el-table-column :label="$t('common.operations')" width="200" fixed="right">
               <template #default="scope">
                 <el-button type="primary" size="small" @click="handleView(scope.row)">
                   {{ $t('common.view') }}
+                </el-button>
+                <el-button type="success" size="small" @click="handleExportFromList(scope.row)" :loading="exporting">
+                  {{ $t('experienceTest.dataComparison.exportCharts') }}
                 </el-button>
               </template>
             </el-table-column>
@@ -617,7 +620,7 @@ export default {
       loadData()
     }
 
-    // 导出所有图表为zip文件
+    // 导出所有图表为zip文件（从详情页面）
     const handleExportCharts = async () => {
       if (!currentTaskId.value) {
         ElMessage.warning('请先选择要导出的任务')
@@ -625,6 +628,30 @@ export default {
       }
 
       exporting.value = true
+      try {
+        await exportChartsForTask(currentTaskId.value)
+      } finally {
+        exporting.value = false
+      }
+    }
+
+    // 从列表直接导出图表
+    const handleExportFromList = async (row) => {
+      if (!row || !row.taskId) {
+        ElMessage.warning('无效的数据')
+        return
+      }
+
+      exporting.value = true
+      try {
+        await exportChartsForTask(row.taskId)
+      } finally {
+        exporting.value = false
+      }
+    }
+
+    // 导出指定任务的对比图表
+    const exportChartsForTask = async (taskId) => {
       try {
         // 动态导入jszip库
         let JSZip
@@ -635,13 +662,168 @@ export default {
           return
         }
 
+        ElMessage.info('正在加载对比数据...')
+
+        // 并行加载所有对比数据
+        const [speedRes, rttRes, stutterRes, avgQoeRes] = await Promise.all([
+          getSpeedComparison(taskId).catch(e => ({ code: 500, message: e.message })),
+          getRttComparison(taskId).catch(e => ({ code: 500, message: e.message })),
+          getStutterComparison(taskId).catch(e => ({ code: 500, message: e.message })),
+          getAvgQoeComparison(taskId).catch(e => ({ code: 500, message: e.message })),
+        ])
+
+        // 创建临时隐藏容器
+        const tempContainer = document.createElement('div')
+        tempContainer.style.position = 'absolute'
+        tempContainer.style.left = '-9999px'
+        tempContainer.style.top = '-9999px'
+        tempContainer.style.width = '800px'
+        tempContainer.style.height = '600px'
+        document.body.appendChild(tempContainer)
+
         const zip = new JSZip()
         let hasAnyChart = false
 
-        // 导出速率对比图表
-        if (speedChart && speedChartRef.value) {
-          try {
-            const speedImage = speedChart.getDataURL({
+        try {
+          // 导出速率对比图表
+          if (speedRes.code === 200 && speedRes.data) {
+            const tempDiv = document.createElement('div')
+            tempDiv.style.width = '800px'
+            tempDiv.style.height = '600px'
+            tempContainer.appendChild(tempDiv)
+            
+            const tempChart = echarts.init(tempDiv)
+            const speedData = speedRes.data
+            
+            // 准备数据
+            const clientData = speedData.clientSpeedList || []
+            const networkData = speedData.networkSpeedList || []
+            const allTimeStamps = new Set()
+            
+            clientData.forEach((item) => {
+              const timeStamp = item.timeStamp || item.sequenceNumber
+              if (timeStamp) {
+                allTimeStamps.add(timeStamp)
+              }
+            })
+            networkData.forEach((item) => {
+              const timeStamp = item.timeStamp || ''
+              if (timeStamp) {
+                allTimeStamps.add(timeStamp)
+              }
+            })
+            
+            const sortedTimeStamps = Array.from(allTimeStamps).sort((a, b) => {
+              return compareTimeStamps(a, b)
+            })
+            
+            const clientMap = new Map()
+            clientData.forEach((item) => {
+              const timeStamp = item.timeStamp || item.sequenceNumber
+              if (timeStamp) {
+                let speed = 0
+                if (typeof item.speed === 'number') {
+                  speed = item.speed
+                } else if (typeof item.speed === 'string') {
+                  speed = parseFloat(item.speed) || 0
+                }
+                clientMap.set(timeStamp, speed)
+              }
+            })
+            
+            const networkUplinkMap = new Map()
+            const networkDownlinkMap = new Map()
+            networkData.forEach((item) => {
+              const timeStamp = item.timeStamp || ''
+              if (timeStamp) {
+                let uplinkSpeed = 0
+                if (typeof item.uplinkBandwidth === 'number') {
+                  uplinkSpeed = item.uplinkBandwidth
+                } else if (typeof item.uplinkBandwidth === 'string') {
+                  uplinkSpeed = parseFloat(item.uplinkBandwidth) || 0
+                }
+                networkUplinkMap.set(timeStamp, uplinkSpeed)
+                
+                let downlinkSpeed = 0
+                if (typeof item.downlinkBandwidth === 'number') {
+                  downlinkSpeed = item.downlinkBandwidth
+                } else if (typeof item.downlinkBandwidth === 'string') {
+                  downlinkSpeed = parseFloat(item.downlinkBandwidth) || 0
+                }
+                networkDownlinkMap.set(timeStamp, downlinkSpeed)
+              }
+            })
+            
+            const clientSpeeds = sortedTimeStamps.map((timeStamp) => {
+              return clientMap.has(timeStamp) ? clientMap.get(timeStamp) : null
+            })
+            const networkUplinkSpeeds = sortedTimeStamps.map((timeStamp) => {
+              return networkUplinkMap.has(timeStamp) ? networkUplinkMap.get(timeStamp) : null
+            })
+            const networkDownlinkSpeeds = sortedTimeStamps.map((timeStamp) => {
+              return networkDownlinkMap.has(timeStamp) ? networkDownlinkMap.get(timeStamp) : null
+            })
+            
+            const speedOption = {
+              title: {
+                text: t('experienceTest.dataComparison.speedComparison'),
+                left: 'center',
+              },
+              tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                  type: 'cross',
+                },
+              },
+              legend: {
+                data: [
+                  t('experienceTest.dataComparison.clientSpeed'),
+                  t('experienceTest.dataComparison.networkUplinkSpeed'),
+                  t('experienceTest.dataComparison.networkDownlinkSpeed'),
+                ],
+                top: 30,
+              },
+              grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                containLabel: true,
+              },
+              xAxis: {
+                type: 'category',
+                boundaryGap: false,
+                data: sortedTimeStamps,
+              },
+              yAxis: {
+                type: 'value',
+                name: 'Kbps',
+              },
+              series: [
+                {
+                  name: t('experienceTest.dataComparison.clientSpeed'),
+                  type: 'line',
+                  data: clientSpeeds,
+                  smooth: true,
+                },
+                {
+                  name: t('experienceTest.dataComparison.networkUplinkSpeed'),
+                  type: 'line',
+                  data: networkUplinkSpeeds,
+                  smooth: true,
+                },
+                {
+                  name: t('experienceTest.dataComparison.networkDownlinkSpeed'),
+                  type: 'line',
+                  data: networkDownlinkSpeeds,
+                  smooth: true,
+                },
+              ],
+            }
+            
+            tempChart.setOption(speedOption)
+            await new Promise(resolve => setTimeout(resolve, 500)) // 等待图表渲染
+            
+            const speedImage = tempChart.getDataURL({
               type: 'png',
               pixelRatio: 2,
               backgroundColor: '#fff',
@@ -650,15 +832,129 @@ export default {
               zip.file('speed-comparison.png', speedImage.split(',')[1], { base64: true })
               hasAnyChart = true
             }
-          } catch (error) {
-            console.warn('Failed to export speed chart:', error)
+            tempChart.dispose()
+            tempContainer.removeChild(tempDiv)
           }
-        }
 
-        // 导出RTT对比图表
-        if (rttChart && rttChartRef.value) {
-          try {
-            const rttImage = rttChart.getDataURL({
+          // 导出RTT对比图表
+          if (rttRes.code === 200 && rttRes.data) {
+            const tempDiv = document.createElement('div')
+            tempDiv.style.width = '800px'
+            tempDiv.style.height = '600px'
+            tempContainer.appendChild(tempDiv)
+            
+            const tempChart = echarts.init(tempDiv)
+            const rttData = rttRes.data
+            
+            const clientData = rttData.clientRttList || []
+            const networkData = rttData.networkRttList || []
+            const allTimeStamps = new Set()
+            
+            clientData.forEach((item) => {
+              const timeStamp = item.timeStamp || item.sequenceNumber
+              if (timeStamp) {
+                allTimeStamps.add(timeStamp)
+              }
+            })
+            networkData.forEach((item) => {
+              const timeStamp = item.timeStamp || ''
+              if (timeStamp) {
+                allTimeStamps.add(timeStamp)
+              }
+            })
+            
+            const sortedTimeStamps = Array.from(allTimeStamps).sort((a, b) => {
+              return compareTimeStamps(a, b)
+            })
+            
+            const clientMap = new Map()
+            clientData.forEach((item) => {
+              const timeStamp = item.timeStamp || item.sequenceNumber
+              if (timeStamp) {
+                let rtt = 0
+                if (typeof item.rtt === 'number') {
+                  rtt = item.rtt
+                } else if (typeof item.rtt === 'string') {
+                  rtt = parseFloat(item.rtt) || 0
+                }
+                clientMap.set(timeStamp, rtt)
+              }
+            })
+            
+            const networkMap = new Map()
+            networkData.forEach((item) => {
+              const timeStamp = item.timeStamp || ''
+              if (timeStamp) {
+                let delay = 0
+                if (typeof item.serviceDelay === 'number') {
+                  delay = item.serviceDelay
+                } else if (typeof item.serviceDelay === 'string') {
+                  delay = parseFloat(item.serviceDelay) || 0
+                }
+                networkMap.set(timeStamp, delay)
+              }
+            })
+            
+            const clientRtts = sortedTimeStamps.map((timeStamp) => {
+              return clientMap.has(timeStamp) ? clientMap.get(timeStamp) : null
+            })
+            const networkDelays = sortedTimeStamps.map((timeStamp) => {
+              return networkMap.has(timeStamp) ? networkMap.get(timeStamp) : null
+            })
+            
+            const rttOption = {
+              title: {
+                text: t('experienceTest.dataComparison.rttComparison'),
+                left: 'center',
+              },
+              tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                  type: 'cross',
+                },
+              },
+              legend: {
+                data: [
+                  t('experienceTest.dataComparison.clientRtt'),
+                  t('experienceTest.dataComparison.networkServiceDelay'),
+                ],
+                top: 30,
+              },
+              grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                containLabel: true,
+              },
+              xAxis: {
+                type: 'category',
+                boundaryGap: false,
+                data: sortedTimeStamps,
+              },
+              yAxis: {
+                type: 'value',
+                name: 'ms',
+              },
+              series: [
+                {
+                  name: t('experienceTest.dataComparison.clientRtt'),
+                  type: 'line',
+                  data: clientRtts,
+                  smooth: true,
+                },
+                {
+                  name: t('experienceTest.dataComparison.networkServiceDelay'),
+                  type: 'line',
+                  data: networkDelays,
+                  smooth: true,
+                },
+              ],
+            }
+            
+            tempChart.setOption(rttOption)
+            await new Promise(resolve => setTimeout(resolve, 500))
+            
+            const rttImage = tempChart.getDataURL({
               type: 'png',
               pixelRatio: 2,
               backgroundColor: '#fff',
@@ -667,15 +963,128 @@ export default {
               zip.file('rtt-comparison.png', rttImage.split(',')[1], { base64: true })
               hasAnyChart = true
             }
-          } catch (error) {
-            console.warn('Failed to export rtt chart:', error)
+            tempChart.dispose()
+            tempContainer.removeChild(tempDiv)
           }
-        }
 
-        // 导出卡顿对比图表
-        if (stutterChart && stutterChartRef.value) {
-          try {
-            const stutterImage = stutterChart.getDataURL({
+          // 导出卡顿对比图表
+          if (stutterRes.code === 200 && stutterRes.data) {
+            const tempDiv = document.createElement('div')
+            tempDiv.style.width = '800px'
+            tempDiv.style.height = '600px'
+            tempContainer.appendChild(tempDiv)
+            
+            const tempChart = echarts.init(tempDiv)
+            const stutterData = stutterRes.data
+            
+            const clientData = stutterData.clientStutterList || []
+            const networkData = stutterData.networkStutterList || []
+            const allTimeStamps = new Set()
+            
+            clientData.forEach((item) => {
+              const timeStamp = item.timeStamp || item.sequenceNumber
+              if (timeStamp) {
+                allTimeStamps.add(timeStamp)
+              }
+            })
+            networkData.forEach((item) => {
+              const timeStamp = item.timeStamp || ''
+              if (timeStamp) {
+                allTimeStamps.add(timeStamp)
+              }
+            })
+            
+            const sortedTimeStamps = Array.from(allTimeStamps).sort((a, b) => {
+              return compareTimeStamps(a, b)
+            })
+            
+            const clientMap = new Map()
+            clientData.forEach((item) => {
+              const timeStamp = item.timeStamp || item.sequenceNumber
+              if (timeStamp) {
+                let ratio = 0
+                if (typeof item.stutterRatio === 'number') {
+                  ratio = item.stutterRatio
+                } else if (typeof item.stutterRatio === 'string') {
+                  ratio = parseFloat(item.stutterRatio) || 0
+                }
+                clientMap.set(timeStamp, ratio)
+              }
+            })
+            
+            const networkMap = new Map()
+            networkData.forEach((item) => {
+              const timeStamp = item.timeStamp || ''
+              if (timeStamp) {
+                let number = 0
+                if (typeof item.stallingNumber === 'number') {
+                  number = item.stallingNumber / 10
+                } else if (typeof item.stallingNumber === 'string') {
+                  number = (parseFloat(item.stallingNumber) || 0) / 10
+                }
+                networkMap.set(timeStamp, number)
+              }
+            })
+            
+            const clientRatios = sortedTimeStamps.map((timeStamp) => {
+              return clientMap.has(timeStamp) ? clientMap.get(timeStamp) : null
+            })
+            const networkNumbers = sortedTimeStamps.map((timeStamp) => {
+              return networkMap.has(timeStamp) ? networkMap.get(timeStamp) : null
+            })
+            
+            const stutterOption = {
+              title: {
+                text: t('experienceTest.dataComparison.stutterComparison'),
+                left: 'center',
+              },
+              tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                  type: 'cross',
+                },
+              },
+              legend: {
+                data: [
+                  t('experienceTest.dataComparison.clientStutterRatio'),
+                  t('experienceTest.dataComparison.networkStallingNumberDiv10'),
+                ],
+                top: 30,
+              },
+              grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                containLabel: true,
+              },
+              xAxis: {
+                type: 'category',
+                boundaryGap: false,
+                data: sortedTimeStamps,
+              },
+              yAxis: {
+                type: 'value',
+              },
+              series: [
+                {
+                  name: t('experienceTest.dataComparison.clientStutterRatio'),
+                  type: 'line',
+                  data: clientRatios,
+                  smooth: true,
+                },
+                {
+                  name: t('experienceTest.dataComparison.networkStallingNumberDiv10'),
+                  type: 'line',
+                  data: networkNumbers,
+                  smooth: true,
+                },
+              ],
+            }
+            
+            tempChart.setOption(stutterOption)
+            await new Promise(resolve => setTimeout(resolve, 500))
+            
+            const stutterImage = tempChart.getDataURL({
               type: 'png',
               pixelRatio: 2,
               backgroundColor: '#fff',
@@ -684,15 +1093,128 @@ export default {
               zip.file('stutter-comparison.png', stutterImage.split(',')[1], { base64: true })
               hasAnyChart = true
             }
-          } catch (error) {
-            console.warn('Failed to export stutter chart:', error)
+            tempChart.dispose()
+            tempContainer.removeChild(tempDiv)
           }
-        }
 
-        // 导出平均QOE对比图表
-        if (avgQoeChart && avgQoeChartRef.value) {
-          try {
-            const avgQoeImage = avgQoeChart.getDataURL({
+          // 导出平均QOE对比图表
+          if (avgQoeRes.code === 200 && avgQoeRes.data) {
+            const tempDiv = document.createElement('div')
+            tempDiv.style.width = '800px'
+            tempDiv.style.height = '600px'
+            tempContainer.appendChild(tempDiv)
+            
+            const tempChart = echarts.init(tempDiv)
+            const avgQoeData = avgQoeRes.data
+            
+            const clientData = avgQoeData.clientAvgQoeList || []
+            const networkData = avgQoeData.networkAvgQoeList || []
+            const allTimeStamps = new Set()
+            
+            clientData.forEach((item) => {
+              const timeStamp = item.timeStamp || item.sequenceNumber
+              if (timeStamp) {
+                allTimeStamps.add(timeStamp)
+              }
+            })
+            networkData.forEach((item) => {
+              const timeStamp = item.timeStamp || ''
+              if (timeStamp) {
+                allTimeStamps.add(timeStamp)
+              }
+            })
+            
+            const sortedTimeStamps = Array.from(allTimeStamps).sort((a, b) => {
+              return compareTimeStamps(a, b)
+            })
+            
+            const clientMap = new Map()
+            clientData.forEach((item) => {
+              const timeStamp = item.timeStamp || item.sequenceNumber
+              if (timeStamp) {
+                let avgQoe = 0
+                if (typeof item.avgQoe === 'number') {
+                  avgQoe = item.avgQoe
+                } else if (typeof item.avgQoe === 'string') {
+                  avgQoe = parseFloat(item.avgQoe) || 0
+                }
+                clientMap.set(timeStamp, avgQoe)
+              }
+            })
+            
+            const networkMap = new Map()
+            networkData.forEach((item) => {
+              const timeStamp = item.timeStamp || ''
+              if (timeStamp) {
+                let avgQoe = 0
+                if (typeof item.avgQoe === 'number') {
+                  avgQoe = item.avgQoe
+                } else if (typeof item.avgQoe === 'string') {
+                  avgQoe = parseFloat(item.avgQoe) || 0
+                }
+                networkMap.set(timeStamp, avgQoe)
+              }
+            })
+            
+            const clientAvgQoes = sortedTimeStamps.map((timeStamp) => {
+              return clientMap.has(timeStamp) ? clientMap.get(timeStamp) : null
+            })
+            const networkAvgQoes = sortedTimeStamps.map((timeStamp) => {
+              return networkMap.has(timeStamp) ? networkMap.get(timeStamp) : null
+            })
+            
+            const avgQoeOption = {
+              title: {
+                text: t('experienceTest.dataComparison.avgQoeComparison'),
+                left: 'center',
+              },
+              tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                  type: 'cross',
+                },
+              },
+              legend: {
+                data: [
+                  t('experienceTest.dataComparison.clientAvgQoe'),
+                  t('experienceTest.dataComparison.networkAvgQoe'),
+                ],
+                top: 30,
+              },
+              grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                containLabel: true,
+              },
+              xAxis: {
+                type: 'category',
+                boundaryGap: false,
+                data: sortedTimeStamps,
+              },
+              yAxis: {
+                type: 'value',
+              },
+              series: [
+                {
+                  name: t('experienceTest.dataComparison.clientAvgQoe'),
+                  type: 'line',
+                  data: clientAvgQoes,
+                  smooth: true,
+                },
+                {
+                  name: t('experienceTest.dataComparison.networkAvgQoe'),
+                  type: 'line',
+                  data: networkAvgQoes,
+                  smooth: true,
+                },
+              ],
+            }
+            
+            tempChart.setOption(avgQoeOption)
+            await new Promise(resolve => setTimeout(resolve, 500))
+            
+            const avgQoeImage = tempChart.getDataURL({
               type: 'png',
               pixelRatio: 2,
               backgroundColor: '#fff',
@@ -701,13 +1223,16 @@ export default {
               zip.file('avg-qoe-comparison.png', avgQoeImage.split(',')[1], { base64: true })
               hasAnyChart = true
             }
-          } catch (error) {
-            console.warn('Failed to export avg qoe chart:', error)
+            tempChart.dispose()
+            tempContainer.removeChild(tempDiv)
           }
+        } finally {
+          // 清理临时容器
+          document.body.removeChild(tempContainer)
         }
 
         if (!hasAnyChart) {
-          ElMessage.warning('没有可导出的图表')
+          ElMessage.warning('没有可导出的图表数据')
           return
         }
 
@@ -716,7 +1241,7 @@ export default {
         const url = window.URL.createObjectURL(content)
         const link = document.createElement('a')
         link.href = url
-        link.download = `comparison-charts-${currentTaskId.value}-${Date.now()}.zip`
+        link.download = `comparison-charts-${taskId}-${Date.now()}.zip`
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)
@@ -726,8 +1251,6 @@ export default {
       } catch (error) {
         console.error('Export charts error:', error)
         ElMessage.error(t('experienceTest.dataComparison.exportFailed') + ': ' + (error.message || '未知错误'))
-      } finally {
-        exporting.value = false
       }
     }
 
@@ -2593,6 +3116,7 @@ export default {
       handleSearch,
       handleReset,
       handleExportCharts,
+      handleExportFromList,
       handleSizeChange,
       handleCurrentChange,
       formatSpeed,
