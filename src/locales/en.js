@@ -1128,6 +1128,8 @@ export default {
       rttStatistics: 'RTT Statistics',
       lostStatistics: 'Lost Rate Statistics',
       videoStatistics: 'Video Statistics',
+      gameDelayStatistics: 'Game Delay Statistics',
+      delayMs: 'Delay (ms)',
       nation: 'Nation',
       operator: 'Operator',
       deviceId: 'Device ID',

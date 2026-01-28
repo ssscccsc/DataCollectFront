@@ -449,7 +449,7 @@
                 </template>
               </el-table-column>
             </el-table>
-            <el-empty v-if="!taskDetail.vmosDataList || taskDetail.vmosDataList.length === 0" :description="$t('common.noData')" />
+            <el-empty v-if="!taskDetail.vmosDataList || taskDetail.vmosDataList.length === 0" description="-" />
           </el-tab-pane>
 
           <!-- 上下行速率统计 -->
@@ -494,6 +494,16 @@
               <el-table-column prop="catonTime" :label="$t('experienceTest.clientData.catonTime')" width="150" />
             </el-table>
             <el-empty v-if="!taskDetail.videoDataList || taskDetail.videoDataList.length === 0" :description="$t('common.noData')" />
+          </el-tab-pane>
+
+          <!-- 游戏延时统计 -->
+          <el-tab-pane :label="$t('experienceTest.clientData.gameDelayStatistics')" name="gameDelay">
+            <el-table :data="taskDetail.gameDelayDataList" border stripe style="width: 100%">
+              <el-table-column type="index" label="#" width="60" />
+              <el-table-column prop="indexValue" :label="$t('experienceTest.clientData.sequenceNumber')" width="120" />
+              <el-table-column prop="delay" :label="$t('experienceTest.clientData.delayMs')" width="150" />
+            </el-table>
+            <el-empty v-if="!taskDetail.gameDelayDataList || taskDetail.gameDelayDataList.length === 0" :description="$t('common.noData')" />
           </el-tab-pane>
         </el-tabs>
         </div>
@@ -545,6 +555,7 @@ export default {
       rttDataList: [],
       lostDataList: [],
       videoDataList: [],
+      gameDelayDataList: [],
     })
     // vMOS编辑相关
     const editingVmosRowId = ref(null)
@@ -720,6 +731,7 @@ export default {
           rttDataList: [],
           lostDataList: [],
           videoDataList: [],
+          gameDelayDataList: [],
         }
         
         const response = await getClientDataDetail(row.taskId)
@@ -731,6 +743,7 @@ export default {
             rttDataList: response.data.rttDataList || [],
             lostDataList: response.data.lostDataList || [],
             videoDataList: response.data.videoDataList || [],
+            gameDelayDataList: response.data.gameDelayDataList || [],
           }
           // 确保默认显示vMOS数据子tab
           activeDetailTab.value = 'vmos'

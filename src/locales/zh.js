@@ -1111,6 +1111,8 @@ export default {
       rttStatistics: '上下行RTT统计',
       lostStatistics: '上下行丢包率统计',
       videoStatistics: '视频卡顿统计',
+      gameDelayStatistics: '游戏延时统计',
+      delayMs: '延时(ms)',
       nation: '国家',
       operator: '运营商',
       deviceId: '设备ID',
