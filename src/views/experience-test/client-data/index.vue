@@ -385,7 +385,11 @@
                   <span v-else>{{ scope.row.speed || '-' }}</span>
                 </template>
               </el-table-column>
-              <el-table-column prop="resolution" :label="$t('experienceTest.clientData.resolution')" width="120" />
+              <el-table-column :label="$t('experienceTest.clientData.resolution')" width="120">
+                <template #default="scope">
+                  {{ scope.row.resolution || '-' }}
+                </template>
+              </el-table-column>
               <el-table-column :label="$t('experienceTest.clientData.rttMs')" width="100">
                 <template #default="scope">
                   <el-input
@@ -422,17 +426,61 @@
                   <span v-else>{{ scope.row.stutterRatio || '-' }}</span>
                 </template>
               </el-table-column>
-              <el-table-column prop="initialBufferingDelay" :label="$t('experienceTest.clientData.sRtt')" width="120" />
-              <el-table-column prop="bitrate" :label="$t('experienceTest.clientData.sBitrate')" width="100" />
-              <el-table-column prop="videoExperience" :label="$t('experienceTest.clientData.sQuality')" width="100" />
-              <el-table-column prop="interactionExperience" :label="$t('experienceTest.clientData.sInteraction')" width="120" />
-              <el-table-column prop="presentationExperience" :label="$t('experienceTest.clientData.sView')" width="120" />
-              <el-table-column prop="sLostPacketRate" :label="$t('experienceTest.clientData.sLostPacketRate')" width="140" />
-              <el-table-column prop="sStallRate" :label="$t('experienceTest.clientData.sStallRate')" width="140" />
-              <el-table-column prop="alpha" :label="$t('experienceTest.clientData.alpha')" width="80" />
-              <el-table-column prop="beta" :label="$t('experienceTest.clientData.beta')" width="80" />
-              <el-table-column prop="vmos" :label="$t('experienceTest.clientData.vmos')" width="80" />
-              <el-table-column prop="avgQoe" :label="$t('experienceTest.clientData.avgQoe')" width="100" />
+              <el-table-column :label="$t('experienceTest.clientData.sRtt')" width="120">
+                <template #default="scope">
+                  {{ scope.row.initialBufferingDelay || '-' }}
+                </template>
+              </el-table-column>
+              <el-table-column :label="$t('experienceTest.clientData.sBitrate')" width="100">
+                <template #default="scope">
+                  {{ scope.row.bitrate || '-' }}
+                </template>
+              </el-table-column>
+              <el-table-column :label="$t('experienceTest.clientData.sQuality')" width="100">
+                <template #default="scope">
+                  {{ scope.row.videoExperience || '-' }}
+                </template>
+              </el-table-column>
+              <el-table-column :label="$t('experienceTest.clientData.sInteraction')" width="120">
+                <template #default="scope">
+                  {{ scope.row.interactionExperience || '-' }}
+                </template>
+              </el-table-column>
+              <el-table-column :label="$t('experienceTest.clientData.sView')" width="120">
+                <template #default="scope">
+                  {{ scope.row.presentationExperience || '-' }}
+                </template>
+              </el-table-column>
+              <el-table-column :label="$t('experienceTest.clientData.sLostPacketRate')" width="140">
+                <template #default="scope">
+                  {{ scope.row.sLostPacketRate || '-' }}
+                </template>
+              </el-table-column>
+              <el-table-column :label="$t('experienceTest.clientData.sStallRate')" width="140">
+                <template #default="scope">
+                  {{ scope.row.sStallRate || '-' }}
+                </template>
+              </el-table-column>
+              <el-table-column :label="$t('experienceTest.clientData.alpha')" width="80">
+                <template #default="scope">
+                  {{ scope.row.alpha || '-' }}
+                </template>
+              </el-table-column>
+              <el-table-column :label="$t('experienceTest.clientData.beta')" width="80">
+                <template #default="scope">
+                  {{ scope.row.beta || '-' }}
+                </template>
+              </el-table-column>
+              <el-table-column :label="$t('experienceTest.clientData.vmos')" width="80">
+                <template #default="scope">
+                  {{ scope.row.vmos || '-' }}
+                </template>
+              </el-table-column>
+              <el-table-column :label="$t('experienceTest.clientData.avgQoe')" width="100">
+                <template #default="scope">
+                  {{ scope.row.avgQoe || '-' }}
+                </template>
+              </el-table-column>
               <el-table-column :label="$t('common.operations')" width="150" fixed="right">
                 <template #default="scope">
                   <template v-if="editingVmosRowId === scope.row.id">
@@ -453,29 +501,39 @@
           </el-tab-pane>
 
           <!-- 上下行速率统计 -->
-          <el-tab-pane :label="$t('experienceTest.clientData.speedStatistics')" name="speed">
+          <el-tab-pane 
+            v-if="taskDetail.speedDataList && taskDetail.speedDataList.length > 0"
+            :label="$t('experienceTest.clientData.speedStatistics')" 
+            name="speed"
+          >
             <el-table :data="taskDetail.speedDataList" border stripe style="width: 100%">
               <el-table-column type="index" label="#" width="60" />
               <el-table-column prop="dlSpeed" :label="$t('experienceTest.clientData.dlSpeed')" width="150" />
               <el-table-column prop="ulSpeed" :label="$t('experienceTest.clientData.ulSpeed')" width="150" />
               <el-table-column prop="total" :label="$t('experienceTest.clientData.total')" width="150" />
             </el-table>
-            <el-empty v-if="!taskDetail.speedDataList || taskDetail.speedDataList.length === 0" :description="$t('common.noData')" />
           </el-tab-pane>
 
           <!-- 上下行RTT统计 -->
-          <el-tab-pane :label="$t('experienceTest.clientData.rttStatistics')" name="rtt">
+          <el-tab-pane 
+            v-if="taskDetail.rttDataList && taskDetail.rttDataList.length > 0"
+            :label="$t('experienceTest.clientData.rttStatistics')" 
+            name="rtt"
+          >
             <el-table :data="taskDetail.rttDataList" border stripe style="width: 100%">
               <el-table-column type="index" label="#" width="60" />
               <el-table-column prop="indexTime" :label="$t('experienceTest.clientData.indexTime')" width="180" />
               <el-table-column prop="dlDelay" :label="$t('experienceTest.clientData.dlDelay')" width="150" />
               <el-table-column prop="ulDelay" :label="$t('experienceTest.clientData.ulDelay')" width="150" />
             </el-table>
-            <el-empty v-if="!taskDetail.rttDataList || taskDetail.rttDataList.length === 0" :description="$t('common.noData')" />
           </el-tab-pane>
 
           <!-- 上下行丢包率统计 -->
-          <el-tab-pane :label="$t('experienceTest.clientData.lostStatistics')" name="lost">
+          <el-tab-pane 
+            v-if="taskDetail.lostDataList && taskDetail.lostDataList.length > 0"
+            :label="$t('experienceTest.clientData.lostStatistics')" 
+            name="lost"
+          >
             <el-table :data="taskDetail.lostDataList" border stripe style="width: 100%">
               <el-table-column type="index" label="#" width="60" />
               <el-table-column prop="indexTime" :label="$t('experienceTest.clientData.indexTime')" width="180" />
@@ -483,27 +541,32 @@
               <el-table-column prop="ulLoss" :label="$t('experienceTest.clientData.ulLoss')" width="150" />
               <el-table-column prop="totalLoss" :label="$t('experienceTest.clientData.totalLoss')" width="150" />
             </el-table>
-            <el-empty v-if="!taskDetail.lostDataList || taskDetail.lostDataList.length === 0" :description="$t('common.noData')" />
           </el-tab-pane>
 
           <!-- 视频卡顿统计 -->
-          <el-tab-pane :label="$t('experienceTest.clientData.videoStatistics')" name="video">
+          <el-tab-pane 
+            v-if="taskDetail.videoDataList && taskDetail.videoDataList.length > 0"
+            :label="$t('experienceTest.clientData.videoStatistics')" 
+            name="video"
+          >
             <el-table :data="taskDetail.videoDataList" border stripe style="width: 100%">
               <el-table-column type="index" label="#" width="60" />
               <el-table-column prop="time" :label="$t('experienceTest.clientData.time')" width="180" />
               <el-table-column prop="catonTime" :label="$t('experienceTest.clientData.catonTime')" width="150" />
             </el-table>
-            <el-empty v-if="!taskDetail.videoDataList || taskDetail.videoDataList.length === 0" :description="$t('common.noData')" />
           </el-tab-pane>
 
           <!-- 游戏延时统计 -->
-          <el-tab-pane :label="$t('experienceTest.clientData.gameDelayStatistics')" name="gameDelay">
+          <el-tab-pane 
+            v-if="taskDetail.gameDelayDataList && taskDetail.gameDelayDataList.length > 0"
+            :label="$t('experienceTest.clientData.gameDelayStatistics')" 
+            name="gameDelay"
+          >
             <el-table :data="taskDetail.gameDelayDataList" border stripe style="width: 100%">
               <el-table-column type="index" label="#" width="60" />
               <el-table-column prop="indexValue" :label="$t('experienceTest.clientData.sequenceNumber')" width="120" />
               <el-table-column prop="delay" :label="$t('experienceTest.clientData.delayMs')" width="150" />
             </el-table>
-            <el-empty v-if="!taskDetail.gameDelayDataList || taskDetail.gameDelayDataList.length === 0" :description="$t('common.noData')" />
           </el-tab-pane>
         </el-tabs>
         </div>
@@ -745,8 +808,22 @@ export default {
             videoDataList: response.data.videoDataList || [],
             gameDelayDataList: response.data.gameDelayDataList || [],
           }
-          // 确保默认显示vMOS数据子tab
-          activeDetailTab.value = 'vmos'
+          // 根据数据是否存在设置默认显示的tab
+          if (taskDetail.value.vmosDataList && taskDetail.value.vmosDataList.length > 0) {
+            activeDetailTab.value = 'vmos'
+          } else if (taskDetail.value.speedDataList && taskDetail.value.speedDataList.length > 0) {
+            activeDetailTab.value = 'speed'
+          } else if (taskDetail.value.rttDataList && taskDetail.value.rttDataList.length > 0) {
+            activeDetailTab.value = 'rtt'
+          } else if (taskDetail.value.lostDataList && taskDetail.value.lostDataList.length > 0) {
+            activeDetailTab.value = 'lost'
+          } else if (taskDetail.value.videoDataList && taskDetail.value.videoDataList.length > 0) {
+            activeDetailTab.value = 'video'
+          } else if (taskDetail.value.gameDelayDataList && taskDetail.value.gameDelayDataList.length > 0) {
+            activeDetailTab.value = 'gameDelay'
+          } else {
+            activeDetailTab.value = 'vmos'
+          }
         } else {
           ElMessage.error(response.message || t('common.error'))
           // 如果加载失败，切换回任务列表tab
