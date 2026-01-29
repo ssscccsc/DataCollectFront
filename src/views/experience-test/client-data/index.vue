@@ -449,7 +449,7 @@
                 </template>
               </el-table-column>
             </el-table>
-            <el-empty v-if="!taskDetail.vmosDataList || taskDetail.vmosDataList.length === 0" description="-" />
+            <el-empty v-if="!taskDetail.vmosDataList || taskDetail.vmosDataList.length === 0" :description="$t('common.noData')" />
           </el-tab-pane>
 
           <!-- 上下行速率统计 -->
@@ -830,6 +830,9 @@ export default {
           }
           if (result.videoDataCount) {
             message += `\n${t('experienceTest.clientData.videoDataCount')}: ${result.videoDataCount}`
+          }
+          if (result.gameDelayDataCount) {
+            message += `\n${t('experienceTest.clientData.gameDelayDataCount')}: ${result.gameDelayDataCount}`
           }
           
           ElMessage.success(message)

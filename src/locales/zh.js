@@ -1094,6 +1094,7 @@ export default {
       rttDataCount: 'RTT数据条数',
       lostDataCount: '丢包率数据条数',
       videoDataCount: '视频卡顿数据条数',
+      gameDelayDataCount: '游戏延时数据条数',
       searchTaskId: '请输入任务ID',
       searchNation: '请输入国家',
       searchOperator: '请输入运营商',

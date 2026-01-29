@@ -1237,6 +1237,7 @@ export default {
       rttDataCount: 'RTT Data Count',
       lostDataCount: 'Lost Data Count',
       videoDataCount: 'Video Data Count',
+      gameDelayDataCount: 'Game Delay Data Count',
       searchTaskId: 'Enter Task ID',
       searchService: 'Enter Service',
       searchApp: 'Enter App',
