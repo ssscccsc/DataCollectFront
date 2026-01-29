@@ -388,7 +388,7 @@
               <el-table-column :label="$t('experienceTest.clientData.resolution')" width="120">
                 <template #default="scope">
                   <el-input
-                    v-if="editingVmosRowId === scope.row.id && (taskDetail.taskInfo?.service === 'voip')"
+                    v-if="editingVmosRowId === scope.row.id"
                     v-model="scope.row.resolution"
                     size="small"
                     @keyup.enter="handleSaveVmosRow(scope.row)"
@@ -435,15 +435,7 @@
               </el-table-column>
               <el-table-column :label="$t('experienceTest.clientData.sBitrate')" width="100">
                 <template #default="scope">
-                  <el-input
-                    v-if="editingVmosRowId === scope.row.id && (taskDetail.taskInfo?.service === 'voip')"
-                    v-model="scope.row.bitrate"
-                    size="small"
-                    placeholder="bitrate"
-                    @keyup.enter="handleSaveVmosRow(scope.row)"
-                    @input="handleVmosFieldChange(scope.row)"
-                  />
-                  <span v-else>{{ scope.row.bitrate || '-' }}</span>
+                  {{ scope.row.bitrate || '-' }}
                 </template>
               </el-table-column>
               <el-table-column :label="$t('experienceTest.clientData.sRtt')" width="120">
@@ -975,14 +967,14 @@ export default {
       // 保存原始数据用于取消时恢复（包括计算字段）
       vmosEditBackup.value = {
         speed: row.speed || '',
+        resolution: row.resolution || '',
         rtt: row.rtt || '',
         packetLossRate: row.packetLossRate || '',
         stutterRatio: row.stutterRatio || '',
         bitrate: row.bitrate || '',
-        resolution: row.resolution || '',
         videoExperience: row.videoExperience || '',
         interactionExperience: row.interactionExperience || '',
-        calculateResolution: row.calculateResolution || '',
+        initialBufferingDelay: row.initialBufferingDelay || '',
         presentationExperience: row.presentationExperience || '',
         sLostPacketRate: row.sLostPacketRate || '',
         sStallRate: row.sStallRate || '',
@@ -996,7 +988,11 @@ export default {
 
     // 处理vMOS字段变化，实时计算（根据业务大类）
     const handleVmosFieldChange = (row) => {
-      const service = taskDetail.value.taskInfo?.service
+      if (!taskDetail.value.taskInfo) {
+        return
+      }
+      
+      const service = taskDetail.value.taskInfo.service
       
       // 如果业务大类为shortvideo，则实时计算相关字段
       if (service === 'shortvideo') {
@@ -1011,7 +1007,7 @@ export default {
         row.bitrate = calculated.bitrate
         row.videoExperience = calculated.videoExperience
         row.interactionExperience = calculated.interactionExperience
-        row.calculateResolution = calculated.calculateResolution
+        row.initialBufferingDelay = calculated.initialBufferingDelay
         row.presentationExperience = calculated.presentationExperience
         row.sLostPacketRate = calculated.sLostPacketRate
         row.sStallRate = calculated.sStallRate
@@ -1021,7 +1017,7 @@ export default {
       } else if (service === 'voip') {
         // 如果业务大类为voip，则实时计算相关字段
         const calculated = calculateVoipVmos(
-          row.bitrate || '0',
+          row.speed || '0',
           row.resolution || '',
           row.rtt || '0',
           row.packetLossRate || '0',
@@ -1032,122 +1028,13 @@ export default {
         row.bitrate = calculated.bitrate
         row.videoExperience = calculated.videoExperience
         row.interactionExperience = calculated.interactionExperience
-        row.calculateResolution = calculated.calculateResolution
+        row.initialBufferingDelay = calculated.initialBufferingDelay
         row.presentationExperience = calculated.presentationExperience
         row.sLostPacketRate = calculated.sLostPacketRate
         row.sStallRate = calculated.sStallRate
         row.alpha = calculated.alpha
         row.beta = calculated.beta
         row.vmos = calculated.vmos
-      }
-    }
-
-    // 分辨率映射函数（voip使用）
-    const getResolutionValue = (resolution) => {
-      const resolutionMap = {
-        144: 36864,
-        270: 129600,
-        360: 230400,
-        480: 409920,
-        720: 921600,
-        1080: 2073600,
-        1556: 3186688,
-        2160: 8294400,
-        2880: 14745600,
-        4320: 33004800,
-      }
-      const resNum = parseFloat(resolution) || 0
-      return resolutionMap[resNum] || resNum
-    }
-
-    // 计算voip业务大类的vMOS数据
-    const calculateVoipVmos = (bitrate, resolution, rtt, packetLossRate, stutterRatio) => {
-      // 转换为数字，如果为空或无效则使用0
-      const bitrateNum = parseFloat(bitrate) || 0
-      const resolutionNum = getResolutionValue(resolution)
-      const rttNum = parseFloat(rtt) || 0
-      const packetLossRateNum = parseFloat(packetLossRate) || 0
-      const stutterRatioNum = parseFloat(stutterRatio) || 0
-
-      // 常量定义
-      const v1 = 4.1192
-      const v2 = 0.0975
-      const v3 = 1.2667
-      const v4 = 0.3177
-      const v5 = 2.1276
-      const fr = 30
-      const v12 = -0.6571
-      const v13 = 232000
-      const v14 = -1.295
-      const v60 = 3.615
-      const v61 = 396.6
-      const v62 = 0.256
-      const v63 = -2.016
-      const v58 = 5
-      const v59 = 1.382
-      const a1 = 5
-      const g1 = 0.15
-      const g2 = 0.15
-
-      // s_bitrate = 1+ v1 - v1/(1+ powf(bitrate / (v2 * powf(Fr, v3) * prof(resolution, v4)), v5))
-      // prof函数应该是pow函数
-      let sBitrate = 1
-      const denominator = v2 * Math.pow(fr, v3) * Math.pow(resolutionNum, v4)
-      if (denominator !== 0) {
-        sBitrate = 1 + v1 - v1 / (1 + Math.pow(bitrateNum / denominator, v5))
-      }
-
-      // s_resolution = 1+v12 - v12 / (1 + powf(resolution / v13, v14))
-      let sResolution = 1
-      if (v13 !== 0) {
-        sResolution = 1 + v12 - v12 / (1 + Math.pow(resolutionNum / v13, v14))
-      }
-
-      // sQuality = max(min((s_bitrate * s_resolution), 5), 1)
-      const sQuality = Math.max(Math.min(sBitrate * sResolution, 5), 1)
-
-      // s_RTT = max(min(1 + v60 - v60 / (1+ powf(RTT / v61 + v62, v63)), 5), 1)
-      let sRtt = 1
-      const rttDenominator = rttNum / v61 + v62
-      if (rttDenominator > 0) {
-        sRtt = Math.max(Math.min(1 + v60 - v60 / (1 + Math.pow(rttDenominator, v63)), 5), 1)
-      }
-
-      // sInteraction = s_RTT
-      const sInteraction = sRtt
-
-      // s_lost_packet_rate = max(min( v58 * exp(-PLR / v59), 5), 1), PLR = 100 * lost_packet_rate
-      const plr = 100 * packetLossRateNum
-      const sLostPacketRate = Math.max(Math.min(v58 * Math.exp(-plr / v59), 5), 1)
-
-      // s_stall_rate = -a1 * stall_rate + 5
-      const sStallRate = -a1 * stutterRatioNum + 5
-
-      // sView = max(min(4* (1- g1 * (5-s_lost_packet_rate) - g2 * (5-s_stall_rate)) + 1, 5), 1)
-      const sViewValue = 4 * (1 - g1 * (5 - sLostPacketRate) - g2 * (5 - sStallRate)) + 1
-      const sView = Math.max(Math.min(sViewValue, 5), 1)
-
-      // α = 0.1 * (1 + 2 * exp( -sInteraction /2))
-      const alpha = 0.1 * (1 + 2 * Math.exp(-sInteraction / 2))
-
-      // β = 0.1 * (1+ 2 * exp(-sView /2))
-      const beta = 0.1 * (1 + 2 * Math.exp(-sView / 2))
-
-      // vMOS = max(min((sQuality - 1) * (1- α(5 - sInteraction) - β(5-sView)) + 1, 5), 1)
-      const vmosValue = (sQuality - 1) * (1 - alpha * (5 - sInteraction) - beta * (5 - sView)) + 1
-      const vmos = Math.max(Math.min(vmosValue, 5), 1)
-
-      return {
-        bitrate: sBitrate.toFixed(4),
-        videoExperience: sQuality.toFixed(4),
-        interactionExperience: sInteraction.toFixed(4),
-        calculateResolution: sRtt.toFixed(4),
-        presentationExperience: sView.toFixed(4),
-        sLostPacketRate: sLostPacketRate.toFixed(4),
-        sStallRate: sStallRate.toFixed(4),
-        alpha: alpha.toFixed(4),
-        beta: beta.toFixed(4),
-        vmos: vmos.toFixed(4),
       }
     }
 
@@ -1175,7 +1062,7 @@ export default {
       const sLostPacketRate = 4 / Math.exp(180.94 * packetLossRateNum) + 1
 
       // s_stall_rate = -4*卡顿率+5
-      const sStallRate = -4 * stutterRatioNum + 5
+      const sStallRate = Math.max(Math.min(-4 * stutterRatioNum + 5, 5), 1)
 
       // sView = max(min(4*(1-0.04*(5-s_lost_packet_rate)-0.25*(5-s_stall_rate)) + 1, 5), 1)
       const sViewValue = 4 * ( 1 - 0.04 * (5 - sLostPacketRate) - 0.25 * (5 - sStallRate)) + 1
@@ -1199,6 +1086,104 @@ export default {
         bitrate: sBitrate.toFixed(4),
         videoExperience: sQuality.toFixed(4),
         interactionExperience: sInteraction.toFixed(4),
+        initialBufferingDelay: sRtt.toFixed(4),
+        presentationExperience: sView.toFixed(4),
+        sLostPacketRate: sLostPacketRate.toFixed(4),
+        sStallRate: sStallRate.toFixed(4),
+        alpha: alpha.toFixed(4),
+        beta: beta.toFixed(4),
+        vmos: vmos.toFixed(4),
+      }
+    }
+
+    // 分辨率映射函数：将分辨率值转换为对应的像素数
+    const getResolutionPixels = (resolution) => {
+      const resolutionMap = {
+        '144': 36864,
+        '270': 129600,
+        '360': 230400,
+        '480': 409920,
+        '720': 921600,
+        '1080': 2073600,
+        '1556': 3186688,
+        '2160': 8294400,
+        '2880': 14745600,
+        '4320': 33004800,
+      }
+      return resolutionMap[String(resolution)] || parseFloat(resolution) || 0
+    }
+
+    // 计算voip业务大类的vMOS数据
+    const calculateVoipVmos = (speed, resolution, rtt, packetLossRate, stutterRatio) => {
+      // 转换为数字，如果为空或无效则使用0
+      const speedNum = parseFloat(speed) || 0
+      const resolutionPixels = getResolutionPixels(resolution)
+      const rttNum = parseFloat(rtt) || 0
+      const packetLossRateNum = parseFloat(packetLossRate) || 0
+      const stutterRatioNum = parseFloat(stutterRatio) || 0
+
+      // 常量定义
+      const v1 = 4.1192
+      const v2 = 0.0975
+      const v3 = 1.2667
+      const v4 = 0.3177
+      const v5 = 2.1276
+      const fr = 30
+      const v12 = -0.6571
+      const v13 = 232000
+      const v14 = -1.295
+      const v60 = 3.615
+      const v61 = 396.6
+      const v62 = 0.256
+      const v63 = -2.016
+      const v58 = 5
+      const v59 = 1.382
+      const a1 = 5
+      const g1 = 0.15
+      const g2 = 0.15
+
+      // s_bitrate = 1 + v1 - v1/(1 + pow(bitrate / (v2 * pow(fr, v3) * pow(resolution, v4)), v5))
+      // bitrate在这里应该是speed（速率）
+      const bitrateDivisor = v2 * Math.pow(fr, v3) * Math.pow(resolutionPixels, v4)
+      const sBitrate = 1 + v1 - v1 / (1 + Math.pow(speedNum / bitrateDivisor, v5))
+
+      // s_resolution = 1 + v12 - v12 / (1 + pow(resolution / v13, v14))
+      const sResolution = 1 + v12 - v12 / (1 + Math.pow(resolutionPixels / v13, v14))
+
+      // sQuality = max(min((s_bitrate * s_resolution), 5), 1)
+      const sQuality = Math.max(Math.min(sBitrate * sResolution, 5), 1)
+
+      // s_RTT = max(min(1 + v60 - v60 / (1 + pow(RTT / v61 + v62, v63)), 5), 1)
+      const sRtt = Math.max(Math.min(1 + v60 - v60 / (1 + Math.pow(rttNum / v61 + v62, v63)), 5), 1)
+
+      // sInteraction = s_RTT
+      const sInteraction = sRtt
+
+      // s_lost_packet_rate = max(min(v58 * exp(-PLR / v59), 5), 1)
+      // PLR = 100 * lost_packet_rate
+      const plr = 100 * packetLossRateNum
+      const sLostPacketRate = Math.max(Math.min(v58 * Math.exp(-plr / v59), 5), 1)
+
+      // s_stall_rate = -a1 * stall_rate + 5
+      const sStallRate = Math.max(Math.min(-a1 * stutterRatioNum + 5, 5), 1)
+
+      // sView = max(min(4 * (1 - g1 * (5 - s_lost_packet_rate) - g2 * (5 - s_stall_rate)) + 1, 5), 1)
+      const sView = Math.max(Math.min(4 * (1 - g1 * (5 - sLostPacketRate) - g2 * (5 - sStallRate)) + 1, 5), 1)
+
+      // α = 0.1 * (1 + 2 * exp(-sInteraction / 2))
+      const alpha = 0.1 * (1 + 2 * Math.exp(-sInteraction / 2))
+
+      // β = 0.1 * (1 + 2 * exp(-sView / 2))
+      const beta = 0.1 * (1 + 2 * Math.exp(-sView / 2))
+
+      // vMOS = max(min((sQuality - 1) * (1 - α(5 - sInteraction) - β(5 - sView)) + 1, 5), 1)
+      const vmos = Math.max(Math.min((sQuality - 1) * (1 - alpha * (5 - sInteraction) - beta * (5 - sView)) + 1, 5), 1)
+
+      return {
+        bitrate: sBitrate.toFixed(4),
+        videoExperience: sQuality.toFixed(4),
+        interactionExperience: sInteraction.toFixed(4),
+        initialBufferingDelay: sRtt.toFixed(4),
         presentationExperience: sView.toFixed(4),
         sLostPacketRate: sLostPacketRate.toFixed(4),
         sStallRate: sStallRate.toFixed(4),
@@ -1219,58 +1204,56 @@ export default {
         // 准备要保存的数据
         const dataToSave = {
           speed: row.speed || '',
+          resolution: row.resolution || '',
           rtt: row.rtt || '',
           packetLossRate: row.packetLossRate || '',
           stutterRatio: row.stutterRatio || '',
         }
 
-        const service = taskDetail.value.taskInfo?.service
-
-        // 如果业务大类为shortvideo，则计算vMOS相关字段
-        if (service === 'shortvideo') {
-          const calculated = calculateShortvideoVmos(
-            row.speed || '0',
-            row.rtt || '0',
-            row.packetLossRate || '0',
-            row.stutterRatio || '0',
-          )
+        // 根据业务大类计算vMOS相关字段
+        if (taskDetail.value.taskInfo) {
+          const service = taskDetail.value.taskInfo.service
           
-          // 将计算后的字段添加到保存数据中
-          dataToSave.bitrate = calculated.bitrate
-          dataToSave.videoExperience = calculated.videoExperience
-          dataToSave.interactionExperience = calculated.interactionExperience
-          dataToSave.calculateResolution = calculated.calculateResolution
-          dataToSave.presentationExperience = calculated.presentationExperience
-          dataToSave.sLostPacketRate = calculated.sLostPacketRate
-          dataToSave.sStallRate = calculated.sStallRate
-          dataToSave.alpha = calculated.alpha
-          dataToSave.beta = calculated.beta
-          dataToSave.vmos = calculated.vmos
-        } else if (service === 'voip') {
-          // 如果业务大类为voip，则计算vMOS相关字段
-          // 保存原始输入值
-          dataToSave.resolution = row.resolution || ''
-          
-          const calculated = calculateVoipVmos(
-            row.bitrate || '0',
-            row.resolution || '',
-            row.rtt || '0',
-            row.packetLossRate || '0',
-            row.stutterRatio || '0',
-          )
-          
-          // 将计算后的字段添加到保存数据中
-          // bitrate字段存储s_bitrate计算结果（用于显示在sBitrate列）
-          dataToSave.bitrate = calculated.bitrate
-          dataToSave.videoExperience = calculated.videoExperience
-          dataToSave.interactionExperience = calculated.interactionExperience
-          dataToSave.calculateResolution = calculated.calculateResolution
-          dataToSave.presentationExperience = calculated.presentationExperience
-          dataToSave.sLostPacketRate = calculated.sLostPacketRate
-          dataToSave.sStallRate = calculated.sStallRate
-          dataToSave.alpha = calculated.alpha
-          dataToSave.beta = calculated.beta
-          dataToSave.vmos = calculated.vmos
+          if (service === 'shortvideo') {
+            const calculated = calculateShortvideoVmos(
+              row.speed || '0',
+              row.rtt || '0',
+              row.packetLossRate || '0',
+              row.stutterRatio || '0',
+            )
+            
+            // 将计算后的字段添加到保存数据中
+            dataToSave.bitrate = calculated.bitrate
+            dataToSave.videoExperience = calculated.videoExperience
+            dataToSave.interactionExperience = calculated.interactionExperience
+            dataToSave.initialBufferingDelay = calculated.initialBufferingDelay
+            dataToSave.presentationExperience = calculated.presentationExperience
+            dataToSave.sLostPacketRate = calculated.sLostPacketRate
+            dataToSave.sStallRate = calculated.sStallRate
+            dataToSave.alpha = calculated.alpha
+            dataToSave.beta = calculated.beta
+            dataToSave.vmos = calculated.vmos
+          } else if (service === 'voip') {
+            const calculated = calculateVoipVmos(
+              row.speed || '0',
+              row.resolution || '',
+              row.rtt || '0',
+              row.packetLossRate || '0',
+              row.stutterRatio || '0',
+            )
+            
+            // 将计算后的字段添加到保存数据中
+            dataToSave.bitrate = calculated.bitrate
+            dataToSave.videoExperience = calculated.videoExperience
+            dataToSave.interactionExperience = calculated.interactionExperience
+            dataToSave.initialBufferingDelay = calculated.initialBufferingDelay
+            dataToSave.presentationExperience = calculated.presentationExperience
+            dataToSave.sLostPacketRate = calculated.sLostPacketRate
+            dataToSave.sStallRate = calculated.sStallRate
+            dataToSave.alpha = calculated.alpha
+            dataToSave.beta = calculated.beta
+            dataToSave.vmos = calculated.vmos
+          }
         }
 
         const response = await updateVmosData(row.id, dataToSave)
@@ -1302,14 +1285,14 @@ export default {
       // 恢复原始数据（包括计算字段）
       if (vmosEditBackup.value) {
         row.speed = vmosEditBackup.value.speed
+        row.resolution = vmosEditBackup.value.resolution
         row.rtt = vmosEditBackup.value.rtt
         row.packetLossRate = vmosEditBackup.value.packetLossRate
         row.stutterRatio = vmosEditBackup.value.stutterRatio
         row.bitrate = vmosEditBackup.value.bitrate
-        row.resolution = vmosEditBackup.value.resolution
         row.videoExperience = vmosEditBackup.value.videoExperience
         row.interactionExperience = vmosEditBackup.value.interactionExperience
-        row.calculateResolution = vmosEditBackup.value.calculateResolution
+        row.initialBufferingDelay = vmosEditBackup.value.initialBufferingDelay
         row.presentationExperience = vmosEditBackup.value.presentationExperience
         row.sLostPacketRate = vmosEditBackup.value.sLostPacketRate
         row.sStallRate = vmosEditBackup.value.sStallRate
