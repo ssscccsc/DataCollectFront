@@ -1119,6 +1119,25 @@ export default {
         row.alpha = calculated.alpha
         row.beta = calculated.beta
         row.vmos = calculated.vmos
+      } else if (service === 'mobile_game') {
+        // 如果业务大类为mobile_game，则实时计算相关字段
+        const calculated = calculateMobileGameVmos(
+          row.rtt || '0',
+          row.packetLossRate || '0',
+          row.stutterRatio || '0',
+        )
+        
+        // 实时更新计算后的字段到row对象中
+        row.bitrate = calculated.bitrate
+        row.videoExperience = calculated.videoExperience
+        row.interactionExperience = calculated.interactionExperience
+        row.initialBufferingDelay = calculated.initialBufferingDelay
+        row.presentationExperience = calculated.presentationExperience
+        row.sLostPacketRate = calculated.sLostPacketRate
+        row.sStallRate = calculated.sStallRate
+        row.alpha = calculated.alpha
+        row.beta = calculated.beta
+        row.vmos = calculated.vmos
       }
     }
 
@@ -1575,6 +1594,64 @@ export default {
       }
     }
 
+    // 计算mobile_game业务大类的vMOS数据
+    const calculateMobileGameVmos = (rtt, packetLossRate, stutterRatio) => {
+      // 转换为数字，如果为空或无效则使用0
+      const rttNum = parseFloat(rtt) || 0
+      const packetLossRateNum = parseFloat(packetLossRate) || 0
+      const stutterRatioNum = parseFloat(stutterRatio) || 0
+
+      // 常量定义
+      const a3 = 0.0035
+      const a4 = 180.94
+      const a5 = 4
+      const g1 = 0.25
+      const g2 = 0.04
+
+      // sQuality = 4.5（固定值）
+      const sQuality = 4.5
+
+      // s_RTT = 4 / exp(a3 * RTT) + 1, a3 = 0.0035
+      const sRtt = 4 / Math.exp(a3 * rttNum) + 1
+
+      // sInteraction = s_RTT
+      const sInteraction = sRtt
+
+      // s_lost_packet_rate = 4 / exp(a4 * lost_packet_rate) + 1, a4 = 180.94
+      const sLostPacketRate = 4 / Math.exp(a4 * packetLossRateNum) + 1
+
+      // s_stall_rate = -a5 * stall_rate + 5, a5 = 4
+      const sStallRate = Math.max(Math.min(-a5 * stutterRatioNum + 5, 5), 1)
+
+      // sView = max(min(4 * (1 - g1 * (5 - s_lost_packet_rate) - g2 * (5 - s_stall_rate)) + 1, 5), 1), g1 = 0.25, g2 = 0.04
+      const sViewValue = 4 * (1 - g1 * (5 - sLostPacketRate) - g2 * (5 - sStallRate)) + 1
+      const sView = Math.max(Math.min(sViewValue, 5), 1)
+
+      // α = 0.1 * (1 + 2 * exp(-sInteraction / 2))
+      const alpha = 0.1 * (1 + 2 * Math.exp(-sInteraction / 2))
+
+      // β = 0.1 * (1 + 2 * exp(-sView / 2))
+      const beta = 0.1 * (1 + 2 * Math.exp(-sView / 2))
+
+      // vMOS = min(max((sQuality - 1) * (1 - α(5 - sInteraction) - β*(5 - sView)) + 1, 1), 5)
+      const vmosValue = (sQuality - 1) * (1 - alpha * (5 - sInteraction) - beta * (5 - sView)) + 1
+      const vmos = Math.min(Math.max(vmosValue, 1), 5)
+
+      // mobile_game 不需要 bitrate 和 resolution，但为了保持数据结构一致性，返回空值或固定值
+      return {
+        bitrate: '-',
+        videoExperience: sQuality.toFixed(4),
+        interactionExperience: sInteraction.toFixed(4),
+        initialBufferingDelay: sRtt.toFixed(4),
+        presentationExperience: sView.toFixed(4),
+        sLostPacketRate: sLostPacketRate.toFixed(4),
+        sStallRate: sStallRate.toFixed(4),
+        alpha: alpha.toFixed(4),
+        beta: beta.toFixed(4),
+        vmos: vmos.toFixed(4),
+      }
+    }
+
     const handleSaveVmosRow = async (row) => {
       if (!row || !row.id) {
         ElMessage.warning('无效的数据')
@@ -1699,6 +1776,24 @@ export default {
             const calculated = calculateMeetingVmos(
               row.speed || '0',
               row.resolution || '',
+              row.rtt || '0',
+              row.packetLossRate || '0',
+              row.stutterRatio || '0',
+            )
+            
+            // 将计算后的字段添加到保存数据中
+            dataToSave.bitrate = calculated.bitrate
+            dataToSave.videoExperience = calculated.videoExperience
+            dataToSave.interactionExperience = calculated.interactionExperience
+            dataToSave.initialBufferingDelay = calculated.initialBufferingDelay
+            dataToSave.presentationExperience = calculated.presentationExperience
+            dataToSave.sLostPacketRate = calculated.sLostPacketRate
+            dataToSave.sStallRate = calculated.sStallRate
+            dataToSave.alpha = calculated.alpha
+            dataToSave.beta = calculated.beta
+            dataToSave.vmos = calculated.vmos
+          } else if (service === 'mobile_game') {
+            const calculated = calculateMobileGameVmos(
               row.rtt || '0',
               row.packetLossRate || '0',
               row.stutterRatio || '0',
