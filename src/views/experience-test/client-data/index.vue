@@ -380,6 +380,15 @@
                 {{ $t('experienceTest.clientData.revertDownlinkSpeed') }}
               </el-button>
             </div>
+            <!-- 替换/回退游戏内RTT按钮（仅在mobile_game和mobile_game_cloud时显示） -->
+            <div v-if="taskDetail.taskInfo && (taskDetail.taskInfo.service === 'mobile_game' || taskDetail.taskInfo.service === 'mobile_game_cloud')" style="margin-bottom: 16px;">
+              <el-button type="primary" @click="handleReplaceGameRtt" :disabled="isReplacingRtt || !hasGameDelayData">
+                {{ $t('experienceTest.clientData.replaceGameRtt') }}
+              </el-button>
+              <el-button type="warning" @click="handleRevertGameRtt" :disabled="isReplacingRtt || !hasOriginalRttData">
+                {{ $t('experienceTest.clientData.revertGameRtt') }}
+              </el-button>
+            </div>
             <el-table :data="taskDetail.vmosDataList" border stripe style="width: 100%">
               <el-table-column prop="sequenceNumber" :label="$t('experienceTest.clientData.sequenceNumber')" width="100" />
               <el-table-column :label="$t('experienceTest.clientData.speedKbps')" width="100">
@@ -654,6 +663,16 @@ export default {
       return taskDetail.value.speedDataList && taskDetail.value.speedDataList.length > 0
     })
     
+    // 替换游戏内RTT相关
+    const isReplacingRtt = ref(false)
+    const originalRttDataBackup = ref({}) // 保存原始RTT数据，格式：{ rowId: originalRtt }
+    const hasOriginalRttData = computed(() => {
+      return Object.keys(originalRttDataBackup.value).length > 0
+    })
+    const hasGameDelayData = computed(() => {
+      return taskDetail.value.gameDelayDataList && taskDetail.value.gameDelayDataList.length > 0
+    })
+    
     // 基础信息编辑相关
     const editingBasicInfo = ref(false)
     const basicInfoSaving = ref(false)
@@ -818,6 +837,10 @@ export default {
         // 重置替换下行速率相关状态
         originalSpeedDataBackup.value = {}
         isReplacingSpeed.value = false
+        
+        // 重置替换游戏内RTT相关状态
+        originalRttDataBackup.value = {}
+        isReplacingRtt.value = false
         
         // 重置数据
         taskDetail.value = {
@@ -2265,6 +2288,44 @@ export default {
         row.alpha = calculated.alpha
         row.beta = calculated.beta
         row.vmos = calculated.vmos
+      } else if (service === 'mobile_game') {
+        const calculated = calculateMobileGameVmos(
+          row.rtt || '0',
+          row.packetLossRate || '0',
+          row.stutterRatio || '0',
+          params,
+        )
+        row.bitrate = calculated.bitrate
+        row.videoExperience = calculated.videoExperience
+        row.interactionExperience = calculated.interactionExperience
+        row.initialBufferingDelay = calculated.initialBufferingDelay
+        row.calculatedResolution = calculated.calculatedResolution
+        row.presentationExperience = calculated.presentationExperience
+        row.sLostPacketRate = calculated.sLostPacketRate
+        row.sStallRate = calculated.sStallRate
+        row.alpha = calculated.alpha
+        row.beta = calculated.beta
+        row.vmos = calculated.vmos
+      } else if (service === 'mobile_game_cloud') {
+        const calculated = calculateMobileGameCloudVmos(
+          row.speed || '0',
+          row.resolution || '',
+          row.rtt || '0',
+          row.packetLossRate || '0',
+          row.stutterRatio || '0',
+          params,
+        )
+        row.bitrate = calculated.bitrate
+        row.videoExperience = calculated.videoExperience
+        row.interactionExperience = calculated.interactionExperience
+        row.initialBufferingDelay = calculated.initialBufferingDelay
+        row.calculatedResolution = calculated.calculatedResolution
+        row.presentationExperience = calculated.presentationExperience
+        row.sLostPacketRate = calculated.sLostPacketRate
+        row.sStallRate = calculated.sStallRate
+        row.alpha = calculated.alpha
+        row.beta = calculated.beta
+        row.vmos = calculated.vmos
       }
     }
 
@@ -2300,6 +2361,44 @@ export default {
         dataToSave.vmos = calculated.vmos
       } else if (service === 'meeting') {
         const calculated = calculateMeetingVmos(
+          row.speed || '0',
+          row.resolution || '',
+          row.rtt || '0',
+          row.packetLossRate || '0',
+          row.stutterRatio || '0',
+          params,
+        )
+        dataToSave.bitrate = calculated.bitrate
+        dataToSave.videoExperience = calculated.videoExperience
+        dataToSave.interactionExperience = calculated.interactionExperience
+        dataToSave.initialBufferingDelay = calculated.initialBufferingDelay
+        dataToSave.calculatedResolution = calculated.calculatedResolution
+        dataToSave.presentationExperience = calculated.presentationExperience
+        dataToSave.sLostPacketRate = calculated.sLostPacketRate
+        dataToSave.sStallRate = calculated.sStallRate
+        dataToSave.alpha = calculated.alpha
+        dataToSave.beta = calculated.beta
+        dataToSave.vmos = calculated.vmos
+      } else if (service === 'mobile_game') {
+        const calculated = calculateMobileGameVmos(
+          row.rtt || '0',
+          row.packetLossRate || '0',
+          row.stutterRatio || '0',
+          params,
+        )
+        dataToSave.bitrate = calculated.bitrate
+        dataToSave.videoExperience = calculated.videoExperience
+        dataToSave.interactionExperience = calculated.interactionExperience
+        dataToSave.initialBufferingDelay = calculated.initialBufferingDelay
+        dataToSave.calculatedResolution = calculated.calculatedResolution
+        dataToSave.presentationExperience = calculated.presentationExperience
+        dataToSave.sLostPacketRate = calculated.sLostPacketRate
+        dataToSave.sStallRate = calculated.sStallRate
+        dataToSave.alpha = calculated.alpha
+        dataToSave.beta = calculated.beta
+        dataToSave.vmos = calculated.vmos
+      } else if (service === 'mobile_game_cloud') {
+        const calculated = calculateMobileGameCloudVmos(
           row.speed || '0',
           row.resolution || '',
           row.rtt || '0',
@@ -2484,6 +2583,167 @@ export default {
       }
     }
 
+    // 替换游戏内RTT
+    const handleReplaceGameRtt = async () => {
+      if (!taskDetail.value.taskInfo || !taskDetail.value.vmosDataList || !taskDetail.value.gameDelayDataList) {
+        ElMessage.warning('数据不完整')
+        return
+      }
+
+      const service = taskDetail.value.taskInfo.service
+      if (service !== 'mobile_game' && service !== 'mobile_game_cloud') {
+        ElMessage.warning('当前业务大类不支持此功能')
+        return
+      }
+
+      if (taskDetail.value.vmosDataList.length !== taskDetail.value.gameDelayDataList.length) {
+        ElMessage.warning('vMOS数据与游戏延时统计数据数量不匹配')
+        return
+      }
+
+      isReplacingRtt.value = true
+      try {
+        // 获取配置参数
+        const params = await getVmosParams(service)
+
+        // 先保存所有原始RTT数据
+        originalRttDataBackup.value = {}
+        for (let i = 0; i < taskDetail.value.vmosDataList.length; i++) {
+          const vmosRow = taskDetail.value.vmosDataList[i]
+          originalRttDataBackup.value[vmosRow.id] = vmosRow.rtt || ''
+        }
+
+        // 遍历vMOS数据列表，替换RTT并重新计算
+        // 通过序号匹配：vmosDataList的sequenceNumber和gameDelayDataList的indexValue
+        for (let i = 0; i < taskDetail.value.vmosDataList.length; i++) {
+          const vmosRow = taskDetail.value.vmosDataList[i]
+          const gameDelayRow = taskDetail.value.gameDelayDataList[i]
+
+          // 获取游戏延时（单位：ms），直接替换RTT
+          const gameDelay = parseFloat(gameDelayRow.delay) || 0
+
+          // 替换RTT
+          vmosRow.rtt = gameDelay.toString()
+
+          // 重新计算vMOS数据
+          await recalculateVmosDataForRow(vmosRow, service, params)
+        }
+
+        // 批量保存到数据库
+        let successCount = 0
+        let failCount = 0
+        const savePromises = taskDetail.value.vmosDataList.map(async (vmosRow) => {
+          try {
+            const dataToSave = prepareVmosDataToSave(vmosRow, service, params)
+            const response = await updateVmosData(vmosRow.id, dataToSave)
+            if (response.code === 200) {
+              successCount++
+            } else {
+              failCount++
+              console.error(`保存vMOS数据失败 (ID: ${vmosRow.id}):`, response.message)
+            }
+          } catch (error) {
+            failCount++
+            console.error(`保存vMOS数据失败 (ID: ${vmosRow.id}):`, error)
+          }
+        })
+
+        await Promise.all(savePromises)
+
+        if (failCount === 0) {
+          ElMessage.success(`替换游戏内RTT成功，已保存 ${successCount} 条数据`)
+          // 刷新当前任务详情
+          if (taskDetail.value.taskInfo && taskDetail.value.taskInfo.taskId) {
+            await handleViewDetail({ taskId: taskDetail.value.taskInfo.taskId })
+          }
+        } else {
+          ElMessage.warning(`替换游戏内RTT完成，成功保存 ${successCount} 条，失败 ${failCount} 条`)
+        }
+      } catch (error) {
+        console.error('Replace game RTT error:', error)
+        ElMessage.error(error.message || t('common.error'))
+      } finally {
+        isReplacingRtt.value = false
+      }
+    }
+
+    // 回退游戏内RTT
+    const handleRevertGameRtt = async () => {
+      if (!taskDetail.value.taskInfo || !taskDetail.value.vmosDataList) {
+        ElMessage.warning('数据不完整')
+        return
+      }
+
+      const service = taskDetail.value.taskInfo.service
+      if (service !== 'mobile_game' && service !== 'mobile_game_cloud') {
+        ElMessage.warning('当前业务大类不支持此功能')
+        return
+      }
+
+      if (Object.keys(originalRttDataBackup.value).length === 0) {
+        ElMessage.warning('没有可回退的原始数据')
+        return
+      }
+
+      isReplacingRtt.value = true
+      try {
+        // 获取配置参数
+        const params = await getVmosParams(service)
+
+        // 遍历vMOS数据列表，恢复原始RTT并重新计算
+        for (let i = 0; i < taskDetail.value.vmosDataList.length; i++) {
+          const vmosRow = taskDetail.value.vmosDataList[i]
+          const originalRtt = originalRttDataBackup.value[vmosRow.id]
+
+          // 如果存在原始RTT，则恢复
+          if (originalRtt !== undefined && originalRtt !== null) {
+            vmosRow.rtt = originalRtt
+
+            // 重新计算vMOS数据
+            await recalculateVmosDataForRow(vmosRow, service, params)
+          }
+        }
+
+        // 批量保存到数据库
+        let successCount = 0
+        let failCount = 0
+        const savePromises = taskDetail.value.vmosDataList.map(async (vmosRow) => {
+          try {
+            const dataToSave = prepareVmosDataToSave(vmosRow, service, params)
+            const response = await updateVmosData(vmosRow.id, dataToSave)
+            if (response.code === 200) {
+              successCount++
+            } else {
+              failCount++
+              console.error(`保存vMOS数据失败 (ID: ${vmosRow.id}):`, response.message)
+            }
+          } catch (error) {
+            failCount++
+            console.error(`保存vMOS数据失败 (ID: ${vmosRow.id}):`, error)
+          }
+        })
+
+        await Promise.all(savePromises)
+
+        if (failCount === 0) {
+          // 只有在全部保存成功后才清空原始数据备份
+          originalRttDataBackup.value = {}
+          ElMessage.success(`回退游戏内RTT成功，已保存 ${successCount} 条数据`)
+          // 刷新当前任务详情
+          if (taskDetail.value.taskInfo && taskDetail.value.taskInfo.taskId) {
+            await handleViewDetail({ taskId: taskDetail.value.taskInfo.taskId })
+          }
+        } else {
+          ElMessage.warning(`回退游戏内RTT完成，成功保存 ${successCount} 条，失败 ${failCount} 条`)
+        }
+      } catch (error) {
+        console.error('Revert game RTT error:', error)
+        ElMessage.error(error.message || t('common.error'))
+      } finally {
+        isReplacingRtt.value = false
+      }
+    }
+
     // 删除任务
     const handleDelete = async (row) => {
       if (!row || !row.taskId) {
@@ -2573,6 +2833,11 @@ export default {
       isReplacingSpeed,
       hasOriginalSpeedData,
       hasSpeedData,
+      handleReplaceGameRtt,
+      handleRevertGameRtt,
+      isReplacingRtt,
+      hasOriginalRttData,
+      hasGameDelayData,
     }
   },
 }

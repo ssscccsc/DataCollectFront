@@ -1304,6 +1304,8 @@ export default {
       avgLost: 'Avg Lost',
       replaceDownlinkSpeed: 'Replace Downlink Speed',
       revertDownlinkSpeed: 'Revert Downlink Speed',
+      replaceGameRtt: 'Replace Game RTT',
+      revertGameRtt: 'Revert Game RTT',
     },
     dataComparison: {
       description: 'Client-network data comparison analysis, support data comparison and viewing',

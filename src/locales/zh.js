@@ -1168,6 +1168,8 @@ export default {
       avgLost: '平均丢包率',
       replaceDownlinkSpeed: '替换下行速率',
       revertDownlinkSpeed: '回退下行速率',
+      replaceGameRtt: '替换游戏内RTT',
+      revertGameRtt: '回退游戏内RTT',
     },
     networkData: {
       description: '管理网络侧数据，包括数据查看、编辑、删除等操作',
