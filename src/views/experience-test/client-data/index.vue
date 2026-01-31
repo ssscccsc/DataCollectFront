@@ -1332,7 +1332,7 @@ export default {
     const calculateWatchLiveVmos = (speed, resolution, rtt, packetLossRate, stutterRatio) => {
       // 转换为数字，如果为空或无效则使用0
       const speedNum = parseFloat(speed) || 0
-      const resolutionPixels = getResolutionPixels(resolution)
+      const resolutionNum = parseFloat(resolution) || 0
       const rttNum = parseFloat(rtt) || 0
       const packetLossRateNum = parseFloat(packetLossRate) || 0
       const stutterRatioNum = parseFloat(stutterRatio) || 0
@@ -1352,7 +1352,7 @@ export default {
       const sBitrate = 5 / (1 + Math.exp(-speedNum / a1))
 
       // s_resolution = 5/ (1 + exp(-resolution / a2)), a2 = 410
-      const sResolution = 5 / (1 + Math.exp(-resolutionPixels / a2))
+      const sResolution = 5 / (1 + Math.exp(-resolutionNum / a2))
 
       // sQuality = max(min(4 * (1 - w1 * (5 - s_bitrate) - w2 * (5 - s_resolution)) + 1, 5), 1), w1 = 0.25, w2 = 0.05
       const sQualityValue = 4 * (1 - w1 * (5 - sBitrate) - w2 * (5 - sResolution)) + 1
@@ -1407,7 +1407,7 @@ export default {
     const calculateLiveStreamingVmos = (speed, resolution, rtt, packetLossRate, stutterRatio) => {
       // 转换为数字，如果为空或无效则使用0
       const speedNum = parseFloat(speed) || 0
-      const resolutionPixels = getResolutionPixels(resolution)
+      const resolutionNum = parseFloat(resolution) || 0
       const rttNum = parseFloat(rtt) || 0
       const packetLossRateNum = parseFloat(packetLossRate) || 0
       const stutterRatioNum = parseFloat(stutterRatio) || 0
@@ -1427,7 +1427,7 @@ export default {
       const sBitrate = 5 / (1 + Math.exp(-speedNum / a1))
 
       // s_resolution = 5 / (1 + exp( -resolution / a2)), a2 = 410
-      const sResolution = 5 / (1 + Math.exp(-resolutionPixels / a2))
+      const sResolution = 5 / (1 + Math.exp(-resolutionNum / a2))
 
       // sQuality = max(min( 4 * (1 - w1 * (5 - s_bitrate) - w2 * (5 - s_resolution)) +1, 5), 1), w1 = 0.25, w2 = 0.05
       const sQualityValue = 4 * (1 - w1 * (5 - sBitrate) - w2 * (5 - sResolution)) + 1
@@ -1484,7 +1484,7 @@ export default {
     const calculateVodStreamingVmos = (speed, resolution, rtt, packetLossRate, stutterRatio) => {
       // 转换为数字，如果为空或无效则使用0
       const speedNum = parseFloat(speed) || 0
-      const resolutionPixels = getResolutionPixels(resolution)
+      const resolutionNum = parseFloat(resolution) || 0
       const rttNum = parseFloat(rtt) || 0
       const packetLossRateNum = parseFloat(packetLossRate) || 0
       const stutterRatioNum = parseFloat(stutterRatio) || 0
@@ -1504,7 +1504,7 @@ export default {
       const sBitrate = 5 / (1 + Math.exp(-speedNum / a1))
 
       // s_resolution = 5/(1 + exp(-resolution / a2)), a2 = 410
-      const sResolution = 5 / (1 + Math.exp(-resolutionPixels / a2))
+      const sResolution = 5 / (1 + Math.exp(-resolutionNum / a2))
 
       // sQuality = max(min(4 * (1 - w1 * (5 - s_bitrate) - w2 * (5 - s_resolution)) + 1, 5), 1), w1 = 0.04, w2 = 0.25
       const sQualityValue = 4 * (1 - w1 * (5 - sBitrate) - w2 * (5 - sResolution)) + 1
@@ -1559,7 +1559,7 @@ export default {
     const calculateMeetingVmos = (speed, resolution, rtt, packetLossRate, stutterRatio) => {
       // 转换为数字，如果为空或无效则使用0
       const speedNum = parseFloat(speed) || 0
-      const resolutionPixels = getResolutionPixels(resolution)
+      const resolutionNum = parseFloat(resolution) || 0
       const rttNum = parseFloat(rtt) || 0
       const packetLossRateNum = parseFloat(packetLossRate) || 0
       const stutterRatioNum = parseFloat(stutterRatio) || 0
@@ -1579,7 +1579,7 @@ export default {
       const sBitrate = 5 / (1 + Math.exp(-speedNum / a1))
 
       // s_resolution = 5/(1 + exp(-resolution / a2)), a2 = 410
-      const sResolution = 5 / (1 + Math.exp(-resolutionPixels / a2))
+      const sResolution = 5 / (1 + Math.exp(-resolutionNum / a2))
 
       // sQuality = max(min(4 * (1- w1 * (5-s_bitrate) - w2 * (5 - s_resolution)) + 1, 5), 1), w1 =0.25, w2 = 0.05
       const sQualityValue = 4 * (1 - w1 * (5 - sBitrate) - w2 * (5 - sResolution)) + 1
@@ -1693,7 +1693,7 @@ export default {
     const calculateMobileGameCloudVmos = (speed, resolution, rtt, packetLossRate, stutterRatio) => {
       // 转换为数字，如果为空或无效则使用0
       const speedNum = parseFloat(speed) || 0
-      const resolutionPixels = getResolutionPixels(resolution)
+      const resolutionNum = parseFloat(resolution) || 0
       const rttNum = parseFloat(rtt) || 0
       const packetLossRateNum = parseFloat(packetLossRate) || 0
       const stutterRatioNum = parseFloat(stutterRatio) || 0
@@ -1713,7 +1713,7 @@ export default {
       const sBitrate = 5 / (1 + Math.exp(-speedNum / a1))
 
       // s_resolution = 5 / (1 + exp(-resolution / a2)), a2 = 410
-      const sResolution = 5 / (1 + Math.exp(-resolutionPixels / a2))
+      const sResolution = 5 / (1 + Math.exp(-resolutionNum / a2))
 
       // sQuality = max(min(4 * (1 - w1 * (5-s_bitrate) - w2 * (5 - s_resolution)) + 1, 5), 1), w1 = 0.25, w2 = 0.05
       const sQualityValue = 4 * (1 - w1 * (5 - sBitrate) - w2 * (5 - sResolution)) + 1
