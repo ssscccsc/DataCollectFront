@@ -1131,7 +1131,7 @@ export default {
       stutterRatio: '卡顿占比',
       stutterRatioPercent: '卡顿占比(%)',
       initialBufferingDelay: '初缓时延',
-      sRtt: 's_resoulution',
+      sResoulution: 's_resoulution',
       bitrate: '码率',
       sBitrate: 's_bitrate',
       calculatedResolution: '计算分辨率',

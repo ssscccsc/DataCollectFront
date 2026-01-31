@@ -1147,7 +1147,7 @@ export default {
       stutterRatio: 'Stutter Ratio',
       stutterRatioPercent: 'Stutter Ratio (%)',
       initialBufferingDelay: 'Initial Buffering Delay',
-      sRtt: 's_resoulution',
+      sResoulution: 's_resoulution',
       bitrate: 'Bitrate',
       sBitrate: 's_bitrate',
       calculatedResolution: 'Calculated Resolution',
