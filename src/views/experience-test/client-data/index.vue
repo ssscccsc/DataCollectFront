@@ -440,7 +440,7 @@
               </el-table-column>
               <el-table-column :label="$t('experienceTest.clientData.sResoulution')" width="120">
                 <template #default="scope">
-                  {{ scope.row.calculatedResolution || '-' }}
+                  {{ scope.row.calculateResolution || '-' }}
                 </template>
               </el-table-column>
               <el-table-column :label="$t('experienceTest.clientData.sQuality')" width="100">
@@ -975,7 +975,7 @@ export default {
         videoExperience: row.videoExperience || '',
         interactionExperience: row.interactionExperience || '',
         initialBufferingDelay: row.initialBufferingDelay || '',
-        calculatedResolution: row.calculatedResolution || '',
+        calculateResolution: row.calculateResolution || '',
         presentationExperience: row.presentationExperience || '',
         sLostPacketRate: row.sLostPacketRate || '',
         sStallRate: row.sStallRate || '',
@@ -1009,7 +1009,7 @@ export default {
         row.videoExperience = calculated.videoExperience
         row.interactionExperience = calculated.interactionExperience
         row.initialBufferingDelay = calculated.initialBufferingDelay
-        row.calculatedResolution = calculated.calculatedResolution
+        row.calculateResolution = calculated.calculateResolution
         row.presentationExperience = calculated.presentationExperience
         row.sLostPacketRate = calculated.sLostPacketRate
         row.sStallRate = calculated.sStallRate
@@ -1031,7 +1031,7 @@ export default {
         row.videoExperience = calculated.videoExperience
         row.interactionExperience = calculated.interactionExperience
         row.initialBufferingDelay = calculated.initialBufferingDelay
-        row.calculatedResolution = calculated.calculatedResolution
+        row.calculateResolution = calculated.calculateResolution
         row.presentationExperience = calculated.presentationExperience
         row.sLostPacketRate = calculated.sLostPacketRate
         row.sStallRate = calculated.sStallRate
@@ -1053,7 +1053,7 @@ export default {
         row.videoExperience = calculated.videoExperience
         row.interactionExperience = calculated.interactionExperience
         row.initialBufferingDelay = calculated.initialBufferingDelay
-        row.calculatedResolution = calculated.calculatedResolution
+        row.calculateResolution = calculated.calculateResolution
         row.presentationExperience = calculated.presentationExperience
         row.sLostPacketRate = calculated.sLostPacketRate
         row.sStallRate = calculated.sStallRate
@@ -1075,7 +1075,7 @@ export default {
         row.videoExperience = calculated.videoExperience
         row.interactionExperience = calculated.interactionExperience
         row.initialBufferingDelay = calculated.initialBufferingDelay
-        row.calculatedResolution = calculated.calculatedResolution
+        row.calculateResolution = calculated.calculateResolution
         row.presentationExperience = calculated.presentationExperience
         row.sLostPacketRate = calculated.sLostPacketRate
         row.sStallRate = calculated.sStallRate
@@ -1097,7 +1097,7 @@ export default {
         row.videoExperience = calculated.videoExperience
         row.interactionExperience = calculated.interactionExperience
         row.initialBufferingDelay = calculated.initialBufferingDelay
-        row.calculatedResolution = calculated.calculatedResolution
+        row.calculateResolution = calculated.calculateResolution
         row.presentationExperience = calculated.presentationExperience
         row.sLostPacketRate = calculated.sLostPacketRate
         row.sStallRate = calculated.sStallRate
@@ -1119,7 +1119,7 @@ export default {
         row.videoExperience = calculated.videoExperience
         row.interactionExperience = calculated.interactionExperience
         row.initialBufferingDelay = calculated.initialBufferingDelay
-        row.calculatedResolution = calculated.calculatedResolution
+        row.calculateResolution = calculated.calculateResolution
         row.presentationExperience = calculated.presentationExperience
         row.sLostPacketRate = calculated.sLostPacketRate
         row.sStallRate = calculated.sStallRate
@@ -1139,7 +1139,7 @@ export default {
         row.videoExperience = calculated.videoExperience
         row.interactionExperience = calculated.interactionExperience
         row.initialBufferingDelay = calculated.initialBufferingDelay
-        row.calculatedResolution = calculated.calculatedResolution
+        row.calculateResolution = calculated.calculateResolution
         row.presentationExperience = calculated.presentationExperience
         row.sLostPacketRate = calculated.sLostPacketRate
         row.sStallRate = calculated.sStallRate
@@ -1161,7 +1161,7 @@ export default {
         row.videoExperience = calculated.videoExperience
         row.interactionExperience = calculated.interactionExperience
         row.initialBufferingDelay = calculated.initialBufferingDelay
-        row.calculatedResolution = calculated.calculatedResolution
+        row.calculateResolution = calculated.calculateResolution
         row.presentationExperience = calculated.presentationExperience
         row.sLostPacketRate = calculated.sLostPacketRate
         row.sStallRate = calculated.sStallRate
@@ -1220,7 +1220,7 @@ export default {
         videoExperience: sQuality.toFixed(4),
         interactionExperience: sInteraction.toFixed(4),
         initialBufferingDelay: sRtt.toFixed(4),
-        calculatedResolution: '-',
+        calculateResolution: '-',
         presentationExperience: sView.toFixed(4),
         sLostPacketRate: sLostPacketRate.toFixed(4),
         sStallRate: sStallRate.toFixed(4),
@@ -1318,7 +1318,7 @@ export default {
         videoExperience: sQuality.toFixed(4),
         interactionExperience: sInteraction.toFixed(4),
         initialBufferingDelay: sRtt.toFixed(4),
-        calculatedResolution: sResolution.toFixed(4),
+        calculateResolution: sResolution.toFixed(4),
         presentationExperience: sView.toFixed(4),
         sLostPacketRate: sLostPacketRate.toFixed(4),
         sStallRate: sStallRate.toFixed(4),
@@ -1393,7 +1393,7 @@ export default {
         videoExperience: sQuality.toFixed(4),
         interactionExperience: sInteraction.toFixed(4),
         initialBufferingDelay: sRtt.toFixed(4),
-        calculatedResolution: sResolution.toFixed(4),
+        calculateResolution: sResolution.toFixed(4),
         presentationExperience: sView.toFixed(4),
         sLostPacketRate: sLostPacketRate.toFixed(4),
         sStallRate: sStallRate.toFixed(4),
@@ -1470,7 +1470,7 @@ export default {
         videoExperience: sQuality.toFixed(4),
         interactionExperience: sInteraction.toFixed(4),
         initialBufferingDelay: sRtt.toFixed(4),
-        calculatedResolution: sResolution.toFixed(4),
+        calculateResolution: sResolution.toFixed(4),
         presentationExperience: sView.toFixed(4),
         sLostPacketRate: sLostPacketRate.toFixed(4),
         sStallRate: sStallRate.toFixed(4),
@@ -1545,7 +1545,7 @@ export default {
         videoExperience: sQuality.toFixed(4),
         interactionExperience: sInteraction.toFixed(4),
         initialBufferingDelay: sRtt.toFixed(4),
-        calculatedResolution: sResolution.toFixed(4),
+        calculateResolution: sResolution.toFixed(4),
         presentationExperience: sView.toFixed(4),
         sLostPacketRate: sLostPacketRate.toFixed(4),
         sStallRate: sStallRate.toFixed(4),
@@ -1620,7 +1620,7 @@ export default {
         videoExperience: sQuality.toFixed(4),
         interactionExperience: sInteraction.toFixed(4),
         initialBufferingDelay: sRtt.toFixed(4),
-        calculatedResolution: sResolution.toFixed(4),
+        calculateResolution: sResolution.toFixed(4),
         presentationExperience: sView.toFixed(4),
         sLostPacketRate: sLostPacketRate.toFixed(4),
         sStallRate: sStallRate.toFixed(4),
@@ -1679,7 +1679,7 @@ export default {
         videoExperience: sQuality.toFixed(4),
         interactionExperience: sInteraction.toFixed(4),
         initialBufferingDelay: sRtt.toFixed(4),
-        calculatedResolution: '-',
+        calculateResolution: '-',
         presentationExperience: sView.toFixed(4),
         sLostPacketRate: sLostPacketRate.toFixed(4),
         sStallRate: sStallRate.toFixed(4),
@@ -1750,7 +1750,7 @@ export default {
         videoExperience: sQuality.toFixed(4),
         interactionExperience: sInteraction.toFixed(4),
         initialBufferingDelay: sRtt.toFixed(4),
-        calculatedResolution: sResolution.toFixed(4),
+        calculateResolution: sResolution.toFixed(4),
         presentationExperience: sView.toFixed(4),
         sLostPacketRate: sLostPacketRate.toFixed(4),
         sStallRate: sStallRate.toFixed(4),
@@ -1794,7 +1794,7 @@ export default {
             dataToSave.videoExperience = calculated.videoExperience
             dataToSave.interactionExperience = calculated.interactionExperience
             dataToSave.initialBufferingDelay = calculated.initialBufferingDelay
-            dataToSave.calculatedResolution = calculated.calculatedResolution
+            dataToSave.calculateResolution = calculated.calculateResolution
             dataToSave.presentationExperience = calculated.presentationExperience
             dataToSave.sLostPacketRate = calculated.sLostPacketRate
             dataToSave.sStallRate = calculated.sStallRate
@@ -1815,7 +1815,7 @@ export default {
             dataToSave.videoExperience = calculated.videoExperience
             dataToSave.interactionExperience = calculated.interactionExperience
             dataToSave.initialBufferingDelay = calculated.initialBufferingDelay
-            dataToSave.calculatedResolution = calculated.calculatedResolution
+            dataToSave.calculateResolution = calculated.calculateResolution
             dataToSave.presentationExperience = calculated.presentationExperience
             dataToSave.sLostPacketRate = calculated.sLostPacketRate
             dataToSave.sStallRate = calculated.sStallRate
@@ -1836,7 +1836,7 @@ export default {
             dataToSave.videoExperience = calculated.videoExperience
             dataToSave.interactionExperience = calculated.interactionExperience
             dataToSave.initialBufferingDelay = calculated.initialBufferingDelay
-            dataToSave.calculatedResolution = calculated.calculatedResolution
+            dataToSave.calculateResolution = calculated.calculateResolution
             dataToSave.presentationExperience = calculated.presentationExperience
             dataToSave.sLostPacketRate = calculated.sLostPacketRate
             dataToSave.sStallRate = calculated.sStallRate
@@ -1857,7 +1857,7 @@ export default {
             dataToSave.videoExperience = calculated.videoExperience
             dataToSave.interactionExperience = calculated.interactionExperience
             dataToSave.initialBufferingDelay = calculated.initialBufferingDelay
-            dataToSave.calculatedResolution = calculated.calculatedResolution
+            dataToSave.calculateResolution = calculated.calculateResolution
             dataToSave.presentationExperience = calculated.presentationExperience
             dataToSave.sLostPacketRate = calculated.sLostPacketRate
             dataToSave.sStallRate = calculated.sStallRate
@@ -1878,7 +1878,7 @@ export default {
             dataToSave.videoExperience = calculated.videoExperience
             dataToSave.interactionExperience = calculated.interactionExperience
             dataToSave.initialBufferingDelay = calculated.initialBufferingDelay
-            dataToSave.calculatedResolution = calculated.calculatedResolution
+            dataToSave.calculateResolution = calculated.calculateResolution
             dataToSave.presentationExperience = calculated.presentationExperience
             dataToSave.sLostPacketRate = calculated.sLostPacketRate
             dataToSave.sStallRate = calculated.sStallRate
@@ -1899,7 +1899,7 @@ export default {
             dataToSave.videoExperience = calculated.videoExperience
             dataToSave.interactionExperience = calculated.interactionExperience
             dataToSave.initialBufferingDelay = calculated.initialBufferingDelay
-            dataToSave.calculatedResolution = calculated.calculatedResolution
+            dataToSave.calculateResolution = calculated.calculateResolution
             dataToSave.presentationExperience = calculated.presentationExperience
             dataToSave.sLostPacketRate = calculated.sLostPacketRate
             dataToSave.sStallRate = calculated.sStallRate
@@ -1918,7 +1918,7 @@ export default {
             dataToSave.videoExperience = calculated.videoExperience
             dataToSave.interactionExperience = calculated.interactionExperience
             dataToSave.initialBufferingDelay = calculated.initialBufferingDelay
-            dataToSave.calculatedResolution = calculated.calculatedResolution
+            dataToSave.calculateResolution = calculated.calculateResolution
             dataToSave.presentationExperience = calculated.presentationExperience
             dataToSave.sLostPacketRate = calculated.sLostPacketRate
             dataToSave.sStallRate = calculated.sStallRate
@@ -1939,7 +1939,7 @@ export default {
             dataToSave.videoExperience = calculated.videoExperience
             dataToSave.interactionExperience = calculated.interactionExperience
             dataToSave.initialBufferingDelay = calculated.initialBufferingDelay
-            dataToSave.calculatedResolution = calculated.calculatedResolution
+            dataToSave.calculateResolution = calculated.calculateResolution
             dataToSave.presentationExperience = calculated.presentationExperience
             dataToSave.sLostPacketRate = calculated.sLostPacketRate
             dataToSave.sStallRate = calculated.sStallRate
@@ -1986,7 +1986,7 @@ export default {
         row.videoExperience = vmosEditBackup.value.videoExperience
         row.interactionExperience = vmosEditBackup.value.interactionExperience
         row.initialBufferingDelay = vmosEditBackup.value.initialBufferingDelay
-        row.calculatedResolution = vmosEditBackup.value.calculatedResolution
+        row.calculateResolution = vmosEditBackup.value.calculateResolution
         row.presentationExperience = vmosEditBackup.value.presentationExperience
         row.sLostPacketRate = vmosEditBackup.value.sLostPacketRate
         row.sStallRate = vmosEditBackup.value.sStallRate
