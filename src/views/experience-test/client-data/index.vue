@@ -905,6 +905,20 @@ export default {
           } else {
             activeDetailTab.value = 'vmos'
           }
+          
+          // 自动加载网络侧RTT对比数据（用于替换网络侧RTT功能）
+          if (taskDetail.value.taskInfo && taskDetail.value.taskInfo.taskId) {
+            try {
+              const rttComparisonResponse = await getRttComparison(taskDetail.value.taskInfo.taskId)
+              if (rttComparisonResponse.code === 200 && rttComparisonResponse.data) {
+                networkRttComparisonData.value = rttComparisonResponse.data
+              }
+            } catch (error) {
+              // 如果获取失败，不显示错误，只是不设置数据（按钮会保持disabled状态）
+              console.warn('获取网络侧RTT对比数据失败:', error)
+              networkRttComparisonData.value = null
+            }
+          }
         } else {
           ElMessage.error(response.message || t('common.error'))
           // 如果加载失败，切换回任务列表tab
@@ -2786,15 +2800,24 @@ export default {
 
       isReplacingNetworkRtt.value = true
       try {
-        // 获取网络侧RTT对比数据
-        const response = await getRttComparison(taskId)
-        if (response.code !== 200 || !response.data || !response.data.networkRttList || response.data.networkRttList.length === 0) {
-          ElMessage.warning('无法获取网络侧RTT数据，请确保已配置网络侧数据')
-          return
+        // 获取网络侧RTT对比数据（如果还没有获取过）
+        let networkRttList = null
+        if (networkRttComparisonData.value && networkRttComparisonData.value.networkRttList) {
+          networkRttList = networkRttComparisonData.value.networkRttList
+        } else {
+          const response = await getRttComparison(taskId)
+          if (response.code !== 200 || !response.data || !response.data.networkRttList || response.data.networkRttList.length === 0) {
+            ElMessage.warning('无法获取网络侧RTT数据，请确保已配置网络侧数据')
+            return
+          }
+          networkRttComparisonData.value = response.data
+          networkRttList = response.data.networkRttList
         }
 
-        networkRttComparisonData.value = response.data
-        const networkRttList = response.data.networkRttList
+        if (!networkRttList || networkRttList.length === 0) {
+          ElMessage.warning('网络侧RTT数据为空，请确保已配置网络侧数据')
+          return
+        }
 
         if (taskDetail.value.vmosDataList.length !== networkRttList.length) {
           ElMessage.warning(`vMOS数据(${taskDetail.value.vmosDataList.length}条)与网络侧RTT数据(${networkRttList.length}条)数量不匹配`)
