@@ -440,7 +440,7 @@
               </el-table-column>
               <el-table-column :label="$t('experienceTest.clientData.sResoulution')" width="120">
                 <template #default="scope">
-                  {{ scope.row.calculateResolution || '-' }}
+                  {{ scope.row.calculatedResolution || '-' }}
                 </template>
               </el-table-column>
               <el-table-column :label="$t('experienceTest.clientData.sQuality')" width="100">
@@ -591,7 +591,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { Plus, Refresh, UploadFilled, Search, ArrowUp, ArrowDown, DataAnalysis } from '@element-plus/icons-vue'
-import { uploadClientDataFile, getClientDataPage, getClientDataDetail, updateVmosData, updateTaskInfo, deleteTaskInfo } from '@/api/test-settings'
+import { uploadClientDataFile, getClientDataPage, getClientDataDetail, updateVmosData, updateTaskInfo, deleteTaskInfo, getVmosParamsConfigByService } from '@/api/test-settings'
 
 export default {
   name: 'ClientData',
@@ -631,6 +631,9 @@ export default {
     const editingVmosRowId = ref(null)
     const vmosSaving = ref(false)
     const vmosEditBackup = ref({})
+    
+    // vMOS参数配置缓存（按业务大类）
+    const vmosParamsCache = ref({})
     
     // 基础信息编辑相关
     const editingBasicInfo = ref(false)
@@ -975,7 +978,7 @@ export default {
         videoExperience: row.videoExperience || '',
         interactionExperience: row.interactionExperience || '',
         initialBufferingDelay: row.initialBufferingDelay || '',
-        calculateResolution: row.calculateResolution || '',
+        calculatedResolution: row.calculatedResolution || '',
         presentationExperience: row.presentationExperience || '',
         sLostPacketRate: row.sLostPacketRate || '',
         sStallRate: row.sStallRate || '',
@@ -988,12 +991,15 @@ export default {
     }
 
     // 处理vMOS字段变化，实时计算（根据业务大类）
-    const handleVmosFieldChange = (row) => {
+    const handleVmosFieldChange = async (row) => {
       if (!taskDetail.value.taskInfo) {
         return
       }
       
       const service = taskDetail.value.taskInfo.service
+      
+      // 获取配置参数
+      const params = await getVmosParams(service)
       
       // 如果业务大类为shortvideo，则实时计算相关字段
       if (service === 'shortvideo') {
@@ -1002,6 +1008,7 @@ export default {
           row.rtt || '0',
           row.packetLossRate || '0',
           row.stutterRatio || '0',
+          params,
         )
         
         // 实时更新计算后的字段到row对象中
@@ -1009,7 +1016,7 @@ export default {
         row.videoExperience = calculated.videoExperience
         row.interactionExperience = calculated.interactionExperience
         row.initialBufferingDelay = calculated.initialBufferingDelay
-        row.calculateResolution = calculated.calculateResolution
+        row.calculatedResolution = calculated.calculatedResolution
         row.presentationExperience = calculated.presentationExperience
         row.sLostPacketRate = calculated.sLostPacketRate
         row.sStallRate = calculated.sStallRate
@@ -1024,6 +1031,7 @@ export default {
           row.rtt || '0',
           row.packetLossRate || '0',
           row.stutterRatio || '0',
+          params,
         )
         
         // 实时更新计算后的字段到row对象中
@@ -1031,7 +1039,7 @@ export default {
         row.videoExperience = calculated.videoExperience
         row.interactionExperience = calculated.interactionExperience
         row.initialBufferingDelay = calculated.initialBufferingDelay
-        row.calculateResolution = calculated.calculateResolution
+        row.calculatedResolution = calculated.calculatedResolution
         row.presentationExperience = calculated.presentationExperience
         row.sLostPacketRate = calculated.sLostPacketRate
         row.sStallRate = calculated.sStallRate
@@ -1046,6 +1054,7 @@ export default {
           row.rtt || '0',
           row.packetLossRate || '0',
           row.stutterRatio || '0',
+          params,
         )
         
         // 实时更新计算后的字段到row对象中
@@ -1053,7 +1062,7 @@ export default {
         row.videoExperience = calculated.videoExperience
         row.interactionExperience = calculated.interactionExperience
         row.initialBufferingDelay = calculated.initialBufferingDelay
-        row.calculateResolution = calculated.calculateResolution
+        row.calculatedResolution = calculated.calculatedResolution
         row.presentationExperience = calculated.presentationExperience
         row.sLostPacketRate = calculated.sLostPacketRate
         row.sStallRate = calculated.sStallRate
@@ -1068,6 +1077,7 @@ export default {
           row.rtt || '0',
           row.packetLossRate || '0',
           row.stutterRatio || '0',
+          params,
         )
         
         // 实时更新计算后的字段到row对象中
@@ -1075,7 +1085,7 @@ export default {
         row.videoExperience = calculated.videoExperience
         row.interactionExperience = calculated.interactionExperience
         row.initialBufferingDelay = calculated.initialBufferingDelay
-        row.calculateResolution = calculated.calculateResolution
+        row.calculatedResolution = calculated.calculatedResolution
         row.presentationExperience = calculated.presentationExperience
         row.sLostPacketRate = calculated.sLostPacketRate
         row.sStallRate = calculated.sStallRate
@@ -1090,6 +1100,7 @@ export default {
           row.rtt || '0',
           row.packetLossRate || '0',
           row.stutterRatio || '0',
+          params,
         )
         
         // 实时更新计算后的字段到row对象中
@@ -1097,7 +1108,7 @@ export default {
         row.videoExperience = calculated.videoExperience
         row.interactionExperience = calculated.interactionExperience
         row.initialBufferingDelay = calculated.initialBufferingDelay
-        row.calculateResolution = calculated.calculateResolution
+        row.calculatedResolution = calculated.calculatedResolution
         row.presentationExperience = calculated.presentationExperience
         row.sLostPacketRate = calculated.sLostPacketRate
         row.sStallRate = calculated.sStallRate
@@ -1112,6 +1123,7 @@ export default {
           row.rtt || '0',
           row.packetLossRate || '0',
           row.stutterRatio || '0',
+          params,
         )
         
         // 实时更新计算后的字段到row对象中
@@ -1119,7 +1131,7 @@ export default {
         row.videoExperience = calculated.videoExperience
         row.interactionExperience = calculated.interactionExperience
         row.initialBufferingDelay = calculated.initialBufferingDelay
-        row.calculateResolution = calculated.calculateResolution
+        row.calculatedResolution = calculated.calculatedResolution
         row.presentationExperience = calculated.presentationExperience
         row.sLostPacketRate = calculated.sLostPacketRate
         row.sStallRate = calculated.sStallRate
@@ -1132,6 +1144,7 @@ export default {
           row.rtt || '0',
           row.packetLossRate || '0',
           row.stutterRatio || '0',
+          params,
         )
         
         // 实时更新计算后的字段到row对象中
@@ -1139,7 +1152,7 @@ export default {
         row.videoExperience = calculated.videoExperience
         row.interactionExperience = calculated.interactionExperience
         row.initialBufferingDelay = calculated.initialBufferingDelay
-        row.calculateResolution = calculated.calculateResolution
+        row.calculatedResolution = calculated.calculatedResolution
         row.presentationExperience = calculated.presentationExperience
         row.sLostPacketRate = calculated.sLostPacketRate
         row.sStallRate = calculated.sStallRate
@@ -1154,6 +1167,7 @@ export default {
           row.rtt || '0',
           row.packetLossRate || '0',
           row.stutterRatio || '0',
+          params,
         )
         
         // 实时更新计算后的字段到row对象中
@@ -1161,7 +1175,7 @@ export default {
         row.videoExperience = calculated.videoExperience
         row.interactionExperience = calculated.interactionExperience
         row.initialBufferingDelay = calculated.initialBufferingDelay
-        row.calculateResolution = calculated.calculateResolution
+        row.calculatedResolution = calculated.calculatedResolution
         row.presentationExperience = calculated.presentationExperience
         row.sLostPacketRate = calculated.sLostPacketRate
         row.sStallRate = calculated.sStallRate
@@ -1172,33 +1186,41 @@ export default {
     }
 
     // 计算shortvideo业务大类的vMOS数据
-    const calculateShortvideoVmos = (speed, rtt, packetLossRate, stutterRatio) => {
+    const calculateShortvideoVmos = (speed, rtt, packetLossRate, stutterRatio, params) => {
       // 转换为数字，如果为空或无效则使用0
       const speedNum = parseFloat(speed) || 0
       const rttNum = parseFloat(rtt) || 0
       const packetLossRateNum = parseFloat(packetLossRate) || 0
       const stutterRatioNum = parseFloat(stutterRatio) || 0
 
-      // s_bitrate = 5/(1+exp(-速率/928.9840))
-      const sBitrate = 5 / (1 + Math.exp(-speedNum / 928.9840))
+      // 从配置中获取参数，如果没有则使用默认值
+      const a1 = params?.a1 ?? 928.9840
+      const a3 = params?.a3 ?? 0.0035
+      const a4 = params?.a4 ?? 180.94
+      const a5 = params?.a5 ?? 4
+      const g1 = params?.g1 ?? 0.04
+      const g2 = params?.g2 ?? 0.25
+
+      // s_bitrate = 5/(1+exp(-速率/a1))
+      const sBitrate = 5 / (1 + Math.exp(-speedNum / a1))
 
       // sQuality = s_bitrate
       const sQuality = sBitrate
 
       // s_RTT = 4/exp(0.0035 * Rtt) + 1
-      const sRtt = 4 / Math.exp(0.0035 * rttNum) + 1
+      const sRtt = 4 / Math.exp(a3 * rttNum) + 1
 
       // sInteraction = s_RTT
       const sInteraction = sRtt
 
       // s_lost_packet_rate = 4/exp(180.94 * 丢包率) + 1
-      const sLostPacketRate = 4 / Math.exp(180.94 * packetLossRateNum) + 1
+      const sLostPacketRate = 4 / Math.exp(a4 * packetLossRateNum) + 1
 
       // s_stall_rate = -4*卡顿率+5
-      const sStallRate = Math.max(Math.min(-4 * stutterRatioNum + 5, 5), 1)
+      const sStallRate = -a5 * stutterRatioNum + 5
 
       // sView = max(min(4*(1-0.04*(5-s_lost_packet_rate)-0.25*(5-s_stall_rate)) + 1, 5), 1)
-      const sViewValue = 4 * ( 1 - 0.04 * (5 - sLostPacketRate) - 0.25 * (5 - sStallRate)) + 1
+      const sViewValue = 4 * ( 1 - g1 * (5 - sLostPacketRate) - g2 * (5 - sStallRate)) + 1
       const sView = Math.max(Math.min(sViewValue, 5), 1)
 
       // α = 0.1*(1+2*exp(-sInteraction/2))
@@ -1220,7 +1242,7 @@ export default {
         videoExperience: sQuality.toFixed(4),
         interactionExperience: sInteraction.toFixed(4),
         initialBufferingDelay: sRtt.toFixed(4),
-        calculateResolution: '-',
+        calculatedResolution: '-',
         presentationExperience: sView.toFixed(4),
         sLostPacketRate: sLostPacketRate.toFixed(4),
         sStallRate: sStallRate.toFixed(4),
@@ -1228,6 +1250,54 @@ export default {
         beta: beta.toFixed(4),
         vmos: vmos.toFixed(4),
       }
+    }
+
+    // 获取vMOS参数配置（带缓存）
+    const getVmosParams = async (service) => {
+      // 如果缓存中有，直接返回
+      if (vmosParamsCache.value[service]) {
+        return vmosParamsCache.value[service]
+      }
+      
+      // 默认参数值
+      const defaultParams = {
+        a1: 928.9840,
+        a2: 410,
+        w1: 0.25,
+        w2: 0.05,
+        a3: 0.0035,
+        a4: 180.94,
+        a5: 4,
+        g1: 0.25,
+        g2: 0.1,
+      }
+      
+      try {
+        const response = await getVmosParamsConfigByService(service)
+        if (response.code === 200 && response.data) {
+          const config = response.data
+          const params = {
+            a1: config.a1 ?? defaultParams.a1,
+            a2: config.a2 ?? defaultParams.a2,
+            w1: config.w1 ?? defaultParams.w1,
+            w2: config.w2 ?? defaultParams.w2,
+            a3: config.a3 ?? defaultParams.a3,
+            a4: config.a4 ?? defaultParams.a4,
+            a5: config.a5 ?? defaultParams.a5,
+            g1: config.g1 ?? defaultParams.g1,
+            g2: config.g2 ?? defaultParams.g2,
+          }
+          // 缓存配置
+          vmosParamsCache.value[service] = params
+          return params
+        }
+      } catch (error) {
+        console.warn(`获取${service}的vMOS参数配置失败，使用默认值:`, error)
+      }
+      
+      // 使用默认值并缓存
+      vmosParamsCache.value[service] = defaultParams
+      return defaultParams
     }
 
     // 分辨率映射函数：将分辨率值转换为对应的像素数
@@ -1248,7 +1318,7 @@ export default {
     }
 
     // 计算voip业务大类的vMOS数据
-    const calculateVoipVmos = (speed, resolution, rtt, packetLossRate, stutterRatio) => {
+    const calculateVoipVmos = (speed, resolution, rtt, packetLossRate, stutterRatio, params) => {
       // 转换为数字，如果为空或无效则使用0
       const speedNum = parseFloat(speed) || 0
       const resolutionPixels = getResolutionPixels(resolution)
@@ -1256,7 +1326,7 @@ export default {
       const packetLossRateNum = parseFloat(packetLossRate) || 0
       const stutterRatioNum = parseFloat(stutterRatio) || 0
 
-      // 常量定义
+      // 常量定义（voip特有的常量，不在配置范围内）
       const v1 = 4.1192
       const v2 = 0.0975
       const v3 = 1.2667
@@ -1272,9 +1342,11 @@ export default {
       const v63 = -2.016
       const v58 = 5
       const v59 = 1.382
-      const a1 = 5
-      const g1 = 0.15
-      const g2 = 0.15
+      
+      // 从配置中获取参数，如果没有则使用默认值（voip中a1用于stall_rate，g1和g2用于sView）
+      const a1 = params?.a1 ?? 5
+      const g1 = params?.g1 ?? 0.15
+      const g2 = params?.g2 ?? 0.15
 
       // s_bitrate = 1 + v1 - v1/(1 + pow(bitrate / (v2 * pow(fr, v3) * pow(resolution, v4)), v5))
       // bitrate在这里应该是speed（速率）
@@ -1318,7 +1390,7 @@ export default {
         videoExperience: sQuality.toFixed(4),
         interactionExperience: sInteraction.toFixed(4),
         initialBufferingDelay: sRtt.toFixed(4),
-        calculateResolution: sResolution.toFixed(4),
+        calculatedResolution: sResolution.toFixed(4),
         presentationExperience: sView.toFixed(4),
         sLostPacketRate: sLostPacketRate.toFixed(4),
         sStallRate: sStallRate.toFixed(4),
@@ -1329,30 +1401,30 @@ export default {
     }
 
     // 计算watch_live业务大类的vMOS数据
-    const calculateWatchLiveVmos = (speed, resolution, rtt, packetLossRate, stutterRatio) => {
+    const calculateWatchLiveVmos = (speed, resolution, rtt, packetLossRate, stutterRatio, params) => {
       // 转换为数字，如果为空或无效则使用0
       const speedNum = parseFloat(speed) || 0
-      const resolutionNum = parseFloat(resolution) || 0
+      const resolutionPixels = getResolutionPixels(resolution)
       const rttNum = parseFloat(rtt) || 0
       const packetLossRateNum = parseFloat(packetLossRate) || 0
       const stutterRatioNum = parseFloat(stutterRatio) || 0
 
-      // 常量定义
-      const a1 = 928.9840
-      const a2 = 410
-      const w1 = 0.25
-      const w2 = 0.05
-      const a3 = 0.0035
-      const a4 = 180.94
-      const a5 = 4
-      const g1 = 0.25
-      const g2 = 0.1
+      // 从配置中获取参数，如果没有则使用默认值
+      const a1 = params?.a1 ?? 928.9840
+      const a2 = params?.a2 ?? 410
+      const w1 = params?.w1 ?? 0.25
+      const w2 = params?.w2 ?? 0.05
+      const a3 = params?.a3 ?? 0.0035
+      const a4 = params?.a4 ?? 180.94
+      const a5 = params?.a5 ?? 4
+      const g1 = params?.g1 ?? 0.25
+      const g2 = params?.g2 ?? 0.1
 
       // s_bitrate = 5/ (1 + exp(-bitrate / a1)), a1 = 928.9840
       const sBitrate = 5 / (1 + Math.exp(-speedNum / a1))
 
       // s_resolution = 5/ (1 + exp(-resolution / a2)), a2 = 410
-      const sResolution = 5 / (1 + Math.exp(-resolutionNum / a2))
+      const sResolution = 5 / (1 + Math.exp(-resolutionPixels / a2))
 
       // sQuality = max(min(4 * (1 - w1 * (5 - s_bitrate) - w2 * (5 - s_resolution)) + 1, 5), 1), w1 = 0.25, w2 = 0.05
       const sQualityValue = 4 * (1 - w1 * (5 - sBitrate) - w2 * (5 - sResolution)) + 1
@@ -1393,7 +1465,7 @@ export default {
         videoExperience: sQuality.toFixed(4),
         interactionExperience: sInteraction.toFixed(4),
         initialBufferingDelay: sRtt.toFixed(4),
-        calculateResolution: sResolution.toFixed(4),
+        calculatedResolution: sResolution.toFixed(4),
         presentationExperience: sView.toFixed(4),
         sLostPacketRate: sLostPacketRate.toFixed(4),
         sStallRate: sStallRate.toFixed(4),
@@ -1404,30 +1476,30 @@ export default {
     }
 
     // 计算live_streaming业务大类的vMOS数据
-    const calculateLiveStreamingVmos = (speed, resolution, rtt, packetLossRate, stutterRatio) => {
+    const calculateLiveStreamingVmos = (speed, resolution, rtt, packetLossRate, stutterRatio, params) => {
       // 转换为数字，如果为空或无效则使用0
       const speedNum = parseFloat(speed) || 0
-      const resolutionNum = parseFloat(resolution) || 0
+      const resolutionPixels = getResolutionPixels(resolution)
       const rttNum = parseFloat(rtt) || 0
       const packetLossRateNum = parseFloat(packetLossRate) || 0
       const stutterRatioNum = parseFloat(stutterRatio) || 0
 
-      // 常量定义
-      const a1 = 928.9840
-      const a2 = 410
-      const w1 = 0.25
-      const w2 = 0.05
-      const a3 = 0.0035
-      const a4 = 180.94
-      const a5 = 4
-      const g1 = 0.25
-      const g2 = 0.1
+      // 从配置中获取参数，如果没有则使用默认值
+      const a1 = params?.a1 ?? 928.9840
+      const a2 = params?.a2 ?? 410
+      const w1 = params?.w1 ?? 0.25
+      const w2 = params?.w2 ?? 0.05
+      const a3 = params?.a3 ?? 0.0035
+      const a4 = params?.a4 ?? 180.94
+      const a5 = params?.a5 ?? 4
+      const g1 = params?.g1 ?? 0.25
+      const g2 = params?.g2 ?? 0.1
 
       // s_bitrate = 5 / (1 + exp(-bitrate / a1)), a1 = 928.9840
       const sBitrate = 5 / (1 + Math.exp(-speedNum / a1))
 
       // s_resolution = 5 / (1 + exp( -resolution / a2)), a2 = 410
-      const sResolution = 5 / (1 + Math.exp(-resolutionNum / a2))
+      const sResolution = 5 / (1 + Math.exp(-resolutionPixels / a2))
 
       // sQuality = max(min( 4 * (1 - w1 * (5 - s_bitrate) - w2 * (5 - s_resolution)) +1, 5), 1), w1 = 0.25, w2 = 0.05
       const sQualityValue = 4 * (1 - w1 * (5 - sBitrate) - w2 * (5 - sResolution)) + 1
@@ -1470,7 +1542,7 @@ export default {
         videoExperience: sQuality.toFixed(4),
         interactionExperience: sInteraction.toFixed(4),
         initialBufferingDelay: sRtt.toFixed(4),
-        calculateResolution: sResolution.toFixed(4),
+        calculatedResolution: sResolution.toFixed(4),
         presentationExperience: sView.toFixed(4),
         sLostPacketRate: sLostPacketRate.toFixed(4),
         sStallRate: sStallRate.toFixed(4),
@@ -1481,30 +1553,30 @@ export default {
     }
 
     // 计算vod_streaming业务大类的vMOS数据
-    const calculateVodStreamingVmos = (speed, resolution, rtt, packetLossRate, stutterRatio) => {
+    const calculateVodStreamingVmos = (speed, resolution, rtt, packetLossRate, stutterRatio, params) => {
       // 转换为数字，如果为空或无效则使用0
       const speedNum = parseFloat(speed) || 0
-      const resolutionNum = parseFloat(resolution) || 0
+      const resolutionPixels = getResolutionPixels(resolution)
       const rttNum = parseFloat(rtt) || 0
       const packetLossRateNum = parseFloat(packetLossRate) || 0
       const stutterRatioNum = parseFloat(stutterRatio) || 0
 
-      // 常量定义
-      const a1 = 928.9840
-      const a2 = 410
-      const w1 = 0.04
-      const w2 = 0.25
-      const a3 = 0.0035
-      const a4 = 180.94
-      const a5 = 4
-      const g1 = 0.04
-      const g2 = 0.25
+      // 从配置中获取参数，如果没有则使用默认值
+      const a1 = params?.a1 ?? 928.9840
+      const a2 = params?.a2 ?? 410
+      const w1 = params?.w1 ?? 0.04
+      const w2 = params?.w2 ?? 0.25
+      const a3 = params?.a3 ?? 0.0035
+      const a4 = params?.a4 ?? 180.94
+      const a5 = params?.a5 ?? 4
+      const g1 = params?.g1 ?? 0.04
+      const g2 = params?.g2 ?? 0.25
 
       // s_bitrate = 5/(1 + exp(-bitrate / a1)), a1 = 928.9840
       const sBitrate = 5 / (1 + Math.exp(-speedNum / a1))
 
       // s_resolution = 5/(1 + exp(-resolution / a2)), a2 = 410
-      const sResolution = 5 / (1 + Math.exp(-resolutionNum / a2))
+      const sResolution = 5 / (1 + Math.exp(-resolutionPixels / a2))
 
       // sQuality = max(min(4 * (1 - w1 * (5 - s_bitrate) - w2 * (5 - s_resolution)) + 1, 5), 1), w1 = 0.04, w2 = 0.25
       const sQualityValue = 4 * (1 - w1 * (5 - sBitrate) - w2 * (5 - sResolution)) + 1
@@ -1545,7 +1617,7 @@ export default {
         videoExperience: sQuality.toFixed(4),
         interactionExperience: sInteraction.toFixed(4),
         initialBufferingDelay: sRtt.toFixed(4),
-        calculateResolution: sResolution.toFixed(4),
+        calculatedResolution: sResolution.toFixed(4),
         presentationExperience: sView.toFixed(4),
         sLostPacketRate: sLostPacketRate.toFixed(4),
         sStallRate: sStallRate.toFixed(4),
@@ -1556,30 +1628,30 @@ export default {
     }
 
     // 计算meeting业务大类的vMOS数据
-    const calculateMeetingVmos = (speed, resolution, rtt, packetLossRate, stutterRatio) => {
+    const calculateMeetingVmos = (speed, resolution, rtt, packetLossRate, stutterRatio, params) => {
       // 转换为数字，如果为空或无效则使用0
       const speedNum = parseFloat(speed) || 0
-      const resolutionNum = parseFloat(resolution) || 0
+      const resolutionPixels = getResolutionPixels(resolution)
       const rttNum = parseFloat(rtt) || 0
       const packetLossRateNum = parseFloat(packetLossRate) || 0
       const stutterRatioNum = parseFloat(stutterRatio) || 0
 
-      // 常量定义
-      const a1 = 928.9840
-      const a2 = 410
-      const w1 = 0.25
-      const w2 = 0.05
-      const a3 = 0.0035
-      const a4 = 180.94
-      const a5 = 4
-      const g1 = 0.05
-      const g2 = 0.25
+      // 从配置中获取参数，如果没有则使用默认值
+      const a1 = params?.a1 ?? 928.9840
+      const a2 = params?.a2 ?? 410
+      const w1 = params?.w1 ?? 0.25
+      const w2 = params?.w2 ?? 0.05
+      const a3 = params?.a3 ?? 0.0035
+      const a4 = params?.a4 ?? 180.94
+      const a5 = params?.a5 ?? 4
+      const g1 = params?.g1 ?? 0.05
+      const g2 = params?.g2 ?? 0.25
 
       // s_bitrate = 5/ (1 + exp(-bitrate / a1)), a1 = 928.9840
       const sBitrate = 5 / (1 + Math.exp(-speedNum / a1))
 
       // s_resolution = 5/(1 + exp(-resolution / a2)), a2 = 410
-      const sResolution = 5 / (1 + Math.exp(-resolutionNum / a2))
+      const sResolution = 5 / (1 + Math.exp(-resolutionPixels / a2))
 
       // sQuality = max(min(4 * (1- w1 * (5-s_bitrate) - w2 * (5 - s_resolution)) + 1, 5), 1), w1 =0.25, w2 = 0.05
       const sQualityValue = 4 * (1 - w1 * (5 - sBitrate) - w2 * (5 - sResolution)) + 1
@@ -1620,7 +1692,7 @@ export default {
         videoExperience: sQuality.toFixed(4),
         interactionExperience: sInteraction.toFixed(4),
         initialBufferingDelay: sRtt.toFixed(4),
-        calculateResolution: sResolution.toFixed(4),
+        calculatedResolution: sResolution.toFixed(4),
         presentationExperience: sView.toFixed(4),
         sLostPacketRate: sLostPacketRate.toFixed(4),
         sStallRate: sStallRate.toFixed(4),
@@ -1631,18 +1703,18 @@ export default {
     }
 
     // 计算mobile_game业务大类的vMOS数据
-    const calculateMobileGameVmos = (rtt, packetLossRate, stutterRatio) => {
+    const calculateMobileGameVmos = (rtt, packetLossRate, stutterRatio, params) => {
       // 转换为数字，如果为空或无效则使用0
       const rttNum = parseFloat(rtt) || 0
       const packetLossRateNum = parseFloat(packetLossRate) || 0
       const stutterRatioNum = parseFloat(stutterRatio) || 0
 
-      // 常量定义
-      const a3 = 0.0035
-      const a4 = 180.94
-      const a5 = 4
-      const g1 = 0.25
-      const g2 = 0.04
+      // 从配置中获取参数，如果没有则使用默认值
+      const a3 = params?.a3 ?? 0.0035
+      const a4 = params?.a4 ?? 180.94
+      const a5 = params?.a5 ?? 4
+      const g1 = params?.g1 ?? 0.25
+      const g2 = params?.g2 ?? 0.04
 
       // sQuality = 4.5（固定值）
       const sQuality = 4.5
@@ -1679,7 +1751,7 @@ export default {
         videoExperience: sQuality.toFixed(4),
         interactionExperience: sInteraction.toFixed(4),
         initialBufferingDelay: sRtt.toFixed(4),
-        calculateResolution: '-',
+        calculatedResolution: '-',
         presentationExperience: sView.toFixed(4),
         sLostPacketRate: sLostPacketRate.toFixed(4),
         sStallRate: sStallRate.toFixed(4),
@@ -1690,30 +1762,30 @@ export default {
     }
 
     // 计算mobile_game_cloud业务大类的vMOS数据
-    const calculateMobileGameCloudVmos = (speed, resolution, rtt, packetLossRate, stutterRatio) => {
+    const calculateMobileGameCloudVmos = (speed, resolution, rtt, packetLossRate, stutterRatio, params) => {
       // 转换为数字，如果为空或无效则使用0
       const speedNum = parseFloat(speed) || 0
-      const resolutionNum = parseFloat(resolution) || 0
+      const resolutionPixels = getResolutionPixels(resolution)
       const rttNum = parseFloat(rtt) || 0
       const packetLossRateNum = parseFloat(packetLossRate) || 0
       const stutterRatioNum = parseFloat(stutterRatio) || 0
 
-      // 常量定义
-      const a1 = 928.9840
-      const a2 = 410
-      const w1 = 0.25
-      const w2 = 0.05
-      const a3 = 0.0035
-      const a4 = 180.94
-      const a5 = 4
-      const g1 = 0.05
-      const g2 = 0.25
+      // 从配置中获取参数，如果没有则使用默认值
+      const a1 = params?.a1 ?? 928.9840
+      const a2 = params?.a2 ?? 410
+      const w1 = params?.w1 ?? 0.25
+      const w2 = params?.w2 ?? 0.05
+      const a3 = params?.a3 ?? 0.0035
+      const a4 = params?.a4 ?? 180.94
+      const a5 = params?.a5 ?? 4
+      const g1 = params?.g1 ?? 0.05
+      const g2 = params?.g2 ?? 0.25
 
       // s_bitrate = 5 / (1 + exp(-bitrate / a1)), a1 = 928.9840
       const sBitrate = 5 / (1 + Math.exp(-speedNum / a1))
 
       // s_resolution = 5 / (1 + exp(-resolution / a2)), a2 = 410
-      const sResolution = 5 / (1 + Math.exp(-resolutionNum / a2))
+      const sResolution = 5 / (1 + Math.exp(-resolutionPixels / a2))
 
       // sQuality = max(min(4 * (1 - w1 * (5-s_bitrate) - w2 * (5 - s_resolution)) + 1, 5), 1), w1 = 0.25, w2 = 0.05
       const sQualityValue = 4 * (1 - w1 * (5 - sBitrate) - w2 * (5 - sResolution)) + 1
@@ -1750,7 +1822,7 @@ export default {
         videoExperience: sQuality.toFixed(4),
         interactionExperience: sInteraction.toFixed(4),
         initialBufferingDelay: sRtt.toFixed(4),
-        calculateResolution: sResolution.toFixed(4),
+        calculatedResolution: sResolution.toFixed(4),
         presentationExperience: sView.toFixed(4),
         sLostPacketRate: sLostPacketRate.toFixed(4),
         sStallRate: sStallRate.toFixed(4),
@@ -1781,12 +1853,16 @@ export default {
         if (taskDetail.value.taskInfo) {
           const service = taskDetail.value.taskInfo.service
           
+          // 获取配置参数
+          const params = await getVmosParams(service)
+          
           if (service === 'shortvideo') {
             const calculated = calculateShortvideoVmos(
               row.speed || '0',
               row.rtt || '0',
               row.packetLossRate || '0',
               row.stutterRatio || '0',
+              params,
             )
             
             // 将计算后的字段添加到保存数据中
@@ -1794,7 +1870,7 @@ export default {
             dataToSave.videoExperience = calculated.videoExperience
             dataToSave.interactionExperience = calculated.interactionExperience
             dataToSave.initialBufferingDelay = calculated.initialBufferingDelay
-            dataToSave.calculateResolution = calculated.calculateResolution
+            dataToSave.calculatedResolution = calculated.calculatedResolution
             dataToSave.presentationExperience = calculated.presentationExperience
             dataToSave.sLostPacketRate = calculated.sLostPacketRate
             dataToSave.sStallRate = calculated.sStallRate
@@ -1808,6 +1884,7 @@ export default {
               row.rtt || '0',
               row.packetLossRate || '0',
               row.stutterRatio || '0',
+              params,
             )
             
             // 将计算后的字段添加到保存数据中
@@ -1815,7 +1892,7 @@ export default {
             dataToSave.videoExperience = calculated.videoExperience
             dataToSave.interactionExperience = calculated.interactionExperience
             dataToSave.initialBufferingDelay = calculated.initialBufferingDelay
-            dataToSave.calculateResolution = calculated.calculateResolution
+            dataToSave.calculatedResolution = calculated.calculatedResolution
             dataToSave.presentationExperience = calculated.presentationExperience
             dataToSave.sLostPacketRate = calculated.sLostPacketRate
             dataToSave.sStallRate = calculated.sStallRate
@@ -1829,6 +1906,7 @@ export default {
               row.rtt || '0',
               row.packetLossRate || '0',
               row.stutterRatio || '0',
+              params,
             )
             
             // 将计算后的字段添加到保存数据中
@@ -1836,7 +1914,7 @@ export default {
             dataToSave.videoExperience = calculated.videoExperience
             dataToSave.interactionExperience = calculated.interactionExperience
             dataToSave.initialBufferingDelay = calculated.initialBufferingDelay
-            dataToSave.calculateResolution = calculated.calculateResolution
+            dataToSave.calculatedResolution = calculated.calculatedResolution
             dataToSave.presentationExperience = calculated.presentationExperience
             dataToSave.sLostPacketRate = calculated.sLostPacketRate
             dataToSave.sStallRate = calculated.sStallRate
@@ -1850,6 +1928,7 @@ export default {
               row.rtt || '0',
               row.packetLossRate || '0',
               row.stutterRatio || '0',
+              params,
             )
             
             // 将计算后的字段添加到保存数据中
@@ -1857,7 +1936,7 @@ export default {
             dataToSave.videoExperience = calculated.videoExperience
             dataToSave.interactionExperience = calculated.interactionExperience
             dataToSave.initialBufferingDelay = calculated.initialBufferingDelay
-            dataToSave.calculateResolution = calculated.calculateResolution
+            dataToSave.calculatedResolution = calculated.calculatedResolution
             dataToSave.presentationExperience = calculated.presentationExperience
             dataToSave.sLostPacketRate = calculated.sLostPacketRate
             dataToSave.sStallRate = calculated.sStallRate
@@ -1871,6 +1950,7 @@ export default {
               row.rtt || '0',
               row.packetLossRate || '0',
               row.stutterRatio || '0',
+              params,
             )
             
             // 将计算后的字段添加到保存数据中
@@ -1878,7 +1958,7 @@ export default {
             dataToSave.videoExperience = calculated.videoExperience
             dataToSave.interactionExperience = calculated.interactionExperience
             dataToSave.initialBufferingDelay = calculated.initialBufferingDelay
-            dataToSave.calculateResolution = calculated.calculateResolution
+            dataToSave.calculatedResolution = calculated.calculatedResolution
             dataToSave.presentationExperience = calculated.presentationExperience
             dataToSave.sLostPacketRate = calculated.sLostPacketRate
             dataToSave.sStallRate = calculated.sStallRate
@@ -1892,6 +1972,7 @@ export default {
               row.rtt || '0',
               row.packetLossRate || '0',
               row.stutterRatio || '0',
+              params,
             )
             
             // 将计算后的字段添加到保存数据中
@@ -1899,7 +1980,7 @@ export default {
             dataToSave.videoExperience = calculated.videoExperience
             dataToSave.interactionExperience = calculated.interactionExperience
             dataToSave.initialBufferingDelay = calculated.initialBufferingDelay
-            dataToSave.calculateResolution = calculated.calculateResolution
+            dataToSave.calculatedResolution = calculated.calculatedResolution
             dataToSave.presentationExperience = calculated.presentationExperience
             dataToSave.sLostPacketRate = calculated.sLostPacketRate
             dataToSave.sStallRate = calculated.sStallRate
@@ -1911,6 +1992,7 @@ export default {
               row.rtt || '0',
               row.packetLossRate || '0',
               row.stutterRatio || '0',
+              params,
             )
             
             // 将计算后的字段添加到保存数据中
@@ -1918,7 +2000,7 @@ export default {
             dataToSave.videoExperience = calculated.videoExperience
             dataToSave.interactionExperience = calculated.interactionExperience
             dataToSave.initialBufferingDelay = calculated.initialBufferingDelay
-            dataToSave.calculateResolution = calculated.calculateResolution
+            dataToSave.calculatedResolution = calculated.calculatedResolution
             dataToSave.presentationExperience = calculated.presentationExperience
             dataToSave.sLostPacketRate = calculated.sLostPacketRate
             dataToSave.sStallRate = calculated.sStallRate
@@ -1932,6 +2014,7 @@ export default {
               row.rtt || '0',
               row.packetLossRate || '0',
               row.stutterRatio || '0',
+              params,
             )
             
             // 将计算后的字段添加到保存数据中
@@ -1939,7 +2022,7 @@ export default {
             dataToSave.videoExperience = calculated.videoExperience
             dataToSave.interactionExperience = calculated.interactionExperience
             dataToSave.initialBufferingDelay = calculated.initialBufferingDelay
-            dataToSave.calculateResolution = calculated.calculateResolution
+            dataToSave.calculatedResolution = calculated.calculatedResolution
             dataToSave.presentationExperience = calculated.presentationExperience
             dataToSave.sLostPacketRate = calculated.sLostPacketRate
             dataToSave.sStallRate = calculated.sStallRate
@@ -1986,7 +2069,7 @@ export default {
         row.videoExperience = vmosEditBackup.value.videoExperience
         row.interactionExperience = vmosEditBackup.value.interactionExperience
         row.initialBufferingDelay = vmosEditBackup.value.initialBufferingDelay
-        row.calculateResolution = vmosEditBackup.value.calculateResolution
+        row.calculatedResolution = vmosEditBackup.value.calculatedResolution
         row.presentationExperience = vmosEditBackup.value.presentationExperience
         row.sLostPacketRate = vmosEditBackup.value.sLostPacketRate
         row.sStallRate = vmosEditBackup.value.sStallRate

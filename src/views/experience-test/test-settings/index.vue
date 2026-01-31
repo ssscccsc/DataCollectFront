@@ -203,6 +203,30 @@
             </el-table>
           </div>
         </el-tab-pane>
+
+        <!-- vMOS计算参数配置 -->
+        <el-tab-pane label="vMOS计算参数配置" name="vmosParams">
+          <div class="tab-content">
+            <div class="table-operations">
+              <el-button @click="loadVmosParamsData">
+                <el-icon><Refresh /></el-icon>
+                {{ $t('common.refresh') }}
+              </el-button>
+            </div>
+
+            <el-table :data="vmosParamsData" v-loading="vmosParamsLoading" style="width: 100%" border>
+              <el-table-column type="index" label="#" width="60" />
+              <el-table-column prop="service" label="应用大类" width="150" />
+              <el-table-column label="操作" width="150" fixed="right">
+                <template #default="scope">
+                  <el-button type="primary" size="small" @click="handleEditVmosParams(scope.row)">
+                    {{ $t('common.edit') }}
+                  </el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
+        </el-tab-pane>
       </el-tabs>
     </el-card>
 
@@ -241,6 +265,139 @@
         </el-button>
       </template>
     </el-dialog>
+
+    <!-- 编辑vMOS参数配置对话框 -->
+    <el-dialog
+      v-model="vmosParamsDialogVisible"
+      title="编辑vMOS计算参数"
+      width="800px"
+      @close="handleVmosParamsDialogClose"
+    >
+      <el-form
+        ref="vmosParamsFormRef"
+        :model="vmosParamsForm"
+        label-width="180px"
+      >
+        <el-form-item label="应用大类">
+          <el-input v-model="vmosParamsForm.service" disabled />
+        </el-form-item>
+        <el-divider>基础参数</el-divider>
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="a1 (bitrate参数)">
+              <el-input-number
+                v-model="vmosParamsForm.a1"
+                :precision="4"
+                :step="0.0001"
+                style="width: 100%;"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="a2 (resolution参数)">
+              <el-input-number
+                v-model="vmosParamsForm.a2"
+                :precision="4"
+                :step="0.0001"
+                style="width: 100%;"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="w1 (sQuality权重1)">
+              <el-input-number
+                v-model="vmosParamsForm.w1"
+                :precision="4"
+                :step="0.0001"
+                style="width: 100%;"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="w2 (sQuality权重2)">
+              <el-input-number
+                v-model="vmosParamsForm.w2"
+                :precision="4"
+                :step="0.0001"
+                style="width: 100%;"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-divider>RTT参数</el-divider>
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="a3 (RTT参数)">
+              <el-input-number
+                v-model="vmosParamsForm.a3"
+                :precision="4"
+                :step="0.0001"
+                style="width: 100%;"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-divider>丢包率参数</el-divider>
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="a4 (lost_packet_rate参数)">
+              <el-input-number
+                v-model="vmosParamsForm.a4"
+                :precision="4"
+                :step="0.0001"
+                style="width: 100%;"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-divider>卡顿率参数</el-divider>
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="a5 (stall_rate参数)">
+              <el-input-number
+                v-model="vmosParamsForm.a5"
+                :precision="4"
+                :step="0.0001"
+                style="width: 100%;"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-divider>sView参数</el-divider>
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="g1 (sView权重1)">
+              <el-input-number
+                v-model="vmosParamsForm.g1"
+                :precision="4"
+                :step="0.0001"
+                style="width: 100%;"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="g2 (sView权重2)">
+              <el-input-number
+                v-model="vmosParamsForm.g2"
+                :precision="4"
+                :step="0.0001"
+                style="width: 100%;"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <template #footer>
+        <el-button @click="vmosParamsDialogVisible = false">
+          {{ $t('common.cancel') }}
+        </el-button>
+        <el-button type="primary" @click="handleSaveVmosParams" :loading="vmosParamsSaving">
+          {{ $t('common.save') }}
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -264,11 +421,16 @@ export default {
     const networkFtpFormRef = ref(null)
     const mappingFormRef = ref(null)
     const timeConfigFormRef = ref(null)
+    const vmosParamsFormRef = ref(null)
     const mappingLoading = ref(false)
     const mappingDialogVisible = ref(false)
     const mappingDialogTitle = ref('')
     const isEditMapping = ref(false)
     const currentMappingId = ref(null)
+    const vmosParamsLoading = ref(false)
+    const vmosParamsDialogVisible = ref(false)
+    const vmosParamsSaving = ref(false)
+    const vmosParamsData = ref([])
 
     // 时间配置表单
     const timeConfigForm = reactive({
@@ -301,6 +463,20 @@ export default {
     const mappingForm = reactive({
       deviceId: '',
       gpsi: '',
+    })
+
+    // vMOS参数配置表单
+    const vmosParamsForm = reactive({
+      service: '',
+      a1: 928.9840,
+      a2: 410,
+      w1: 0.25,
+      w2: 0.05,
+      a3: 0.0035,
+      a4: 180.94,
+      a5: 4,
+      g1: 0.25,
+      g2: 0.1,
     })
 
     // 时间配置表单验证规则
@@ -358,6 +534,8 @@ export default {
         loadClientFtpData()
       } else if (tab.name === 'networkFtp') {
         loadNetworkFtpData()
+      } else if (tab.name === 'vmosParams') {
+        loadVmosParamsData()
       }
     }
 
@@ -371,6 +549,8 @@ export default {
         loadClientFtpData()
       } else if (newTab === 'networkFtp') {
         loadNetworkFtpData()
+      } else if (newTab === 'vmosParams') {
+        loadVmosParamsData()
       }
     })
 
@@ -615,20 +795,176 @@ export default {
       loadTimeConfigData()
     })
 
+    // 加载vMOS参数配置数据
+    const loadVmosParamsData = async () => {
+      vmosParamsLoading.value = true
+      try {
+        const response = await testSettingsApi.getVmosParamsConfig()
+        if (response.code === 200) {
+          const configs = response.data || []
+          // 定义所有业务大类
+          const allServices = [
+            'shortvideo',
+            'voip',
+            'watch_live',
+            'live_streaming',
+            'vod_streaming',
+            'meeting',
+            'mobile_game',
+            'mobile_game_cloud',
+          ]
+          
+          // 创建业务大类列表，如果已有配置则使用配置，否则创建默认项
+          const serviceList = allServices.map(service => {
+            const config = configs.find(c => c.service === service)
+            return config || { service }
+          })
+          
+          vmosParamsData.value = serviceList
+        } else {
+          ElMessage.error(response.message || t('common.error'))
+          // 如果获取失败，至少显示所有业务大类
+          vmosParamsData.value = [
+            { service: 'shortvideo' },
+            { service: 'voip' },
+            { service: 'watch_live' },
+            { service: 'live_streaming' },
+            { service: 'vod_streaming' },
+            { service: 'meeting' },
+            { service: 'mobile_game' },
+            { service: 'mobile_game_cloud' },
+          ]
+        }
+      } catch (error) {
+        ElMessage.error(t('common.error'))
+        // 如果出错，至少显示所有业务大类
+        vmosParamsData.value = [
+          { service: 'shortvideo' },
+          { service: 'voip' },
+          { service: 'watch_live' },
+          { service: 'live_streaming' },
+          { service: 'vod_streaming' },
+          { service: 'meeting' },
+          { service: 'mobile_game' },
+          { service: 'mobile_game_cloud' },
+        ]
+      } finally {
+        vmosParamsLoading.value = false
+      }
+    }
+
+    // 编辑vMOS参数配置
+    const handleEditVmosParams = async (row) => {
+      try {
+        const response = await testSettingsApi.getVmosParamsConfigByService(row.service)
+        if (response.code === 200 && response.data) {
+          const config = response.data
+          vmosParamsForm.service = config.service || row.service
+          vmosParamsForm.a1 = config.a1 || 928.9840
+          vmosParamsForm.a2 = config.a2 || 410
+          vmosParamsForm.w1 = config.w1 || 0.25
+          vmosParamsForm.w2 = config.w2 || 0.05
+          vmosParamsForm.a3 = config.a3 || 0.0035
+          vmosParamsForm.a4 = config.a4 || 180.94
+          vmosParamsForm.a5 = config.a5 || 4
+          vmosParamsForm.g1 = config.g1 || 0.25
+          vmosParamsForm.g2 = config.g2 || 0.1
+          vmosParamsDialogVisible.value = true
+        } else {
+          // 如果没有配置，使用默认值
+          vmosParamsForm.service = row.service
+          vmosParamsForm.a1 = 928.9840
+          vmosParamsForm.a2 = 410
+          vmosParamsForm.w1 = 0.25
+          vmosParamsForm.w2 = 0.05
+          vmosParamsForm.a3 = 0.0035
+          vmosParamsForm.a4 = 180.94
+          vmosParamsForm.a5 = 4
+          vmosParamsForm.g1 = 0.25
+          vmosParamsForm.g2 = 0.1
+          vmosParamsDialogVisible.value = true
+        }
+      } catch (error) {
+        // 如果出错，使用默认值
+        vmosParamsForm.service = row.service
+        vmosParamsForm.a1 = 928.9840
+        vmosParamsForm.a2 = 410
+        vmosParamsForm.w1 = 0.25
+        vmosParamsForm.w2 = 0.05
+        vmosParamsForm.a3 = 0.0035
+        vmosParamsForm.a4 = 180.94
+        vmosParamsForm.a5 = 4
+        vmosParamsForm.g1 = 0.25
+        vmosParamsForm.g2 = 0.1
+        vmosParamsDialogVisible.value = true
+      }
+    }
+
+    // 保存vMOS参数配置
+    const handleSaveVmosParams = async () => {
+      vmosParamsSaving.value = true
+      try {
+        const data = {
+          service: vmosParamsForm.service,
+          a1: vmosParamsForm.a1,
+          a2: vmosParamsForm.a2,
+          w1: vmosParamsForm.w1,
+          w2: vmosParamsForm.w2,
+          a3: vmosParamsForm.a3,
+          a4: vmosParamsForm.a4,
+          a5: vmosParamsForm.a5,
+          g1: vmosParamsForm.g1,
+          g2: vmosParamsForm.g2,
+        }
+        const response = await testSettingsApi.saveOrUpdateVmosParamsConfig(data)
+        if (response.code === 200) {
+          ElMessage.success(t('common.success'))
+          vmosParamsDialogVisible.value = false
+          loadVmosParamsData()
+        } else {
+          ElMessage.error(response.message || t('common.error'))
+        }
+      } catch (error) {
+        ElMessage.error(t('common.error'))
+      } finally {
+        vmosParamsSaving.value = false
+      }
+    }
+
+    // 关闭vMOS参数配置对话框
+    const handleVmosParamsDialogClose = () => {
+      vmosParamsForm.service = ''
+      vmosParamsForm.a1 = 928.9840
+      vmosParamsForm.a2 = 410
+      vmosParamsForm.w1 = 0.25
+      vmosParamsForm.w2 = 0.05
+      vmosParamsForm.a3 = 0.0035
+      vmosParamsForm.a4 = 180.94
+      vmosParamsForm.a5 = 4
+      vmosParamsForm.g1 = 0.25
+      vmosParamsForm.g2 = 0.1
+    }
+
     return {
       activeTab,
       clientFtpFormRef,
       networkFtpFormRef,
       mappingFormRef,
       timeConfigFormRef,
+      vmosParamsFormRef,
       clientFtpForm,
       networkFtpForm,
       timeConfigForm,
       mappingData,
       mappingForm,
+      vmosParamsData,
+      vmosParamsForm,
       mappingLoading,
       mappingDialogVisible,
       mappingDialogTitle,
+      vmosParamsLoading,
+      vmosParamsDialogVisible,
+      vmosParamsSaving,
       clientFtpRules,
       networkFtpRules,
       timeConfigRules,
@@ -647,6 +983,10 @@ export default {
       handleDeleteMapping,
       handleSaveMapping,
       handleMappingDialogClose,
+      loadVmosParamsData,
+      handleEditVmosParams,
+      handleSaveVmosParams,
+      handleVmosParamsDialogClose,
     }
   },
 }

@@ -244,3 +244,29 @@ export function getAvgQoeComparison(taskId) {
     method: 'get',
   });
 }
+
+// vMOS计算参数配置API
+// 获取所有业务大类的vMOS参数配置
+export function getVmosParamsConfig() {
+  return request({
+    url: '/test-settings/vmos-params',
+    method: 'get',
+  });
+}
+
+// 根据业务大类获取vMOS参数配置
+export function getVmosParamsConfigByService(service) {
+  return request({
+    url: `/test-settings/vmos-params/${service}`,
+    method: 'get',
+  });
+}
+
+// 保存或更新vMOS参数配置
+export function saveOrUpdateVmosParamsConfig(data) {
+  return request({
+    url: '/test-settings/vmos-params',
+    method: 'post',
+    data,
+  });
+}
