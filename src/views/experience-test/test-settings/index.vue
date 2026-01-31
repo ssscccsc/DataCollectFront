@@ -281,113 +281,327 @@
         <el-form-item label="应用大类">
           <el-input v-model="vmosParamsForm.service" disabled />
         </el-form-item>
-        <el-divider>基础参数</el-divider>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="a1 (bitrate参数)">
-              <el-input-number
-                v-model="vmosParamsForm.a1"
-                :precision="4"
-                :step="0.0001"
-                style="width: 100%;"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="a2 (resolution参数)">
-              <el-input-number
-                v-model="vmosParamsForm.a2"
-                :precision="4"
-                :step="0.0001"
-                style="width: 100%;"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="w1 (sQuality权重1)">
-              <el-input-number
-                v-model="vmosParamsForm.w1"
-                :precision="4"
-                :step="0.0001"
-                style="width: 100%;"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="w2 (sQuality权重2)">
-              <el-input-number
-                v-model="vmosParamsForm.w2"
-                :precision="4"
-                :step="0.0001"
-                style="width: 100%;"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-divider>RTT参数</el-divider>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="a3 (RTT参数)">
-              <el-input-number
-                v-model="vmosParamsForm.a3"
-                :precision="4"
-                :step="0.0001"
-                style="width: 100%;"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-divider>丢包率参数</el-divider>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="a4 (lost_packet_rate参数)">
-              <el-input-number
-                v-model="vmosParamsForm.a4"
-                :precision="4"
-                :step="0.0001"
-                style="width: 100%;"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-divider>卡顿率参数</el-divider>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="a5 (stall_rate参数)">
-              <el-input-number
-                v-model="vmosParamsForm.a5"
-                :precision="4"
-                :step="0.0001"
-                style="width: 100%;"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-divider>sView参数</el-divider>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="g1 (sView权重1)">
-              <el-input-number
-                v-model="vmosParamsForm.g1"
-                :precision="4"
-                :step="0.0001"
-                style="width: 100%;"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="g2 (sView权重2)">
-              <el-input-number
-                v-model="vmosParamsForm.g2"
-                :precision="4"
-                :step="0.0001"
-                style="width: 100%;"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
+        
+        <!-- voip业务大类的特殊配置 -->
+        <template v-if="vmosParamsForm.service === 'voip'">
+          <el-divider>voip特有参数 - s_bitrate计算</el-divider>
+          <el-row :gutter="20">
+            <el-col :span="12">
+              <el-form-item label="v1">
+                <el-input-number
+                  v-model="vmosParamsForm.v1"
+                  :precision="4"
+                  :step="0.0001"
+                  style="width: 100%;"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="v2">
+                <el-input-number
+                  v-model="vmosParamsForm.v2"
+                  :precision="4"
+                  :step="0.0001"
+                  style="width: 100%;"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row :gutter="20">
+            <el-col :span="12">
+              <el-form-item label="v3">
+                <el-input-number
+                  v-model="vmosParamsForm.v3"
+                  :precision="4"
+                  :step="0.0001"
+                  style="width: 100%;"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="v4">
+                <el-input-number
+                  v-model="vmosParamsForm.v4"
+                  :precision="4"
+                  :step="0.0001"
+                  style="width: 100%;"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row :gutter="20">
+            <el-col :span="12">
+              <el-form-item label="v5">
+                <el-input-number
+                  v-model="vmosParamsForm.v5"
+                  :precision="4"
+                  :step="0.0001"
+                  style="width: 100%;"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="fr (帧率)">
+                <el-input-number
+                  v-model="vmosParamsForm.fr"
+                  :precision="4"
+                  :step="0.0001"
+                  style="width: 100%;"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-divider>voip特有参数 - s_resolution计算</el-divider>
+          <el-row :gutter="20">
+            <el-col :span="12">
+              <el-form-item label="v12">
+                <el-input-number
+                  v-model="vmosParamsForm.v12"
+                  :precision="4"
+                  :step="0.0001"
+                  style="width: 100%;"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="v13">
+                <el-input-number
+                  v-model="vmosParamsForm.v13"
+                  :precision="4"
+                  :step="0.0001"
+                  style="width: 100%;"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row :gutter="20">
+            <el-col :span="12">
+              <el-form-item label="v14">
+                <el-input-number
+                  v-model="vmosParamsForm.v14"
+                  :precision="4"
+                  :step="0.0001"
+                  style="width: 100%;"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-divider>voip特有参数 - s_RTT计算</el-divider>
+          <el-row :gutter="20">
+            <el-col :span="12">
+              <el-form-item label="v60">
+                <el-input-number
+                  v-model="vmosParamsForm.v60"
+                  :precision="4"
+                  :step="0.0001"
+                  style="width: 100%;"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="v61">
+                <el-input-number
+                  v-model="vmosParamsForm.v61"
+                  :precision="4"
+                  :step="0.0001"
+                  style="width: 100%;"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row :gutter="20">
+            <el-col :span="12">
+              <el-form-item label="v62">
+                <el-input-number
+                  v-model="vmosParamsForm.v62"
+                  :precision="4"
+                  :step="0.0001"
+                  style="width: 100%;"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="v63">
+                <el-input-number
+                  v-model="vmosParamsForm.v63"
+                  :precision="4"
+                  :step="0.0001"
+                  style="width: 100%;"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-divider>voip特有参数 - s_lost_packet_rate计算</el-divider>
+          <el-row :gutter="20">
+            <el-col :span="12">
+              <el-form-item label="v58">
+                <el-input-number
+                  v-model="vmosParamsForm.v58"
+                  :precision="4"
+                  :step="0.0001"
+                  style="width: 100%;"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="v59">
+                <el-input-number
+                  v-model="vmosParamsForm.v59"
+                  :precision="4"
+                  :step="0.0001"
+                  style="width: 100%;"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-divider>voip通用参数</el-divider>
+          <el-row :gutter="20">
+            <el-col :span="12">
+              <el-form-item label="a1 (stall_rate参数)">
+                <el-input-number
+                  v-model="vmosParamsForm.a1"
+                  :precision="4"
+                  :step="0.0001"
+                  style="width: 100%;"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-divider>sView参数</el-divider>
+          <el-row :gutter="20">
+            <el-col :span="12">
+              <el-form-item label="g1 (sView权重1)">
+                <el-input-number
+                  v-model="vmosParamsForm.g1"
+                  :precision="4"
+                  :step="0.0001"
+                  style="width: 100%;"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="g2 (sView权重2)">
+                <el-input-number
+                  v-model="vmosParamsForm.g2"
+                  :precision="4"
+                  :step="0.0001"
+                  style="width: 100%;"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </template>
+        
+        <!-- 其他业务大类的通用配置 -->
+        <template v-else>
+          <el-divider>基础参数</el-divider>
+          <el-row :gutter="20">
+            <el-col :span="12">
+              <el-form-item label="a1 (bitrate参数)">
+                <el-input-number
+                  v-model="vmosParamsForm.a1"
+                  :precision="4"
+                  :step="0.0001"
+                  style="width: 100%;"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="a2 (resolution参数)">
+                <el-input-number
+                  v-model="vmosParamsForm.a2"
+                  :precision="4"
+                  :step="0.0001"
+                  style="width: 100%;"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row :gutter="20">
+            <el-col :span="12">
+              <el-form-item label="w1 (sQuality权重1)">
+                <el-input-number
+                  v-model="vmosParamsForm.w1"
+                  :precision="4"
+                  :step="0.0001"
+                  style="width: 100%;"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="w2 (sQuality权重2)">
+                <el-input-number
+                  v-model="vmosParamsForm.w2"
+                  :precision="4"
+                  :step="0.0001"
+                  style="width: 100%;"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-divider>RTT参数</el-divider>
+          <el-row :gutter="20">
+            <el-col :span="12">
+              <el-form-item label="a3 (RTT参数)">
+                <el-input-number
+                  v-model="vmosParamsForm.a3"
+                  :precision="4"
+                  :step="0.0001"
+                  style="width: 100%;"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-divider>丢包率参数</el-divider>
+          <el-row :gutter="20">
+            <el-col :span="12">
+              <el-form-item label="a4 (lost_packet_rate参数)">
+                <el-input-number
+                  v-model="vmosParamsForm.a4"
+                  :precision="4"
+                  :step="0.0001"
+                  style="width: 100%;"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-divider>卡顿率参数</el-divider>
+          <el-row :gutter="20">
+            <el-col :span="12">
+              <el-form-item label="a5 (stall_rate参数)">
+                <el-input-number
+                  v-model="vmosParamsForm.a5"
+                  :precision="4"
+                  :step="0.0001"
+                  style="width: 100%;"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-divider>sView参数</el-divider>
+          <el-row :gutter="20">
+            <el-col :span="12">
+              <el-form-item label="g1 (sView权重1)">
+                <el-input-number
+                  v-model="vmosParamsForm.g1"
+                  :precision="4"
+                  :step="0.0001"
+                  style="width: 100%;"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="g2 (sView权重2)">
+                <el-input-number
+                  v-model="vmosParamsForm.g2"
+                  :precision="4"
+                  :step="0.0001"
+                  style="width: 100%;"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </template>
       </el-form>
       <template #footer>
         <el-button @click="vmosParamsDialogVisible = false">
@@ -477,6 +691,22 @@ export default {
       a5: 4,
       g1: 0.25,
       g2: 0.1,
+      // voip特有参数
+      v1: 4.1192,
+      v2: 0.0975,
+      v3: 1.2667,
+      v4: 0.3177,
+      v5: 2.1276,
+      fr: 30,
+      v12: -0.6571,
+      v13: 232000,
+      v14: -1.295,
+      v58: 5,
+      v59: 1.382,
+      v60: 3.615,
+      v61: 396.6,
+      v62: 0.256,
+      v63: -2.016,
     })
 
     // 时间配置表单验证规则
@@ -857,22 +1087,102 @@ export default {
     const handleEditVmosParams = async (row) => {
       try {
         const response = await testSettingsApi.getVmosParamsConfigByService(row.service)
+        vmosParamsForm.service = row.service
+        
         if (response.code === 200 && response.data) {
           const config = response.data
-          vmosParamsForm.service = config.service || row.service
-          vmosParamsForm.a1 = config.a1 || 928.9840
-          vmosParamsForm.a2 = config.a2 || 410
-          vmosParamsForm.w1 = config.w1 || 0.25
-          vmosParamsForm.w2 = config.w2 || 0.05
-          vmosParamsForm.a3 = config.a3 || 0.0035
-          vmosParamsForm.a4 = config.a4 || 180.94
-          vmosParamsForm.a5 = config.a5 || 4
-          vmosParamsForm.g1 = config.g1 || 0.25
-          vmosParamsForm.g2 = config.g2 || 0.1
+          
+          if (row.service === 'voip') {
+            // voip特有参数的默认值
+            vmosParamsForm.v1 = config.v1 ?? 4.1192
+            vmosParamsForm.v2 = config.v2 ?? 0.0975
+            vmosParamsForm.v3 = config.v3 ?? 1.2667
+            vmosParamsForm.v4 = config.v4 ?? 0.3177
+            vmosParamsForm.v5 = config.v5 ?? 2.1276
+            vmosParamsForm.fr = config.fr ?? 30
+            vmosParamsForm.v12 = config.v12 ?? -0.6571
+            vmosParamsForm.v13 = config.v13 ?? 232000
+            vmosParamsForm.v14 = config.v14 ?? -1.295
+            vmosParamsForm.v58 = config.v58 ?? 5
+            vmosParamsForm.v59 = config.v59 ?? 1.382
+            vmosParamsForm.v60 = config.v60 ?? 3.615
+            vmosParamsForm.v61 = config.v61 ?? 396.6
+            vmosParamsForm.v62 = config.v62 ?? 0.256
+            vmosParamsForm.v63 = config.v63 ?? -2.016
+            vmosParamsForm.a1 = config.a1 ?? 5
+            vmosParamsForm.g1 = config.g1 ?? 0.15
+            vmosParamsForm.g2 = config.g2 ?? 0.15
+          } else {
+            // 其他业务大类的默认值
+            vmosParamsForm.a1 = config.a1 ?? 928.9840
+            vmosParamsForm.a2 = config.a2 ?? 410
+            vmosParamsForm.w1 = config.w1 ?? 0.25
+            vmosParamsForm.w2 = config.w2 ?? 0.05
+            vmosParamsForm.a3 = config.a3 ?? 0.0035
+            vmosParamsForm.a4 = config.a4 ?? 180.94
+            vmosParamsForm.a5 = config.a5 ?? 4
+            vmosParamsForm.g1 = config.g1 ?? 0.25
+            vmosParamsForm.g2 = config.g2 ?? 0.1
+          }
+          
           vmosParamsDialogVisible.value = true
         } else {
           // 如果没有配置，使用默认值
-          vmosParamsForm.service = row.service
+          if (row.service === 'voip') {
+            vmosParamsForm.v1 = 4.1192
+            vmosParamsForm.v2 = 0.0975
+            vmosParamsForm.v3 = 1.2667
+            vmosParamsForm.v4 = 0.3177
+            vmosParamsForm.v5 = 2.1276
+            vmosParamsForm.fr = 30
+            vmosParamsForm.v12 = -0.6571
+            vmosParamsForm.v13 = 232000
+            vmosParamsForm.v14 = -1.295
+            vmosParamsForm.v58 = 5
+            vmosParamsForm.v59 = 1.382
+            vmosParamsForm.v60 = 3.615
+            vmosParamsForm.v61 = 396.6
+            vmosParamsForm.v62 = 0.256
+            vmosParamsForm.v63 = -2.016
+            vmosParamsForm.a1 = 5
+            vmosParamsForm.g1 = 0.15
+            vmosParamsForm.g2 = 0.15
+          } else {
+            vmosParamsForm.a1 = 928.9840
+            vmosParamsForm.a2 = 410
+            vmosParamsForm.w1 = 0.25
+            vmosParamsForm.w2 = 0.05
+            vmosParamsForm.a3 = 0.0035
+            vmosParamsForm.a4 = 180.94
+            vmosParamsForm.a5 = 4
+            vmosParamsForm.g1 = 0.25
+            vmosParamsForm.g2 = 0.1
+          }
+          vmosParamsDialogVisible.value = true
+        }
+      } catch (error) {
+        // 如果出错，使用默认值
+        vmosParamsForm.service = row.service
+        if (row.service === 'voip') {
+          vmosParamsForm.v1 = 4.1192
+          vmosParamsForm.v2 = 0.0975
+          vmosParamsForm.v3 = 1.2667
+          vmosParamsForm.v4 = 0.3177
+          vmosParamsForm.v5 = 2.1276
+          vmosParamsForm.fr = 30
+          vmosParamsForm.v12 = -0.6571
+          vmosParamsForm.v13 = 232000
+          vmosParamsForm.v14 = -1.295
+          vmosParamsForm.v58 = 5
+          vmosParamsForm.v59 = 1.382
+          vmosParamsForm.v60 = 3.615
+          vmosParamsForm.v61 = 396.6
+          vmosParamsForm.v62 = 0.256
+          vmosParamsForm.v63 = -2.016
+          vmosParamsForm.a1 = 5
+          vmosParamsForm.g1 = 0.15
+          vmosParamsForm.g2 = 0.15
+        } else {
           vmosParamsForm.a1 = 928.9840
           vmosParamsForm.a2 = 410
           vmosParamsForm.w1 = 0.25
@@ -882,20 +1192,7 @@ export default {
           vmosParamsForm.a5 = 4
           vmosParamsForm.g1 = 0.25
           vmosParamsForm.g2 = 0.1
-          vmosParamsDialogVisible.value = true
         }
-      } catch (error) {
-        // 如果出错，使用默认值
-        vmosParamsForm.service = row.service
-        vmosParamsForm.a1 = 928.9840
-        vmosParamsForm.a2 = 410
-        vmosParamsForm.w1 = 0.25
-        vmosParamsForm.w2 = 0.05
-        vmosParamsForm.a3 = 0.0035
-        vmosParamsForm.a4 = 180.94
-        vmosParamsForm.a5 = 4
-        vmosParamsForm.g1 = 0.25
-        vmosParamsForm.g2 = 0.1
         vmosParamsDialogVisible.value = true
       }
     }
@@ -906,16 +1203,41 @@ export default {
       try {
         const data = {
           service: vmosParamsForm.service,
-          a1: vmosParamsForm.a1,
-          a2: vmosParamsForm.a2,
-          w1: vmosParamsForm.w1,
-          w2: vmosParamsForm.w2,
-          a3: vmosParamsForm.a3,
-          a4: vmosParamsForm.a4,
-          a5: vmosParamsForm.a5,
-          g1: vmosParamsForm.g1,
-          g2: vmosParamsForm.g2,
         }
+        
+        if (vmosParamsForm.service === 'voip') {
+          // voip特有参数
+          data.v1 = vmosParamsForm.v1
+          data.v2 = vmosParamsForm.v2
+          data.v3 = vmosParamsForm.v3
+          data.v4 = vmosParamsForm.v4
+          data.v5 = vmosParamsForm.v5
+          data.fr = vmosParamsForm.fr
+          data.v12 = vmosParamsForm.v12
+          data.v13 = vmosParamsForm.v13
+          data.v14 = vmosParamsForm.v14
+          data.v58 = vmosParamsForm.v58
+          data.v59 = vmosParamsForm.v59
+          data.v60 = vmosParamsForm.v60
+          data.v61 = vmosParamsForm.v61
+          data.v62 = vmosParamsForm.v62
+          data.v63 = vmosParamsForm.v63
+          data.a1 = vmosParamsForm.a1
+          data.g1 = vmosParamsForm.g1
+          data.g2 = vmosParamsForm.g2
+        } else {
+          // 其他业务大类的参数
+          data.a1 = vmosParamsForm.a1
+          data.a2 = vmosParamsForm.a2
+          data.w1 = vmosParamsForm.w1
+          data.w2 = vmosParamsForm.w2
+          data.a3 = vmosParamsForm.a3
+          data.a4 = vmosParamsForm.a4
+          data.a5 = vmosParamsForm.a5
+          data.g1 = vmosParamsForm.g1
+          data.g2 = vmosParamsForm.g2
+        }
+        
         const response = await testSettingsApi.saveOrUpdateVmosParamsConfig(data)
         if (response.code === 200) {
           ElMessage.success(t('common.success'))
@@ -943,6 +1265,22 @@ export default {
       vmosParamsForm.a5 = 4
       vmosParamsForm.g1 = 0.25
       vmosParamsForm.g2 = 0.1
+      // 重置voip特有参数
+      vmosParamsForm.v1 = 4.1192
+      vmosParamsForm.v2 = 0.0975
+      vmosParamsForm.v3 = 1.2667
+      vmosParamsForm.v4 = 0.3177
+      vmosParamsForm.v5 = 2.1276
+      vmosParamsForm.fr = 30
+      vmosParamsForm.v12 = -0.6571
+      vmosParamsForm.v13 = 232000
+      vmosParamsForm.v14 = -1.295
+      vmosParamsForm.v58 = 5
+      vmosParamsForm.v59 = 1.382
+      vmosParamsForm.v60 = 3.615
+      vmosParamsForm.v61 = 396.6
+      vmosParamsForm.v62 = 0.256
+      vmosParamsForm.v63 = -2.016
     }
 
     return {

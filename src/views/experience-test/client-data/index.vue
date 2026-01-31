@@ -1259,34 +1259,85 @@ export default {
         return vmosParamsCache.value[service]
       }
       
-      // 默认参数值
-      const defaultParams = {
-        a1: 928.9840,
-        a2: 410,
-        w1: 0.25,
-        w2: 0.05,
-        a3: 0.0035,
-        a4: 180.94,
-        a5: 4,
-        g1: 0.25,
-        g2: 0.1,
+      // 默认参数值（根据业务大类不同）
+      let defaultParams = {}
+      
+      if (service === 'voip') {
+        // voip特有的默认值
+        defaultParams = {
+          v1: 4.1192,
+          v2: 0.0975,
+          v3: 1.2667,
+          v4: 0.3177,
+          v5: 2.1276,
+          fr: 30,
+          v12: -0.6571,
+          v13: 232000,
+          v14: -1.295,
+          v58: 5,
+          v59: 1.382,
+          v60: 3.615,
+          v61: 396.6,
+          v62: 0.256,
+          v63: -2.016,
+          a1: 5,
+          g1: 0.15,
+          g2: 0.15,
+        }
+      } else {
+        // 其他业务大类的默认值
+        defaultParams = {
+          a1: 928.9840,
+          a2: 410,
+          w1: 0.25,
+          w2: 0.05,
+          a3: 0.0035,
+          a4: 180.94,
+          a5: 4,
+          g1: 0.25,
+          g2: 0.1,
+        }
       }
       
       try {
         const response = await getVmosParamsConfigByService(service)
         if (response.code === 200 && response.data) {
           const config = response.data
-          const params = {
-            a1: config.a1 ?? defaultParams.a1,
-            a2: config.a2 ?? defaultParams.a2,
-            w1: config.w1 ?? defaultParams.w1,
-            w2: config.w2 ?? defaultParams.w2,
-            a3: config.a3 ?? defaultParams.a3,
-            a4: config.a4 ?? defaultParams.a4,
-            a5: config.a5 ?? defaultParams.a5,
-            g1: config.g1 ?? defaultParams.g1,
-            g2: config.g2 ?? defaultParams.g2,
+          const params = {}
+          
+          if (service === 'voip') {
+            // voip特有的参数
+            params.v1 = config.v1 ?? defaultParams.v1
+            params.v2 = config.v2 ?? defaultParams.v2
+            params.v3 = config.v3 ?? defaultParams.v3
+            params.v4 = config.v4 ?? defaultParams.v4
+            params.v5 = config.v5 ?? defaultParams.v5
+            params.fr = config.fr ?? defaultParams.fr
+            params.v12 = config.v12 ?? defaultParams.v12
+            params.v13 = config.v13 ?? defaultParams.v13
+            params.v14 = config.v14 ?? defaultParams.v14
+            params.v58 = config.v58 ?? defaultParams.v58
+            params.v59 = config.v59 ?? defaultParams.v59
+            params.v60 = config.v60 ?? defaultParams.v60
+            params.v61 = config.v61 ?? defaultParams.v61
+            params.v62 = config.v62 ?? defaultParams.v62
+            params.v63 = config.v63 ?? defaultParams.v63
+            params.a1 = config.a1 ?? defaultParams.a1
+            params.g1 = config.g1 ?? defaultParams.g1
+            params.g2 = config.g2 ?? defaultParams.g2
+          } else {
+            // 其他业务大类的参数
+            params.a1 = config.a1 ?? defaultParams.a1
+            params.a2 = config.a2 ?? defaultParams.a2
+            params.w1 = config.w1 ?? defaultParams.w1
+            params.w2 = config.w2 ?? defaultParams.w2
+            params.a3 = config.a3 ?? defaultParams.a3
+            params.a4 = config.a4 ?? defaultParams.a4
+            params.a5 = config.a5 ?? defaultParams.a5
+            params.g1 = config.g1 ?? defaultParams.g1
+            params.g2 = config.g2 ?? defaultParams.g2
           }
+          
           // 缓存配置
           vmosParamsCache.value[service] = params
           return params
@@ -1326,22 +1377,22 @@ export default {
       const packetLossRateNum = parseFloat(packetLossRate) || 0
       const stutterRatioNum = parseFloat(stutterRatio) || 0
 
-      // 常量定义（voip特有的常量，不在配置范围内）
-      const v1 = 4.1192
-      const v2 = 0.0975
-      const v3 = 1.2667
-      const v4 = 0.3177
-      const v5 = 2.1276
-      const fr = 30
-      const v12 = -0.6571
-      const v13 = 232000
-      const v14 = -1.295
-      const v60 = 3.615
-      const v61 = 396.6
-      const v62 = 0.256
-      const v63 = -2.016
-      const v58 = 5
-      const v59 = 1.382
+      // 从配置中获取voip特有的常量参数，如果没有则使用默认值
+      const v1 = params?.v1 ?? 4.1192
+      const v2 = params?.v2 ?? 0.0975
+      const v3 = params?.v3 ?? 1.2667
+      const v4 = params?.v4 ?? 0.3177
+      const v5 = params?.v5 ?? 2.1276
+      const fr = params?.fr ?? 30
+      const v12 = params?.v12 ?? -0.6571
+      const v13 = params?.v13 ?? 232000
+      const v14 = params?.v14 ?? -1.295
+      const v58 = params?.v58 ?? 5
+      const v59 = params?.v59 ?? 1.382
+      const v60 = params?.v60 ?? 3.615
+      const v61 = params?.v61 ?? 396.6
+      const v62 = params?.v62 ?? 0.256
+      const v63 = params?.v63 ?? -2.016
       
       // 从配置中获取参数，如果没有则使用默认值（voip中a1用于stall_rate，g1和g2用于sView）
       const a1 = params?.a1 ?? 5
