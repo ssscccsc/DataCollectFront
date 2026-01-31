@@ -1302,6 +1302,8 @@ export default {
       avgUplinkLost: 'Avg Uplink Lost',
       avgDownlinkLost: 'Avg Downlink Lost',
       avgLost: 'Avg Lost',
+      replaceDownlinkSpeed: 'Replace Downlink Speed',
+      revertDownlinkSpeed: 'Revert Downlink Speed',
     },
     dataComparison: {
       description: 'Client-network data comparison analysis, support data comparison and viewing',

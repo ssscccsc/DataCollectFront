@@ -371,6 +371,15 @@
             <el-tabs v-model="activeDetailTab" type="border-card" class="data-tabs">
           <!-- vMOS数据 -->
           <el-tab-pane :label="$t('experienceTest.clientData.vmos')" name="vmos">
+            <!-- 替换/回退下行速率按钮（仅在voip和meeting时显示） -->
+            <div v-if="taskDetail.taskInfo && (taskDetail.taskInfo.service === 'voip' || taskDetail.taskInfo.service === 'meeting')" style="margin-bottom: 16px;">
+              <el-button type="primary" @click="handleReplaceDownlinkSpeed" :disabled="isReplacingSpeed || !hasSpeedData">
+                {{ $t('experienceTest.clientData.replaceDownlinkSpeed') }}
+              </el-button>
+              <el-button type="warning" @click="handleRevertDownlinkSpeed" :disabled="isReplacingSpeed || !hasOriginalSpeedData">
+                {{ $t('experienceTest.clientData.revertDownlinkSpeed') }}
+              </el-button>
+            </div>
             <el-table :data="taskDetail.vmosDataList" border stripe style="width: 100%">
               <el-table-column prop="sequenceNumber" :label="$t('experienceTest.clientData.sequenceNumber')" width="100" />
               <el-table-column :label="$t('experienceTest.clientData.speedKbps')" width="100">
@@ -635,6 +644,16 @@ export default {
     // vMOS参数配置缓存（按业务大类）
     const vmosParamsCache = ref({})
     
+    // 替换下行速率相关
+    const isReplacingSpeed = ref(false)
+    const originalSpeedDataBackup = ref({}) // 保存原始速率数据，格式：{ rowId: originalSpeed }
+    const hasOriginalSpeedData = computed(() => {
+      return Object.keys(originalSpeedDataBackup.value).length > 0
+    })
+    const hasSpeedData = computed(() => {
+      return taskDetail.value.speedDataList && taskDetail.value.speedDataList.length > 0
+    })
+    
     // 基础信息编辑相关
     const editingBasicInfo = ref(false)
     const basicInfoSaving = ref(false)
@@ -795,6 +814,10 @@ export default {
           rsrp: '',
           userCategory: '',
         }
+        
+        // 重置替换下行速率相关状态
+        originalSpeedDataBackup.value = {}
+        isReplacingSpeed.value = false
         
         // 重置数据
         taskDetail.value = {
@@ -2200,6 +2223,267 @@ export default {
       }
     }
 
+    // 批量重新计算vMOS数据（不保存到数据库，只更新界面）
+    const recalculateVmosDataForRow = async (row, service, params) => {
+      if (service === 'voip') {
+        const calculated = calculateVoipVmos(
+          row.speed || '0',
+          row.resolution || '',
+          row.rtt || '0',
+          row.packetLossRate || '0',
+          row.stutterRatio || '0',
+          params,
+        )
+        row.bitrate = calculated.bitrate
+        row.videoExperience = calculated.videoExperience
+        row.interactionExperience = calculated.interactionExperience
+        row.initialBufferingDelay = calculated.initialBufferingDelay
+        row.calculatedResolution = calculated.calculatedResolution
+        row.presentationExperience = calculated.presentationExperience
+        row.sLostPacketRate = calculated.sLostPacketRate
+        row.sStallRate = calculated.sStallRate
+        row.alpha = calculated.alpha
+        row.beta = calculated.beta
+        row.vmos = calculated.vmos
+      } else if (service === 'meeting') {
+        const calculated = calculateMeetingVmos(
+          row.speed || '0',
+          row.resolution || '',
+          row.rtt || '0',
+          row.packetLossRate || '0',
+          row.stutterRatio || '0',
+          params,
+        )
+        row.bitrate = calculated.bitrate
+        row.videoExperience = calculated.videoExperience
+        row.interactionExperience = calculated.interactionExperience
+        row.initialBufferingDelay = calculated.initialBufferingDelay
+        row.calculatedResolution = calculated.calculatedResolution
+        row.presentationExperience = calculated.presentationExperience
+        row.sLostPacketRate = calculated.sLostPacketRate
+        row.sStallRate = calculated.sStallRate
+        row.alpha = calculated.alpha
+        row.beta = calculated.beta
+        row.vmos = calculated.vmos
+      }
+    }
+
+    // 准备保存数据（与handleSaveVmosRow中的逻辑相同）
+    const prepareVmosDataToSave = (row, service, params) => {
+      const dataToSave = {
+        speed: row.speed || '',
+        resolution: row.resolution || '',
+        rtt: row.rtt || '',
+        packetLossRate: row.packetLossRate || '',
+        stutterRatio: row.stutterRatio || '',
+      }
+
+      if (service === 'voip') {
+        const calculated = calculateVoipVmos(
+          row.speed || '0',
+          row.resolution || '',
+          row.rtt || '0',
+          row.packetLossRate || '0',
+          row.stutterRatio || '0',
+          params,
+        )
+        dataToSave.bitrate = calculated.bitrate
+        dataToSave.videoExperience = calculated.videoExperience
+        dataToSave.interactionExperience = calculated.interactionExperience
+        dataToSave.initialBufferingDelay = calculated.initialBufferingDelay
+        dataToSave.calculatedResolution = calculated.calculatedResolution
+        dataToSave.presentationExperience = calculated.presentationExperience
+        dataToSave.sLostPacketRate = calculated.sLostPacketRate
+        dataToSave.sStallRate = calculated.sStallRate
+        dataToSave.alpha = calculated.alpha
+        dataToSave.beta = calculated.beta
+        dataToSave.vmos = calculated.vmos
+      } else if (service === 'meeting') {
+        const calculated = calculateMeetingVmos(
+          row.speed || '0',
+          row.resolution || '',
+          row.rtt || '0',
+          row.packetLossRate || '0',
+          row.stutterRatio || '0',
+          params,
+        )
+        dataToSave.bitrate = calculated.bitrate
+        dataToSave.videoExperience = calculated.videoExperience
+        dataToSave.interactionExperience = calculated.interactionExperience
+        dataToSave.initialBufferingDelay = calculated.initialBufferingDelay
+        dataToSave.calculatedResolution = calculated.calculatedResolution
+        dataToSave.presentationExperience = calculated.presentationExperience
+        dataToSave.sLostPacketRate = calculated.sLostPacketRate
+        dataToSave.sStallRate = calculated.sStallRate
+        dataToSave.alpha = calculated.alpha
+        dataToSave.beta = calculated.beta
+        dataToSave.vmos = calculated.vmos
+      }
+
+      return dataToSave
+    }
+
+    // 替换下行速率
+    const handleReplaceDownlinkSpeed = async () => {
+      if (!taskDetail.value.taskInfo || !taskDetail.value.vmosDataList || !taskDetail.value.speedDataList) {
+        ElMessage.warning('数据不完整')
+        return
+      }
+
+      const service = taskDetail.value.taskInfo.service
+      if (service !== 'voip' && service !== 'meeting') {
+        ElMessage.warning('当前业务大类不支持此功能')
+        return
+      }
+
+      if (taskDetail.value.vmosDataList.length !== taskDetail.value.speedDataList.length) {
+        ElMessage.warning('vMOS数据与上下行速率统计数据数量不匹配')
+        return
+      }
+
+      isReplacingSpeed.value = true
+      try {
+        // 获取配置参数
+        const params = await getVmosParams(service)
+
+        // 先保存所有原始速率数据
+        originalSpeedDataBackup.value = {}
+        for (let i = 0; i < taskDetail.value.vmosDataList.length; i++) {
+          const vmosRow = taskDetail.value.vmosDataList[i]
+          originalSpeedDataBackup.value[vmosRow.id] = vmosRow.speed || ''
+        }
+
+        // 遍历vMOS数据列表，替换速率并重新计算
+        for (let i = 0; i < taskDetail.value.vmosDataList.length; i++) {
+          const vmosRow = taskDetail.value.vmosDataList[i]
+          const speedRow = taskDetail.value.speedDataList[i]
+
+          // 获取下行速率（单位：bps），除以1024转换为Kbps
+          const dlSpeedBps = parseFloat(speedRow.dlSpeed) || 0
+          const dlSpeedKbps = dlSpeedBps / 1024
+
+          // 替换速率
+          vmosRow.speed = dlSpeedKbps.toFixed(2)
+
+          // 重新计算vMOS数据
+          await recalculateVmosDataForRow(vmosRow, service, params)
+        }
+
+        // 批量保存到数据库
+        let successCount = 0
+        let failCount = 0
+        const savePromises = taskDetail.value.vmosDataList.map(async (vmosRow) => {
+          try {
+            const dataToSave = prepareVmosDataToSave(vmosRow, service, params)
+            const response = await updateVmosData(vmosRow.id, dataToSave)
+            if (response.code === 200) {
+              successCount++
+            } else {
+              failCount++
+              console.error(`保存vMOS数据失败 (ID: ${vmosRow.id}):`, response.message)
+            }
+          } catch (error) {
+            failCount++
+            console.error(`保存vMOS数据失败 (ID: ${vmosRow.id}):`, error)
+          }
+        })
+
+        await Promise.all(savePromises)
+
+        if (failCount === 0) {
+          ElMessage.success(`替换下行速率成功，已保存 ${successCount} 条数据`)
+          // 刷新当前任务详情
+          if (taskDetail.value.taskInfo && taskDetail.value.taskInfo.taskId) {
+            await handleViewDetail({ taskId: taskDetail.value.taskInfo.taskId })
+          }
+        } else {
+          ElMessage.warning(`替换下行速率完成，成功保存 ${successCount} 条，失败 ${failCount} 条`)
+        }
+      } catch (error) {
+        console.error('Replace downlink speed error:', error)
+        ElMessage.error(error.message || t('common.error'))
+      } finally {
+        isReplacingSpeed.value = false
+      }
+    }
+
+    // 回退下行速率
+    const handleRevertDownlinkSpeed = async () => {
+      if (!taskDetail.value.taskInfo || !taskDetail.value.vmosDataList) {
+        ElMessage.warning('数据不完整')
+        return
+      }
+
+      const service = taskDetail.value.taskInfo.service
+      if (service !== 'voip' && service !== 'meeting') {
+        ElMessage.warning('当前业务大类不支持此功能')
+        return
+      }
+
+      if (Object.keys(originalSpeedDataBackup.value).length === 0) {
+        ElMessage.warning('没有可回退的原始数据')
+        return
+      }
+
+      isReplacingSpeed.value = true
+      try {
+        // 获取配置参数
+        const params = await getVmosParams(service)
+
+        // 遍历vMOS数据列表，恢复原始速率并重新计算
+        for (let i = 0; i < taskDetail.value.vmosDataList.length; i++) {
+          const vmosRow = taskDetail.value.vmosDataList[i]
+          const originalSpeed = originalSpeedDataBackup.value[vmosRow.id]
+
+          // 如果存在原始速率，则恢复
+          if (originalSpeed !== undefined && originalSpeed !== null) {
+            vmosRow.speed = originalSpeed
+
+            // 重新计算vMOS数据
+            await recalculateVmosDataForRow(vmosRow, service, params)
+          }
+        }
+
+        // 批量保存到数据库
+        let successCount = 0
+        let failCount = 0
+        const savePromises = taskDetail.value.vmosDataList.map(async (vmosRow) => {
+          try {
+            const dataToSave = prepareVmosDataToSave(vmosRow, service, params)
+            const response = await updateVmosData(vmosRow.id, dataToSave)
+            if (response.code === 200) {
+              successCount++
+            } else {
+              failCount++
+              console.error(`保存vMOS数据失败 (ID: ${vmosRow.id}):`, response.message)
+            }
+          } catch (error) {
+            failCount++
+            console.error(`保存vMOS数据失败 (ID: ${vmosRow.id}):`, error)
+          }
+        })
+
+        await Promise.all(savePromises)
+
+        if (failCount === 0) {
+          // 只有在全部保存成功后才清空原始数据备份
+          originalSpeedDataBackup.value = {}
+          ElMessage.success(`回退下行速率成功，已保存 ${successCount} 条数据`)
+          // 刷新当前任务详情
+          if (taskDetail.value.taskInfo && taskDetail.value.taskInfo.taskId) {
+            await handleViewDetail({ taskId: taskDetail.value.taskInfo.taskId })
+          }
+        } else {
+          ElMessage.warning(`回退下行速率完成，成功保存 ${successCount} 条，失败 ${failCount} 条`)
+        }
+      } catch (error) {
+        console.error('Revert downlink speed error:', error)
+        ElMessage.error(error.message || t('common.error'))
+      } finally {
+        isReplacingSpeed.value = false
+      }
+    }
+
     // 删除任务
     const handleDelete = async (row) => {
       if (!row || !row.taskId) {
@@ -2284,6 +2568,11 @@ export default {
       handleSaveBasicInfo,
       handleCancelBasicInfoEdit,
       handleDelete,
+      handleReplaceDownlinkSpeed,
+      handleRevertDownlinkSpeed,
+      isReplacingSpeed,
+      hasOriginalSpeedData,
+      hasSpeedData,
     }
   },
 }

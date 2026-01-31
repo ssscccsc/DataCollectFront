@@ -1166,6 +1166,8 @@ export default {
       avgUplinkLost: '平均上行丢包率',
       avgDownlinkLost: '平均下行丢包率',
       avgLost: '平均丢包率',
+      replaceDownlinkSpeed: '替换下行速率',
+      revertDownlinkSpeed: '回退下行速率',
     },
     networkData: {
       description: '管理网络侧数据，包括数据查看、编辑、删除等操作',
