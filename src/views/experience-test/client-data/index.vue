@@ -389,6 +389,15 @@
                 {{ $t('experienceTest.clientData.revertGameRtt') }}
               </el-button>
             </div>
+            <!-- 替换/回退网络侧RTT按钮（所有业务大类都显示） -->
+            <div v-if="taskDetail.taskInfo" style="margin-bottom: 16px;">
+              <el-button type="primary" @click="handleReplaceNetworkRtt" :disabled="isReplacingNetworkRtt || !hasNetworkRttData">
+                {{ $t('experienceTest.clientData.replaceNetworkRtt') }}
+              </el-button>
+              <el-button type="warning" @click="handleRevertNetworkRtt" :disabled="isReplacingNetworkRtt || !hasOriginalNetworkRttData">
+                {{ $t('experienceTest.clientData.revertNetworkRtt') }}
+              </el-button>
+            </div>
             <el-table :data="taskDetail.vmosDataList" border stripe style="width: 100%">
               <el-table-column prop="sequenceNumber" :label="$t('experienceTest.clientData.sequenceNumber')" width="100" />
               <el-table-column :label="$t('experienceTest.clientData.speedKbps')" width="100">
@@ -609,7 +618,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { Plus, Refresh, UploadFilled, Search, ArrowUp, ArrowDown, DataAnalysis } from '@element-plus/icons-vue'
-import { uploadClientDataFile, getClientDataPage, getClientDataDetail, updateVmosData, updateTaskInfo, deleteTaskInfo, getVmosParamsConfigByService } from '@/api/test-settings'
+import { uploadClientDataFile, getClientDataPage, getClientDataDetail, updateVmosData, updateTaskInfo, deleteTaskInfo, getVmosParamsConfigByService, getRttComparison } from '@/api/test-settings'
 
 export default {
   name: 'ClientData',
@@ -671,6 +680,17 @@ export default {
     })
     const hasGameDelayData = computed(() => {
       return taskDetail.value.gameDelayDataList && taskDetail.value.gameDelayDataList.length > 0
+    })
+    
+    // 替换网络侧RTT相关
+    const isReplacingNetworkRtt = ref(false)
+    const originalNetworkRttDataBackup = ref({}) // 保存原始RTT数据，格式：{ rowId: originalRtt }
+    const networkRttComparisonData = ref(null) // 保存网络侧RTT对比数据
+    const hasOriginalNetworkRttData = computed(() => {
+      return Object.keys(originalNetworkRttDataBackup.value).length > 0
+    })
+    const hasNetworkRttData = computed(() => {
+      return networkRttComparisonData.value && networkRttComparisonData.value.networkRttList && networkRttComparisonData.value.networkRttList.length > 0
     })
     
     // 基础信息编辑相关
@@ -841,6 +861,11 @@ export default {
         // 重置替换游戏内RTT相关状态
         originalRttDataBackup.value = {}
         isReplacingRtt.value = false
+        
+        // 重置替换网络侧RTT相关状态
+        originalNetworkRttDataBackup.value = {}
+        isReplacingNetworkRtt.value = false
+        networkRttComparisonData.value = null
         
         // 重置数据
         taskDetail.value = {
@@ -2744,6 +2769,175 @@ export default {
       }
     }
 
+    // 替换网络侧RTT
+    const handleReplaceNetworkRtt = async () => {
+      if (!taskDetail.value.taskInfo || !taskDetail.value.vmosDataList) {
+        ElMessage.warning('数据不完整')
+        return
+      }
+
+      const service = taskDetail.value.taskInfo.service
+      const taskId = taskDetail.value.taskInfo.taskId
+
+      if (!taskId) {
+        ElMessage.warning('任务ID不存在')
+        return
+      }
+
+      isReplacingNetworkRtt.value = true
+      try {
+        // 获取网络侧RTT对比数据
+        const response = await getRttComparison(taskId)
+        if (response.code !== 200 || !response.data || !response.data.networkRttList || response.data.networkRttList.length === 0) {
+          ElMessage.warning('无法获取网络侧RTT数据，请确保已配置网络侧数据')
+          return
+        }
+
+        networkRttComparisonData.value = response.data
+        const networkRttList = response.data.networkRttList
+
+        if (taskDetail.value.vmosDataList.length !== networkRttList.length) {
+          ElMessage.warning(`vMOS数据(${taskDetail.value.vmosDataList.length}条)与网络侧RTT数据(${networkRttList.length}条)数量不匹配`)
+        }
+
+        // 获取配置参数
+        const params = await getVmosParams(service)
+
+        // 先保存所有原始RTT数据
+        originalNetworkRttDataBackup.value = {}
+        for (let i = 0; i < taskDetail.value.vmosDataList.length; i++) {
+          const vmosRow = taskDetail.value.vmosDataList[i]
+          originalNetworkRttDataBackup.value[vmosRow.id] = vmosRow.rtt || ''
+        }
+
+        // 遍历vMOS数据列表，替换RTT并重新计算
+        // 按照索引位置匹配（因为数据应该是按顺序对齐的）
+        const minLength = Math.min(taskDetail.value.vmosDataList.length, networkRttList.length)
+        for (let i = 0; i < minLength; i++) {
+          const vmosRow = taskDetail.value.vmosDataList[i]
+          const networkRttRow = networkRttList[i]
+
+          // 获取网络侧服务时延（单位：ms），直接替换RTT
+          const networkServiceDelay = networkRttRow.serviceDelay ? parseFloat(networkRttRow.serviceDelay.toString()) : 0
+
+          // 替换RTT
+          vmosRow.rtt = networkServiceDelay.toString()
+
+          // 重新计算vMOS数据
+          await recalculateVmosDataForRow(vmosRow, service, params)
+        }
+
+        // 批量保存到数据库
+        let successCount = 0
+        let failCount = 0
+        const savePromises = taskDetail.value.vmosDataList.map(async (vmosRow) => {
+          try {
+            const dataToSave = prepareVmosDataToSave(vmosRow, service, params)
+            const response = await updateVmosData(vmosRow.id, dataToSave)
+            if (response.code === 200) {
+              successCount++
+            } else {
+              failCount++
+              console.error(`保存vMOS数据失败 (ID: ${vmosRow.id}):`, response.message)
+            }
+          } catch (error) {
+            failCount++
+            console.error(`保存vMOS数据失败 (ID: ${vmosRow.id}):`, error)
+          }
+        })
+
+        await Promise.all(savePromises)
+
+        if (failCount === 0) {
+          ElMessage.success(`替换网络侧RTT成功，已保存 ${successCount} 条数据`)
+          // 刷新当前任务详情
+          if (taskDetail.value.taskInfo && taskDetail.value.taskInfo.taskId) {
+            await handleViewDetail({ taskId: taskDetail.value.taskInfo.taskId })
+          }
+        } else {
+          ElMessage.warning(`替换网络侧RTT完成，成功保存 ${successCount} 条，失败 ${failCount} 条`)
+        }
+      } catch (error) {
+        console.error('Replace network RTT error:', error)
+        ElMessage.error(error.message || t('common.error'))
+      } finally {
+        isReplacingNetworkRtt.value = false
+      }
+    }
+
+    // 回退网络侧RTT
+    const handleRevertNetworkRtt = async () => {
+      if (!taskDetail.value.taskInfo || !taskDetail.value.vmosDataList) {
+        ElMessage.warning('数据不完整')
+        return
+      }
+
+      const service = taskDetail.value.taskInfo.service
+
+      if (Object.keys(originalNetworkRttDataBackup.value).length === 0) {
+        ElMessage.warning('没有可回退的原始数据')
+        return
+      }
+
+      isReplacingNetworkRtt.value = true
+      try {
+        // 获取配置参数
+        const params = await getVmosParams(service)
+
+        // 遍历vMOS数据列表，恢复原始RTT并重新计算
+        for (let i = 0; i < taskDetail.value.vmosDataList.length; i++) {
+          const vmosRow = taskDetail.value.vmosDataList[i]
+          const originalRtt = originalNetworkRttDataBackup.value[vmosRow.id]
+
+          // 如果存在原始RTT，则恢复
+          if (originalRtt !== undefined && originalRtt !== null) {
+            vmosRow.rtt = originalRtt
+
+            // 重新计算vMOS数据
+            await recalculateVmosDataForRow(vmosRow, service, params)
+          }
+        }
+
+        // 批量保存到数据库
+        let successCount = 0
+        let failCount = 0
+        const savePromises = taskDetail.value.vmosDataList.map(async (vmosRow) => {
+          try {
+            const dataToSave = prepareVmosDataToSave(vmosRow, service, params)
+            const response = await updateVmosData(vmosRow.id, dataToSave)
+            if (response.code === 200) {
+              successCount++
+            } else {
+              failCount++
+              console.error(`保存vMOS数据失败 (ID: ${vmosRow.id}):`, response.message)
+            }
+          } catch (error) {
+            failCount++
+            console.error(`保存vMOS数据失败 (ID: ${vmosRow.id}):`, error)
+          }
+        })
+
+        await Promise.all(savePromises)
+
+        if (failCount === 0) {
+          // 只有在全部保存成功后才清空原始数据备份
+          originalNetworkRttDataBackup.value = {}
+          ElMessage.success(`回退网络侧RTT成功，已保存 ${successCount} 条数据`)
+          // 刷新当前任务详情
+          if (taskDetail.value.taskInfo && taskDetail.value.taskInfo.taskId) {
+            await handleViewDetail({ taskId: taskDetail.value.taskInfo.taskId })
+          }
+        } else {
+          ElMessage.warning(`回退网络侧RTT完成，成功保存 ${successCount} 条，失败 ${failCount} 条`)
+        }
+      } catch (error) {
+        console.error('Revert network RTT error:', error)
+        ElMessage.error(error.message || t('common.error'))
+      } finally {
+        isReplacingNetworkRtt.value = false
+      }
+    }
+
     // 删除任务
     const handleDelete = async (row) => {
       if (!row || !row.taskId) {
@@ -2838,6 +3032,11 @@ export default {
       isReplacingRtt,
       hasOriginalRttData,
       hasGameDelayData,
+      handleReplaceNetworkRtt,
+      handleRevertNetworkRtt,
+      isReplacingNetworkRtt,
+      hasOriginalNetworkRttData,
+      hasNetworkRttData,
     }
   },
 }

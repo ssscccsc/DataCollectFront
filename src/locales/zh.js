@@ -1170,6 +1170,8 @@ export default {
       revertDownlinkSpeed: '回退下行速率',
       replaceGameRtt: '替换游戏内RTT',
       revertGameRtt: '回退游戏内RTT',
+      replaceNetworkRtt: '替换网络侧RTT',
+      revertNetworkRtt: '回退网络侧RTT',
     },
     networkData: {
       description: '管理网络侧数据，包括数据查看、编辑、删除等操作',

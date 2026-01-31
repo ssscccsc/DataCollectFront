@@ -1306,6 +1306,8 @@ export default {
       revertDownlinkSpeed: 'Revert Downlink Speed',
       replaceGameRtt: 'Replace Game RTT',
       revertGameRtt: 'Revert Game RTT',
+      replaceNetworkRtt: 'Replace Network RTT',
+      revertNetworkRtt: 'Revert Network RTT',
     },
     dataComparison: {
       description: 'Client-network data comparison analysis, support data comparison and viewing',
