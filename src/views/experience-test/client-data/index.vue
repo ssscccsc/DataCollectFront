@@ -1382,7 +1382,7 @@ export default {
     const calculateWatchLiveVmos = (speed, resolution, rtt, packetLossRate, stutterRatio, params) => {
       // 转换为数字，如果为空或无效则使用0；getResolutionPixels 非 map 时返回原值，此处需转为数字
       const speedNum = parseFloat(speed) || 0
-      const resolutionPixels = Number(getResolutionPixels(resolution)) || 0
+      const resolutionPixels = parseFloat(resolution) || 0
       const rttNum = parseFloat(rtt) || 0
       const packetLossRateNum = parseFloat(packetLossRate) || 0
       const stutterRatioNum = parseFloat(stutterRatio) || 0
@@ -1457,7 +1457,7 @@ export default {
     const calculateLiveStreamingVmos = (speed, resolution, rtt, packetLossRate, stutterRatio, params) => {
       // 转换为数字，如果为空或无效则使用0；getResolutionPixels 非 map 时返回原值，此处需转为数字
       const speedNum = parseFloat(speed) || 0
-      const resolutionPixels = Number(getResolutionPixels(resolution)) || 0
+      const resolutionPixels = parseFloat(resolution) || 0
       const rttNum = parseFloat(rtt) || 0
       const packetLossRateNum = parseFloat(packetLossRate) || 0
       const stutterRatioNum = parseFloat(stutterRatio) || 0
@@ -1534,7 +1534,7 @@ export default {
     const calculateVodStreamingVmos = (speed, resolution, rtt, packetLossRate, stutterRatio, params) => {
       // 转换为数字，如果为空或无效则使用0；getResolutionPixels 非 map 时返回原值，此处需转为数字
       const speedNum = parseFloat(speed) || 0
-      const resolutionPixels = Number(getResolutionPixels(resolution)) || 0
+      const resolutionPixels = parseFloat(resolution) || 0
       const rttNum = parseFloat(rtt) || 0
       const packetLossRateNum = parseFloat(packetLossRate) || 0
       const stutterRatioNum = parseFloat(stutterRatio) || 0
@@ -1609,7 +1609,7 @@ export default {
     const calculateMeetingVmos = (speed, resolution, rtt, packetLossRate, stutterRatio, params) => {
       // 转换为数字，如果为空或无效则使用0；getResolutionPixels 非 map 时返回原值，此处需转为数字
       const speedNum = parseFloat(speed) || 0
-      const resolutionPixels = Number(getResolutionPixels(resolution)) || 0
+      const resolutionPixels = parseFloat(resolution) || 0
       const rttNum = parseFloat(rtt) || 0
       const packetLossRateNum = parseFloat(packetLossRate) || 0
       const stutterRatioNum = parseFloat(stutterRatio) || 0
@@ -1743,7 +1743,7 @@ export default {
     const calculateMobileGameCloudVmos = (speed, resolution, rtt, packetLossRate, stutterRatio, params) => {
       // 转换为数字，如果为空或无效则使用0；getResolutionPixels 非 map 时返回原值，此处需转为数字
       const speedNum = parseFloat(speed) || 0
-      const resolutionPixels = Number(getResolutionPixels(resolution)) || 0
+      const resolutionPixels = parseFloat(resolution) || 0
       const rttNum = parseFloat(rtt) || 0
       const packetLossRateNum = parseFloat(packetLossRate) || 0
       const stutterRatioNum = parseFloat(stutterRatio) || 0
