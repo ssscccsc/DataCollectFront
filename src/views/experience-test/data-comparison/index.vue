@@ -1255,25 +1255,31 @@ export default {
         const hasAnyTable = speedTableAoa || rttTableAoa || stutterTableAoa || avgQoeTableAoa
         if (hasAnyTable) {
           try {
-            const XLSX = (await import('xlsx')).default
-            const wb = XLSX.utils.book_new()
+            const xlsxModule = await import('xlsx')
+            const lib = xlsxModule.default || xlsxModule
+            const utils = lib && lib.utils
+            const write = lib && lib.write
+            if (!utils || !write) {
+              throw new Error('xlsx 库未正确加载')
+            }
+            const wb = utils.book_new()
             if (speedTableAoa) {
-              const ws = XLSX.utils.aoa_to_sheet(speedTableAoa)
-              XLSX.utils.book_append_sheet(wb, ws, t('experienceTest.dataComparison.speedComparison'))
+              const ws = utils.aoa_to_sheet(speedTableAoa)
+              utils.book_append_sheet(wb, ws, t('experienceTest.dataComparison.speedComparison'))
             }
             if (rttTableAoa) {
-              const ws = XLSX.utils.aoa_to_sheet(rttTableAoa)
-              XLSX.utils.book_append_sheet(wb, ws, t('experienceTest.dataComparison.rttComparison'))
+              const ws = utils.aoa_to_sheet(rttTableAoa)
+              utils.book_append_sheet(wb, ws, t('experienceTest.dataComparison.rttComparison'))
             }
             if (stutterTableAoa) {
-              const ws = XLSX.utils.aoa_to_sheet(stutterTableAoa)
-              XLSX.utils.book_append_sheet(wb, ws, t('experienceTest.dataComparison.stutterComparison'))
+              const ws = utils.aoa_to_sheet(stutterTableAoa)
+              utils.book_append_sheet(wb, ws, t('experienceTest.dataComparison.stutterComparison'))
             }
             if (avgQoeTableAoa) {
-              const ws = XLSX.utils.aoa_to_sheet(avgQoeTableAoa)
-              XLSX.utils.book_append_sheet(wb, ws, t('experienceTest.dataComparison.avgQoeComparison'))
+              const ws = utils.aoa_to_sheet(avgQoeTableAoa)
+              utils.book_append_sheet(wb, ws, t('experienceTest.dataComparison.avgQoeComparison'))
             }
-            const excelBuffer = XLSX.write(wb, { type: 'array', bookType: 'xlsx' })
+            const excelBuffer = write(wb, { type: 'array', bookType: 'xlsx' })
             zip.file('comparison-data.xlsx', excelBuffer, { binary: true })
           } catch (excelError) {
             console.error('Export Excel error:', excelError)
