@@ -106,12 +106,6 @@
               clearable
             />
             <el-input
-              v-model="searchForm.userCategory"
-              :placeholder="$t('experienceTest.clientData.searchUserCategory')"
-              style="width: 200px; margin-right: 10px;"
-              clearable
-            />
-            <el-input
               v-model="searchForm.service"
               :placeholder="$t('experienceTest.clientData.searchService')"
               style="width: 200px; margin-right: 10px;"
@@ -120,6 +114,12 @@
             <el-input
               v-model="searchForm.app"
               :placeholder="$t('experienceTest.clientData.searchApp')"
+              style="width: 200px; margin-right: 10px;"
+              clearable
+            />
+            <el-input
+              v-model="searchForm.userCategory"
+              :placeholder="$t('experienceTest.clientData.searchUserCategory')"
               style="width: 200px; margin-right: 10px;"
               clearable
             />
@@ -146,9 +146,9 @@
             <el-table-column prop="operator" :label="$t('experienceTest.clientData.operator')" min-width="120" show-overflow-tooltip />
             <el-table-column prop="prb" :label="$t('experienceTest.clientData.prb')" min-width="100" show-overflow-tooltip />
             <el-table-column prop="rsrp" :label="$t('experienceTest.clientData.rsrp')" min-width="100" show-overflow-tooltip />
-            <el-table-column prop="userCategory" :label="$t('experienceTest.clientData.userCategory')" min-width="120" show-overflow-tooltip />
             <el-table-column prop="service" :label="$t('experienceTest.clientData.service')" min-width="150" show-overflow-tooltip />
             <el-table-column prop="app" :label="$t('experienceTest.clientData.app')" min-width="150" show-overflow-tooltip />
+            <el-table-column prop="userCategory" :label="$t('experienceTest.clientData.userCategory')" min-width="120" show-overflow-tooltip />
             <el-table-column prop="startTime" :label="$t('experienceTest.clientData.startTime')" min-width="180" show-overflow-tooltip />
             <el-table-column prop="endTime" :label="$t('experienceTest.clientData.endTime')" min-width="180" show-overflow-tooltip />
             <el-table-column :label="$t('common.operations')" width="180" fixed="right">
@@ -424,7 +424,7 @@
                     @keyup.enter="handleSaveVmosRow(scope.row)"
                     @input="handleVmosFieldChange(scope.row)"
                   />
-                  <span v-else>{{ scope.row.resolution || '-' }}</span>
+                  <span v-else>{{ taskDetail.taskInfo?.service === 'voip' ? ((getResolutionPixels(scope.row.resolution) ?? scope.row.resolution) || '-') : (scope.row.resolution || '-') }}</span>
                 </template>
               </el-table-column>
               <el-table-column :label="$t('experienceTest.clientData.rttMs')" width="100">
@@ -1277,7 +1277,7 @@ export default {
       return defaultParams
     }
 
-    // 分辨率映射函数：将分辨率值转换为对应的像素数
+    // 分辨率映射函数：在 map 中则返回对应像素数，否则直接返回 resolution 原值（用于显示）；计算时需再转为数字
     const getResolutionPixels = (resolution) => {
       const resolutionMap = {
         '144': 36864,
@@ -1291,14 +1291,15 @@ export default {
         '2880': 14745600,
         '4320': 33004800,
       }
-      return resolutionMap[String(resolution)] || parseFloat(resolution) || 0
+      const key = resolution == null ? '' : String(resolution).trim()
+      return key in resolutionMap ? resolutionMap[key] : (resolution ?? '')
     }
 
     // 计算voip业务大类的vMOS数据
     const calculateVoipVmos = (speed, resolution, rtt, packetLossRate, stutterRatio, params) => {
-      // 转换为数字，如果为空或无效则使用0
+      // 转换为数字，如果为空或无效则使用0；getResolutionPixels 非 map 时返回原值，此处需转为数字
       const speedNum = parseFloat(speed) || 0
-      const resolutionPixels = getResolutionPixels(resolution)
+      const resolutionPixels = Number(getResolutionPixels(resolution)) || 0
       const rttNum = parseFloat(rtt) || 0
       const packetLossRateNum = parseFloat(packetLossRate) || 0
       const stutterRatioNum = parseFloat(stutterRatio) || 0
@@ -1379,9 +1380,9 @@ export default {
 
     // 计算watch_live业务大类的vMOS数据
     const calculateWatchLiveVmos = (speed, resolution, rtt, packetLossRate, stutterRatio, params) => {
-      // 转换为数字，如果为空或无效则使用0
+      // 转换为数字，如果为空或无效则使用0；getResolutionPixels 非 map 时返回原值，此处需转为数字
       const speedNum = parseFloat(speed) || 0
-      const resolutionPixels = getResolutionPixels(resolution)
+      const resolutionPixels = Number(getResolutionPixels(resolution)) || 0
       const rttNum = parseFloat(rtt) || 0
       const packetLossRateNum = parseFloat(packetLossRate) || 0
       const stutterRatioNum = parseFloat(stutterRatio) || 0
@@ -1454,9 +1455,9 @@ export default {
 
     // 计算live_streaming业务大类的vMOS数据
     const calculateLiveStreamingVmos = (speed, resolution, rtt, packetLossRate, stutterRatio, params) => {
-      // 转换为数字，如果为空或无效则使用0
+      // 转换为数字，如果为空或无效则使用0；getResolutionPixels 非 map 时返回原值，此处需转为数字
       const speedNum = parseFloat(speed) || 0
-      const resolutionPixels = getResolutionPixels(resolution)
+      const resolutionPixels = Number(getResolutionPixels(resolution)) || 0
       const rttNum = parseFloat(rtt) || 0
       const packetLossRateNum = parseFloat(packetLossRate) || 0
       const stutterRatioNum = parseFloat(stutterRatio) || 0
@@ -1531,9 +1532,9 @@ export default {
 
     // 计算vod_streaming业务大类的vMOS数据
     const calculateVodStreamingVmos = (speed, resolution, rtt, packetLossRate, stutterRatio, params) => {
-      // 转换为数字，如果为空或无效则使用0
+      // 转换为数字，如果为空或无效则使用0；getResolutionPixels 非 map 时返回原值，此处需转为数字
       const speedNum = parseFloat(speed) || 0
-      const resolutionPixels = getResolutionPixels(resolution)
+      const resolutionPixels = Number(getResolutionPixels(resolution)) || 0
       const rttNum = parseFloat(rtt) || 0
       const packetLossRateNum = parseFloat(packetLossRate) || 0
       const stutterRatioNum = parseFloat(stutterRatio) || 0
@@ -1606,9 +1607,9 @@ export default {
 
     // 计算meeting业务大类的vMOS数据
     const calculateMeetingVmos = (speed, resolution, rtt, packetLossRate, stutterRatio, params) => {
-      // 转换为数字，如果为空或无效则使用0
+      // 转换为数字，如果为空或无效则使用0；getResolutionPixels 非 map 时返回原值，此处需转为数字
       const speedNum = parseFloat(speed) || 0
-      const resolutionPixels = getResolutionPixels(resolution)
+      const resolutionPixels = Number(getResolutionPixels(resolution)) || 0
       const rttNum = parseFloat(rtt) || 0
       const packetLossRateNum = parseFloat(packetLossRate) || 0
       const stutterRatioNum = parseFloat(stutterRatio) || 0
@@ -1740,9 +1741,9 @@ export default {
 
     // 计算mobile_game_cloud业务大类的vMOS数据
     const calculateMobileGameCloudVmos = (speed, resolution, rtt, packetLossRate, stutterRatio, params) => {
-      // 转换为数字，如果为空或无效则使用0
+      // 转换为数字，如果为空或无效则使用0；getResolutionPixels 非 map 时返回原值，此处需转为数字
       const speedNum = parseFloat(speed) || 0
-      const resolutionPixels = getResolutionPixels(resolution)
+      const resolutionPixels = Number(getResolutionPixels(resolution)) || 0
       const rttNum = parseFloat(rtt) || 0
       const packetLossRateNum = parseFloat(packetLossRate) || 0
       const stutterRatioNum = parseFloat(stutterRatio) || 0
@@ -2742,6 +2743,7 @@ export default {
       isGameRttReplaced,
       isNetworkRttReplaced,
       saveReplaceRevertToDb,
+      getResolutionPixels,
     }
   },
 }
