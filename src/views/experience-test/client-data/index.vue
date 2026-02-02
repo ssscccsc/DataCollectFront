@@ -1098,198 +1098,16 @@ export default {
       editingVmosRowId.value = row.id
     }
 
-    // 处理vMOS字段变化，实时计算（根据业务大类）
+    // 处理vMOS字段变化，实时计算（与编辑保存、批量替换共用同一套公式）
     const handleVmosFieldChange = async (row) => {
       if (!taskDetail.value.taskInfo) {
         return
       }
-      
       const service = taskDetail.value.taskInfo.service
-      
-      // 获取配置参数
       const params = await getVmosParams(service)
-      
-      // 如果业务大类为shortvideo，则实时计算相关字段
-      if (service === 'shortvideo') {
-        const calculated = calculateShortvideoVmos(
-          row.speed || '0',
-          row.rtt || '0',
-          row.packetLossRate || '0',
-          row.stutterRatio || '0',
-          params,
-        )
-        
-        // 实时更新计算后的字段到row对象中
-        row.bitrate = calculated.bitrate
-        row.videoExperience = calculated.videoExperience
-        row.interactionExperience = calculated.interactionExperience
-        row.initialBufferingDelay = calculated.initialBufferingDelay
-        row.calculatedResolution = calculated.calculatedResolution
-        row.presentationExperience = calculated.presentationExperience
-        row.sLostPacketRate = calculated.sLostPacketRate
-        row.sStallRate = calculated.sStallRate
-        row.alpha = calculated.alpha
-        row.beta = calculated.beta
-        row.vmos = calculated.vmos
-      } else if (service === 'voip') {
-        // 如果业务大类为voip，则实时计算相关字段
-        const calculated = calculateVoipVmos(
-          row.speed || '0',
-          row.resolution || '',
-          row.rtt || '0',
-          row.packetLossRate || '0',
-          row.stutterRatio || '0',
-          params,
-        )
-        
-        // 实时更新计算后的字段到row对象中
-        row.bitrate = calculated.bitrate
-        row.videoExperience = calculated.videoExperience
-        row.interactionExperience = calculated.interactionExperience
-        row.initialBufferingDelay = calculated.initialBufferingDelay
-        row.calculatedResolution = calculated.calculatedResolution
-        row.presentationExperience = calculated.presentationExperience
-        row.sLostPacketRate = calculated.sLostPacketRate
-        row.sStallRate = calculated.sStallRate
-        row.alpha = calculated.alpha
-        row.beta = calculated.beta
-        row.vmos = calculated.vmos
-      } else if (service === 'watch_live') {
-        // 如果业务大类为watch_live，则实时计算相关字段
-        const calculated = calculateWatchLiveVmos(
-          row.speed || '0',
-          row.resolution || '',
-          row.rtt || '0',
-          row.packetLossRate || '0',
-          row.stutterRatio || '0',
-          params,
-        )
-        
-        // 实时更新计算后的字段到row对象中
-        row.bitrate = calculated.bitrate
-        row.videoExperience = calculated.videoExperience
-        row.interactionExperience = calculated.interactionExperience
-        row.initialBufferingDelay = calculated.initialBufferingDelay
-        row.calculatedResolution = calculated.calculatedResolution
-        row.presentationExperience = calculated.presentationExperience
-        row.sLostPacketRate = calculated.sLostPacketRate
-        row.sStallRate = calculated.sStallRate
-        row.alpha = calculated.alpha
-        row.beta = calculated.beta
-        row.vmos = calculated.vmos
-      } else if (service === 'live_streaming') {
-        // 如果业务大类为live_streaming，则实时计算相关字段
-        const calculated = calculateLiveStreamingVmos(
-          row.speed || '0',
-          row.resolution || '',
-          row.rtt || '0',
-          row.packetLossRate || '0',
-          row.stutterRatio || '0',
-          params,
-        )
-        
-        // 实时更新计算后的字段到row对象中
-        row.bitrate = calculated.bitrate
-        row.videoExperience = calculated.videoExperience
-        row.interactionExperience = calculated.interactionExperience
-        row.initialBufferingDelay = calculated.initialBufferingDelay
-        row.calculatedResolution = calculated.calculatedResolution
-        row.presentationExperience = calculated.presentationExperience
-        row.sLostPacketRate = calculated.sLostPacketRate
-        row.sStallRate = calculated.sStallRate
-        row.alpha = calculated.alpha
-        row.beta = calculated.beta
-        row.vmos = calculated.vmos
-      } else if (service === 'vod_streaming') {
-        // 如果业务大类为vod_streaming，则实时计算相关字段
-        const calculated = calculateVodStreamingVmos(
-          row.speed || '0',
-          row.resolution || '',
-          row.rtt || '0',
-          row.packetLossRate || '0',
-          row.stutterRatio || '0',
-          params,
-        )
-        
-        // 实时更新计算后的字段到row对象中
-        row.bitrate = calculated.bitrate
-        row.videoExperience = calculated.videoExperience
-        row.interactionExperience = calculated.interactionExperience
-        row.initialBufferingDelay = calculated.initialBufferingDelay
-        row.calculatedResolution = calculated.calculatedResolution
-        row.presentationExperience = calculated.presentationExperience
-        row.sLostPacketRate = calculated.sLostPacketRate
-        row.sStallRate = calculated.sStallRate
-        row.alpha = calculated.alpha
-        row.beta = calculated.beta
-        row.vmos = calculated.vmos
-      } else if (service === 'meeting') {
-        // 如果业务大类为meeting，则实时计算相关字段
-        const calculated = calculateMeetingVmos(
-          row.speed || '0',
-          row.resolution || '',
-          row.rtt || '0',
-          row.packetLossRate || '0',
-          row.stutterRatio || '0',
-          params,
-        )
-        
-        // 实时更新计算后的字段到row对象中
-        row.bitrate = calculated.bitrate
-        row.videoExperience = calculated.videoExperience
-        row.interactionExperience = calculated.interactionExperience
-        row.initialBufferingDelay = calculated.initialBufferingDelay
-        row.calculatedResolution = calculated.calculatedResolution
-        row.presentationExperience = calculated.presentationExperience
-        row.sLostPacketRate = calculated.sLostPacketRate
-        row.sStallRate = calculated.sStallRate
-        row.alpha = calculated.alpha
-        row.beta = calculated.beta
-        row.vmos = calculated.vmos
-      } else if (service === 'mobile_game') {
-        // 如果业务大类为mobile_game，则实时计算相关字段
-        const calculated = calculateMobileGameVmos(
-          row.rtt || '0',
-          row.packetLossRate || '0',
-          row.stutterRatio || '0',
-          params,
-        )
-        
-        // 实时更新计算后的字段到row对象中
-        row.bitrate = calculated.bitrate
-        row.videoExperience = calculated.videoExperience
-        row.interactionExperience = calculated.interactionExperience
-        row.initialBufferingDelay = calculated.initialBufferingDelay
-        row.calculatedResolution = calculated.calculatedResolution
-        row.presentationExperience = calculated.presentationExperience
-        row.sLostPacketRate = calculated.sLostPacketRate
-        row.sStallRate = calculated.sStallRate
-        row.alpha = calculated.alpha
-        row.beta = calculated.beta
-        row.vmos = calculated.vmos
-      } else if (service === 'mobile_game_cloud') {
-        // 如果业务大类为mobile_game_cloud，则实时计算相关字段
-        const calculated = calculateMobileGameCloudVmos(
-          row.speed || '0',
-          row.resolution || '',
-          row.rtt || '0',
-          row.packetLossRate || '0',
-          row.stutterRatio || '0',
-          params,
-        )
-        
-        // 实时更新计算后的字段到row对象中
-        row.bitrate = calculated.bitrate
-        row.videoExperience = calculated.videoExperience
-        row.interactionExperience = calculated.interactionExperience
-        row.initialBufferingDelay = calculated.initialBufferingDelay
-        row.calculatedResolution = calculated.calculatedResolution
-        row.presentationExperience = calculated.presentationExperience
-        row.sLostPacketRate = calculated.sLostPacketRate
-        row.sStallRate = calculated.sStallRate
-        row.alpha = calculated.alpha
-        row.beta = calculated.beta
-        row.vmos = calculated.vmos
+      const calculated = computeVmosForService(row, service, params)
+      if (calculated) {
+        applyCalculatedToTarget(row, calculated)
       }
     }
 
@@ -1991,6 +1809,117 @@ export default {
       }
     }
 
+    /**
+     * 根据业务类型统一计算 vMOS 相关字段（编辑、批量替换、保存共用同一套公式）
+     * @param row 当前行数据
+     * @param service 业务大类
+     * @param params 配置参数
+     * @returns 计算后的字段对象，不支持的 service 返回 null
+     */
+    const computeVmosForService = (row, service, params) => {
+      if (!service || !params) {
+        return null
+      }
+      if (service === 'shortvideo') {
+        return calculateShortvideoVmos(
+          row.speed || '0',
+          row.rtt || '0',
+          row.packetLossRate || '0',
+          row.stutterRatio || '0',
+          params,
+        )
+      }
+      if (service === 'voip') {
+        return calculateVoipVmos(
+          row.speed || '0',
+          row.resolution || '',
+          row.rtt || '0',
+          row.packetLossRate || '0',
+          row.stutterRatio || '0',
+          params,
+        )
+      }
+      if (service === 'watch_live') {
+        return calculateWatchLiveVmos(
+          row.speed || '0',
+          row.resolution || '',
+          row.rtt || '0',
+          row.packetLossRate || '0',
+          row.stutterRatio || '0',
+          params,
+        )
+      }
+      if (service === 'live_streaming') {
+        return calculateLiveStreamingVmos(
+          row.speed || '0',
+          row.resolution || '',
+          row.rtt || '0',
+          row.packetLossRate || '0',
+          row.stutterRatio || '0',
+          params,
+        )
+      }
+      if (service === 'vod_streaming') {
+        return calculateVodStreamingVmos(
+          row.speed || '0',
+          row.resolution || '',
+          row.rtt || '0',
+          row.packetLossRate || '0',
+          row.stutterRatio || '0',
+          params,
+        )
+      }
+      if (service === 'meeting') {
+        return calculateMeetingVmos(
+          row.speed || '0',
+          row.resolution || '',
+          row.rtt || '0',
+          row.packetLossRate || '0',
+          row.stutterRatio || '0',
+          params,
+        )
+      }
+      if (service === 'mobile_game') {
+        return calculateMobileGameVmos(
+          row.rtt || '0',
+          row.packetLossRate || '0',
+          row.stutterRatio || '0',
+          params,
+        )
+      }
+      if (service === 'mobile_game_cloud') {
+        return calculateMobileGameCloudVmos(
+          row.speed || '0',
+          row.resolution || '',
+          row.rtt || '0',
+          row.packetLossRate || '0',
+          row.stutterRatio || '0',
+          params,
+        )
+      }
+      return null
+    }
+
+    /**
+     * 将计算结果应用到目标对象（row 或 dataToSave）
+     */
+    const applyCalculatedToTarget = (target, calculated) => {
+      if (!target || !calculated) {
+        return
+      }
+      target.bitrate = calculated.bitrate
+      target.videoExperience = calculated.videoExperience
+      target.interactionExperience = calculated.interactionExperience
+      target.initialBufferingDelay = calculated.initialBufferingDelay
+      target.calculatedResolution = calculated.calculatedResolution
+      target.presentationExperience = calculated.presentationExperience
+      target.sLostPacketRate = calculated.sLostPacketRate
+      target.sStallRate = calculated.sStallRate
+      target.alpha = calculated.alpha
+      target.beta = calculated.beta
+      target.vmos = calculated.vmos
+    }
+
     const handleSaveVmosRow = async (row) => {
       if (!row || !row.id) {
         ElMessage.warning('无效的数据')
@@ -1999,198 +1928,13 @@ export default {
 
       vmosSaving.value = true
       try {
-        // 准备要保存的数据
-        const dataToSave = {
-          speed: row.speed || '',
-          resolution: row.resolution || '',
-          rtt: row.rtt || '',
-          packetLossRate: row.packetLossRate || '',
-          stutterRatio: row.stutterRatio || '',
+        if (!taskDetail.value.taskInfo) {
+          ElMessage.warning('任务信息不存在')
+          return
         }
-
-        // 根据业务大类计算vMOS相关字段
-        if (taskDetail.value.taskInfo) {
-          const service = taskDetail.value.taskInfo.service
-          
-          // 获取配置参数
-          const params = await getVmosParams(service)
-          
-          if (service === 'shortvideo') {
-            const calculated = calculateShortvideoVmos(
-              row.speed || '0',
-              row.rtt || '0',
-              row.packetLossRate || '0',
-              row.stutterRatio || '0',
-              params,
-            )
-            
-            // 将计算后的字段添加到保存数据中
-            dataToSave.bitrate = calculated.bitrate
-            dataToSave.videoExperience = calculated.videoExperience
-            dataToSave.interactionExperience = calculated.interactionExperience
-            dataToSave.initialBufferingDelay = calculated.initialBufferingDelay
-            dataToSave.calculatedResolution = calculated.calculatedResolution
-            dataToSave.presentationExperience = calculated.presentationExperience
-            dataToSave.sLostPacketRate = calculated.sLostPacketRate
-            dataToSave.sStallRate = calculated.sStallRate
-            dataToSave.alpha = calculated.alpha
-            dataToSave.beta = calculated.beta
-            dataToSave.vmos = calculated.vmos
-          } else if (service === 'voip') {
-            const calculated = calculateVoipVmos(
-              row.speed || '0',
-              row.resolution || '',
-              row.rtt || '0',
-              row.packetLossRate || '0',
-              row.stutterRatio || '0',
-              params,
-            )
-            
-            // 将计算后的字段添加到保存数据中
-            dataToSave.bitrate = calculated.bitrate
-            dataToSave.videoExperience = calculated.videoExperience
-            dataToSave.interactionExperience = calculated.interactionExperience
-            dataToSave.initialBufferingDelay = calculated.initialBufferingDelay
-            dataToSave.calculatedResolution = calculated.calculatedResolution
-            dataToSave.presentationExperience = calculated.presentationExperience
-            dataToSave.sLostPacketRate = calculated.sLostPacketRate
-            dataToSave.sStallRate = calculated.sStallRate
-            dataToSave.alpha = calculated.alpha
-            dataToSave.beta = calculated.beta
-            dataToSave.vmos = calculated.vmos
-          } else if (service === 'watch_live') {
-            const calculated = calculateWatchLiveVmos(
-              row.speed || '0',
-              row.resolution || '',
-              row.rtt || '0',
-              row.packetLossRate || '0',
-              row.stutterRatio || '0',
-              params,
-            )
-            
-            // 将计算后的字段添加到保存数据中
-            dataToSave.bitrate = calculated.bitrate
-            dataToSave.videoExperience = calculated.videoExperience
-            dataToSave.interactionExperience = calculated.interactionExperience
-            dataToSave.initialBufferingDelay = calculated.initialBufferingDelay
-            dataToSave.calculatedResolution = calculated.calculatedResolution
-            dataToSave.presentationExperience = calculated.presentationExperience
-            dataToSave.sLostPacketRate = calculated.sLostPacketRate
-            dataToSave.sStallRate = calculated.sStallRate
-            dataToSave.alpha = calculated.alpha
-            dataToSave.beta = calculated.beta
-            dataToSave.vmos = calculated.vmos
-          } else if (service === 'live_streaming') {
-            const calculated = calculateLiveStreamingVmos(
-              row.speed || '0',
-              row.resolution || '',
-              row.rtt || '0',
-              row.packetLossRate || '0',
-              row.stutterRatio || '0',
-              params,
-            )
-            
-            // 将计算后的字段添加到保存数据中
-            dataToSave.bitrate = calculated.bitrate
-            dataToSave.videoExperience = calculated.videoExperience
-            dataToSave.interactionExperience = calculated.interactionExperience
-            dataToSave.initialBufferingDelay = calculated.initialBufferingDelay
-            dataToSave.calculatedResolution = calculated.calculatedResolution
-            dataToSave.presentationExperience = calculated.presentationExperience
-            dataToSave.sLostPacketRate = calculated.sLostPacketRate
-            dataToSave.sStallRate = calculated.sStallRate
-            dataToSave.alpha = calculated.alpha
-            dataToSave.beta = calculated.beta
-            dataToSave.vmos = calculated.vmos
-          } else if (service === 'vod_streaming') {
-            const calculated = calculateVodStreamingVmos(
-              row.speed || '0',
-              row.resolution || '',
-              row.rtt || '0',
-              row.packetLossRate || '0',
-              row.stutterRatio || '0',
-              params,
-            )
-            
-            // 将计算后的字段添加到保存数据中
-            dataToSave.bitrate = calculated.bitrate
-            dataToSave.videoExperience = calculated.videoExperience
-            dataToSave.interactionExperience = calculated.interactionExperience
-            dataToSave.initialBufferingDelay = calculated.initialBufferingDelay
-            dataToSave.calculatedResolution = calculated.calculatedResolution
-            dataToSave.presentationExperience = calculated.presentationExperience
-            dataToSave.sLostPacketRate = calculated.sLostPacketRate
-            dataToSave.sStallRate = calculated.sStallRate
-            dataToSave.alpha = calculated.alpha
-            dataToSave.beta = calculated.beta
-            dataToSave.vmos = calculated.vmos
-          } else if (service === 'meeting') {
-            const calculated = calculateMeetingVmos(
-              row.speed || '0',
-              row.resolution || '',
-              row.rtt || '0',
-              row.packetLossRate || '0',
-              row.stutterRatio || '0',
-              params,
-            )
-            
-            // 将计算后的字段添加到保存数据中
-            dataToSave.bitrate = calculated.bitrate
-            dataToSave.videoExperience = calculated.videoExperience
-            dataToSave.interactionExperience = calculated.interactionExperience
-            dataToSave.initialBufferingDelay = calculated.initialBufferingDelay
-            dataToSave.calculatedResolution = calculated.calculatedResolution
-            dataToSave.presentationExperience = calculated.presentationExperience
-            dataToSave.sLostPacketRate = calculated.sLostPacketRate
-            dataToSave.sStallRate = calculated.sStallRate
-            dataToSave.alpha = calculated.alpha
-            dataToSave.beta = calculated.beta
-            dataToSave.vmos = calculated.vmos
-          } else if (service === 'mobile_game') {
-            const calculated = calculateMobileGameVmos(
-              row.rtt || '0',
-              row.packetLossRate || '0',
-              row.stutterRatio || '0',
-              params,
-            )
-            
-            // 将计算后的字段添加到保存数据中
-            dataToSave.bitrate = calculated.bitrate
-            dataToSave.videoExperience = calculated.videoExperience
-            dataToSave.interactionExperience = calculated.interactionExperience
-            dataToSave.initialBufferingDelay = calculated.initialBufferingDelay
-            dataToSave.calculatedResolution = calculated.calculatedResolution
-            dataToSave.presentationExperience = calculated.presentationExperience
-            dataToSave.sLostPacketRate = calculated.sLostPacketRate
-            dataToSave.sStallRate = calculated.sStallRate
-            dataToSave.alpha = calculated.alpha
-            dataToSave.beta = calculated.beta
-            dataToSave.vmos = calculated.vmos
-          } else if (service === 'mobile_game_cloud') {
-            const calculated = calculateMobileGameCloudVmos(
-              row.speed || '0',
-              row.resolution || '',
-              row.rtt || '0',
-              row.packetLossRate || '0',
-              row.stutterRatio || '0',
-              params,
-            )
-            
-            // 将计算后的字段添加到保存数据中
-            dataToSave.bitrate = calculated.bitrate
-            dataToSave.videoExperience = calculated.videoExperience
-            dataToSave.interactionExperience = calculated.interactionExperience
-            dataToSave.initialBufferingDelay = calculated.initialBufferingDelay
-            dataToSave.calculatedResolution = calculated.calculatedResolution
-            dataToSave.presentationExperience = calculated.presentationExperience
-            dataToSave.sLostPacketRate = calculated.sLostPacketRate
-            dataToSave.sStallRate = calculated.sStallRate
-            dataToSave.alpha = calculated.alpha
-            dataToSave.beta = calculated.beta
-            dataToSave.vmos = calculated.vmos
-          }
-        }
-
+        const service = taskDetail.value.taskInfo.service
+        const params = await getVmosParams(service)
+        const dataToSave = prepareVmosDataToSave(row, service, params)
         const response = await updateVmosData(row.id, dataToSave)
 
         if (response.code === 200) {
@@ -2308,90 +2052,15 @@ export default {
       }
     }
 
-    // 批量重新计算vMOS数据（不保存到数据库，只更新界面）
-    const recalculateVmosDataForRow = async (row, service, params) => {
-      if (service === 'voip') {
-        const calculated = calculateVoipVmos(
-          row.speed || '0',
-          row.resolution || '',
-          row.rtt || '0',
-          row.packetLossRate || '0',
-          row.stutterRatio || '0',
-          params,
-        )
-        row.bitrate = calculated.bitrate
-        row.videoExperience = calculated.videoExperience
-        row.interactionExperience = calculated.interactionExperience
-        row.initialBufferingDelay = calculated.initialBufferingDelay
-        row.calculatedResolution = calculated.calculatedResolution
-        row.presentationExperience = calculated.presentationExperience
-        row.sLostPacketRate = calculated.sLostPacketRate
-        row.sStallRate = calculated.sStallRate
-        row.alpha = calculated.alpha
-        row.beta = calculated.beta
-        row.vmos = calculated.vmos
-      } else if (service === 'meeting') {
-        const calculated = calculateMeetingVmos(
-          row.speed || '0',
-          row.resolution || '',
-          row.rtt || '0',
-          row.packetLossRate || '0',
-          row.stutterRatio || '0',
-          params,
-        )
-        row.bitrate = calculated.bitrate
-        row.videoExperience = calculated.videoExperience
-        row.interactionExperience = calculated.interactionExperience
-        row.initialBufferingDelay = calculated.initialBufferingDelay
-        row.calculatedResolution = calculated.calculatedResolution
-        row.presentationExperience = calculated.presentationExperience
-        row.sLostPacketRate = calculated.sLostPacketRate
-        row.sStallRate = calculated.sStallRate
-        row.alpha = calculated.alpha
-        row.beta = calculated.beta
-        row.vmos = calculated.vmos
-      } else if (service === 'mobile_game') {
-        const calculated = calculateMobileGameVmos(
-          row.rtt || '0',
-          row.packetLossRate || '0',
-          row.stutterRatio || '0',
-          params,
-        )
-        row.bitrate = calculated.bitrate
-        row.videoExperience = calculated.videoExperience
-        row.interactionExperience = calculated.interactionExperience
-        row.initialBufferingDelay = calculated.initialBufferingDelay
-        row.calculatedResolution = calculated.calculatedResolution
-        row.presentationExperience = calculated.presentationExperience
-        row.sLostPacketRate = calculated.sLostPacketRate
-        row.sStallRate = calculated.sStallRate
-        row.alpha = calculated.alpha
-        row.beta = calculated.beta
-        row.vmos = calculated.vmos
-      } else if (service === 'mobile_game_cloud') {
-        const calculated = calculateMobileGameCloudVmos(
-          row.speed || '0',
-          row.resolution || '',
-          row.rtt || '0',
-          row.packetLossRate || '0',
-          row.stutterRatio || '0',
-          params,
-        )
-        row.bitrate = calculated.bitrate
-        row.videoExperience = calculated.videoExperience
-        row.interactionExperience = calculated.interactionExperience
-        row.initialBufferingDelay = calculated.initialBufferingDelay
-        row.calculatedResolution = calculated.calculatedResolution
-        row.presentationExperience = calculated.presentationExperience
-        row.sLostPacketRate = calculated.sLostPacketRate
-        row.sStallRate = calculated.sStallRate
-        row.alpha = calculated.alpha
-        row.beta = calculated.beta
-        row.vmos = calculated.vmos
+    // 批量重新计算vMOS数据（不保存到数据库，只更新界面），与编辑、保存共用同一套公式
+    const recalculateVmosDataForRow = (row, service, params) => {
+      const calculated = computeVmosForService(row, service, params)
+      if (calculated) {
+        applyCalculatedToTarget(row, calculated)
       }
     }
 
-    // 准备保存数据（与handleSaveVmosRow中的逻辑相同）
+    // 准备保存数据（与编辑、批量替换共用同一套公式）
     const prepareVmosDataToSave = (row, service, params) => {
       const dataToSave = {
         speed: row.speed || '',
@@ -2400,92 +2069,14 @@ export default {
         packetLossRate: row.packetLossRate || '',
         stutterRatio: row.stutterRatio || '',
       }
-
-      if (service === 'voip') {
-        const calculated = calculateVoipVmos(
-          row.speed || '0',
-          row.resolution || '',
-          row.rtt || '0',
-          row.packetLossRate || '0',
-          row.stutterRatio || '0',
-          params,
-        )
-        dataToSave.bitrate = calculated.bitrate
-        dataToSave.videoExperience = calculated.videoExperience
-        dataToSave.interactionExperience = calculated.interactionExperience
-        dataToSave.initialBufferingDelay = calculated.initialBufferingDelay
-        dataToSave.calculatedResolution = calculated.calculatedResolution
-        dataToSave.presentationExperience = calculated.presentationExperience
-        dataToSave.sLostPacketRate = calculated.sLostPacketRate
-        dataToSave.sStallRate = calculated.sStallRate
-        dataToSave.alpha = calculated.alpha
-        dataToSave.beta = calculated.beta
-        dataToSave.vmos = calculated.vmos
-      } else if (service === 'meeting') {
-        const calculated = calculateMeetingVmos(
-          row.speed || '0',
-          row.resolution || '',
-          row.rtt || '0',
-          row.packetLossRate || '0',
-          row.stutterRatio || '0',
-          params,
-        )
-        dataToSave.bitrate = calculated.bitrate
-        dataToSave.videoExperience = calculated.videoExperience
-        dataToSave.interactionExperience = calculated.interactionExperience
-        dataToSave.initialBufferingDelay = calculated.initialBufferingDelay
-        dataToSave.calculatedResolution = calculated.calculatedResolution
-        dataToSave.presentationExperience = calculated.presentationExperience
-        dataToSave.sLostPacketRate = calculated.sLostPacketRate
-        dataToSave.sStallRate = calculated.sStallRate
-        dataToSave.alpha = calculated.alpha
-        dataToSave.beta = calculated.beta
-        dataToSave.vmos = calculated.vmos
-      } else if (service === 'mobile_game') {
-        const calculated = calculateMobileGameVmos(
-          row.rtt || '0',
-          row.packetLossRate || '0',
-          row.stutterRatio || '0',
-          params,
-        )
-        dataToSave.bitrate = calculated.bitrate
-        dataToSave.videoExperience = calculated.videoExperience
-        dataToSave.interactionExperience = calculated.interactionExperience
-        dataToSave.initialBufferingDelay = calculated.initialBufferingDelay
-        dataToSave.calculatedResolution = calculated.calculatedResolution
-        dataToSave.presentationExperience = calculated.presentationExperience
-        dataToSave.sLostPacketRate = calculated.sLostPacketRate
-        dataToSave.sStallRate = calculated.sStallRate
-        dataToSave.alpha = calculated.alpha
-        dataToSave.beta = calculated.beta
-        dataToSave.vmos = calculated.vmos
-      } else if (service === 'mobile_game_cloud') {
-        const calculated = calculateMobileGameCloudVmos(
-          row.speed || '0',
-          row.resolution || '',
-          row.rtt || '0',
-          row.packetLossRate || '0',
-          row.stutterRatio || '0',
-          params,
-        )
-        dataToSave.bitrate = calculated.bitrate
-        dataToSave.videoExperience = calculated.videoExperience
-        dataToSave.interactionExperience = calculated.interactionExperience
-        dataToSave.initialBufferingDelay = calculated.initialBufferingDelay
-        dataToSave.calculatedResolution = calculated.calculatedResolution
-        dataToSave.presentationExperience = calculated.presentationExperience
-        dataToSave.sLostPacketRate = calculated.sLostPacketRate
-        dataToSave.sStallRate = calculated.sStallRate
-        dataToSave.alpha = calculated.alpha
-        dataToSave.beta = calculated.beta
-        dataToSave.vmos = calculated.vmos
+      const calculated = computeVmosForService(row, service, params)
+      if (calculated) {
+        applyCalculatedToTarget(dataToSave, calculated)
       }
-
       // 是否已替换数据标志（保存到数据库，用于再次打开详情时恢复“已执行”状态）
       dataToSave.speedReplaced = row.speedReplaced === 1 || row.speedReplaced === '1' ? 1 : 0
       dataToSave.gameRttReplaced = row.gameRttReplaced === 1 || row.gameRttReplaced === '1' ? 1 : 0
       dataToSave.networkRttReplaced = row.networkRttReplaced === 1 || row.networkRttReplaced === '1' ? 1 : 0
-
       return dataToSave
     }
 
