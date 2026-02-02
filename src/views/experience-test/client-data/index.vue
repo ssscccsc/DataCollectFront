@@ -920,7 +920,15 @@ export default {
           } else {
             activeDetailTab.value = 'vmos'
           }
-          
+
+          // 从数据库恢复“是否已替换数据”状态（每条vMOS记录都有标志，取首条即可）
+          const firstVmos = taskDetail.value.vmosDataList && taskDetail.value.vmosDataList[0]
+          if (firstVmos) {
+            isDownlinkSpeedReplaced.value = firstVmos.speedReplaced === 1 || firstVmos.speedReplaced === '1'
+            isGameRttReplaced.value = firstVmos.gameRttReplaced === 1 || firstVmos.gameRttReplaced === '1'
+            isNetworkRttReplaced.value = firstVmos.networkRttReplaced === 1 || firstVmos.networkRttReplaced === '1'
+          }
+
           // 自动加载网络侧RTT对比数据（用于替换网络侧RTT功能）
           if (taskDetail.value.taskInfo && taskDetail.value.taskInfo.taskId) {
             try {
@@ -2473,6 +2481,11 @@ export default {
         dataToSave.vmos = calculated.vmos
       }
 
+      // 是否已替换数据标志（保存到数据库，用于再次打开详情时恢复“已执行”状态）
+      dataToSave.speedReplaced = row.speedReplaced === 1 || row.speedReplaced === '1' ? 1 : 0
+      dataToSave.gameRttReplaced = row.gameRttReplaced === 1 || row.gameRttReplaced === '1' ? 1 : 0
+      dataToSave.networkRttReplaced = row.networkRttReplaced === 1 || row.networkRttReplaced === '1' ? 1 : 0
+
       return dataToSave
     }
 
@@ -2517,6 +2530,7 @@ export default {
 
           // 替换速率
           vmosRow.speed = dlSpeedKbps.toFixed(2)
+          vmosRow.speedReplaced = 1
 
           // 重新计算vMOS数据
           await recalculateVmosDataForRow(vmosRow, service, params)
@@ -2605,6 +2619,7 @@ export default {
 
           // 替换速率
           vmosRow.speed = totalKbps.toFixed(2)
+          vmosRow.speedReplaced = 0
 
           // 重新计算vMOS数据
           await recalculateVmosDataForRow(vmosRow, service, params)
@@ -2696,6 +2711,7 @@ export default {
 
           // 替换RTT
           vmosRow.rtt = gameDelay.toString()
+          vmosRow.gameRttReplaced = 1
 
           // 重新计算vMOS数据
           await recalculateVmosDataForRow(vmosRow, service, params)
@@ -2783,6 +2799,7 @@ export default {
 
           // 替换RTT
           vmosRow.rtt = ulDelay.toString()
+          vmosRow.gameRttReplaced = 0
 
           // 重新计算vMOS数据
           await recalculateVmosDataForRow(vmosRow, service, params)
@@ -2895,6 +2912,7 @@ export default {
 
           // 替换RTT
           vmosRow.rtt = networkServiceDelay.toString()
+          vmosRow.networkRttReplaced = 1
 
           // 重新计算vMOS数据
           await recalculateVmosDataForRow(vmosRow, service, params)
@@ -2978,6 +2996,7 @@ export default {
 
           // 替换RTT
           vmosRow.rtt = ulDelay.toString()
+          vmosRow.networkRttReplaced = 0
 
           // 重新计算vMOS数据
           await recalculateVmosDataForRow(vmosRow, service, params)
