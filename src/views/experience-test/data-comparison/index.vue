@@ -683,6 +683,10 @@ export default {
 
         const zip = new JSZip()
         let hasAnyChart = false
+        let speedTableAoa = null
+        let rttTableAoa = null
+        let stutterTableAoa = null
+        let avgQoeTableAoa = null
 
         try {
           // 导出速率对比图表
@@ -832,6 +836,10 @@ export default {
               zip.file('speed-comparison.png', speedImage.split(',')[1], { base64: true })
               hasAnyChart = true
             }
+            speedTableAoa = [
+              [t('experienceTest.dataComparison.sequenceNumber'), t('experienceTest.dataComparison.clientSpeedKbps'), t('experienceTest.dataComparison.networkUplinkBandwidthKbps'), t('experienceTest.dataComparison.networkDownlinkBandwidthKbps')],
+              ...sortedTimeStamps.map((ts, i) => [ts, clientSpeeds[i] ?? '', networkUplinkSpeeds[i] ?? '', networkDownlinkSpeeds[i] ?? '']),
+            ]
             tempChart.dispose()
             tempContainer.removeChild(tempDiv)
           }
@@ -963,6 +971,10 @@ export default {
               zip.file('rtt-comparison.png', rttImage.split(',')[1], { base64: true })
               hasAnyChart = true
             }
+            rttTableAoa = [
+              [t('experienceTest.dataComparison.sequenceNumber'), t('experienceTest.dataComparison.clientRtt'), t('experienceTest.dataComparison.networkServiceDelay')],
+              ...sortedTimeStamps.map((ts, i) => [ts, clientRtts[i] ?? '', networkDelays[i] ?? '']),
+            ]
             tempChart.dispose()
             tempContainer.removeChild(tempDiv)
           }
@@ -1093,6 +1105,10 @@ export default {
               zip.file('stutter-comparison.png', stutterImage.split(',')[1], { base64: true })
               hasAnyChart = true
             }
+            stutterTableAoa = [
+              [t('experienceTest.dataComparison.sequenceNumber'), t('experienceTest.dataComparison.clientStutterRatio'), t('experienceTest.dataComparison.networkStallingNumberDiv10')],
+              ...sortedTimeStamps.map((ts, i) => [ts, clientRatios[i] ?? '', networkNumbers[i] ?? '']),
+            ]
             tempChart.dispose()
             tempContainer.removeChild(tempDiv)
           }
@@ -1223,6 +1239,10 @@ export default {
               zip.file('avg-qoe-comparison.png', avgQoeImage.split(',')[1], { base64: true })
               hasAnyChart = true
             }
+            avgQoeTableAoa = [
+              [t('experienceTest.dataComparison.sequenceNumber'), t('experienceTest.dataComparison.clientAvgQoe'), t('experienceTest.dataComparison.networkAvgQoe')],
+              ...sortedTimeStamps.map((ts, i) => [ts, clientAvgQoes[i] ?? '', networkAvgQoes[i] ?? '']),
+            ]
             tempChart.dispose()
             tempContainer.removeChild(tempDiv)
           }
@@ -1231,8 +1251,39 @@ export default {
           document.body.removeChild(tempContainer)
         }
 
-        if (!hasAnyChart) {
-          ElMessage.warning('没有可导出的图表数据')
+        // 将表格数据导出为 Excel 并加入 zip
+        const hasAnyTable = speedTableAoa || rttTableAoa || stutterTableAoa || avgQoeTableAoa
+        if (hasAnyTable) {
+          try {
+            const XLSX = (await import('xlsx')).default
+            const wb = XLSX.utils.book_new()
+            if (speedTableAoa) {
+              const ws = XLSX.utils.aoa_to_sheet(speedTableAoa)
+              XLSX.utils.book_append_sheet(wb, ws, t('experienceTest.dataComparison.speedComparison'))
+            }
+            if (rttTableAoa) {
+              const ws = XLSX.utils.aoa_to_sheet(rttTableAoa)
+              XLSX.utils.book_append_sheet(wb, ws, t('experienceTest.dataComparison.rttComparison'))
+            }
+            if (stutterTableAoa) {
+              const ws = XLSX.utils.aoa_to_sheet(stutterTableAoa)
+              XLSX.utils.book_append_sheet(wb, ws, t('experienceTest.dataComparison.stutterComparison'))
+            }
+            if (avgQoeTableAoa) {
+              const ws = XLSX.utils.aoa_to_sheet(avgQoeTableAoa)
+              XLSX.utils.book_append_sheet(wb, ws, t('experienceTest.dataComparison.avgQoeComparison'))
+            }
+            const excelBuffer = XLSX.write(wb, { type: 'array', bookType: 'xlsx' })
+            zip.file('comparison-data.xlsx', excelBuffer, { binary: true })
+          } catch (excelError) {
+            console.error('Export Excel error:', excelError)
+            ElMessage.warning('表格数据导出为 Excel 失败，仅导出图表')
+          }
+        }
+
+        const hasAnyData = hasAnyChart || hasAnyTable
+        if (!hasAnyData) {
+          ElMessage.warning('没有可导出的图表或表格数据')
           return
         }
 
