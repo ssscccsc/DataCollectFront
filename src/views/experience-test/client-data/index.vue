@@ -394,7 +394,7 @@
               <el-button type="primary" @click="handleReplaceNetworkRtt" :disabled="isReplacingNetworkRtt || !hasNetworkRttData">
                 {{ $t('experienceTest.clientData.replaceNetworkRtt') }}
               </el-button>
-              <el-button type="warning" @click="handleRevertNetworkRtt" :disabled="isReplacingNetworkRtt || !hasOriginalNetworkRttData">
+              <el-button type="warning" @click="handleRevertNetworkRtt" :disabled="isReplacingNetworkRtt || !hasRttData">
                 {{ $t('experienceTest.clientData.revertNetworkRtt') }}
               </el-button>
             </div>
@@ -691,6 +691,9 @@ export default {
     })
     const hasNetworkRttData = computed(() => {
       return networkRttComparisonData.value && networkRttComparisonData.value.networkRttList && networkRttComparisonData.value.networkRttList.length > 0
+    })
+    const hasRttData = computed(() => {
+      return taskDetail.value.rttDataList && taskDetail.value.rttDataList.length > 0
     })
     
     // 基础信息编辑相关
@@ -2888,18 +2891,22 @@ export default {
       }
     }
 
-    // 回退网络侧RTT
+    // 回退网络侧RTT（使用上下行RTT统计中的上行RTT替换）
     const handleRevertNetworkRtt = async () => {
-      if (!taskDetail.value.taskInfo || !taskDetail.value.vmosDataList) {
+      if (!taskDetail.value.taskInfo || !taskDetail.value.vmosDataList || !taskDetail.value.rttDataList) {
         ElMessage.warning('数据不完整')
         return
       }
 
       const service = taskDetail.value.taskInfo.service
 
-      if (Object.keys(originalNetworkRttDataBackup.value).length === 0) {
-        ElMessage.warning('没有可回退的原始数据')
+      if (taskDetail.value.rttDataList.length === 0) {
+        ElMessage.warning('上下行RTT统计数据为空')
         return
+      }
+
+      if (taskDetail.value.vmosDataList.length !== taskDetail.value.rttDataList.length) {
+        ElMessage.warning(`vMOS数据(${taskDetail.value.vmosDataList.length}条)与上下行RTT统计数据(${taskDetail.value.rttDataList.length}条)数量不匹配`)
       }
 
       isReplacingNetworkRtt.value = true
@@ -2907,18 +2914,21 @@ export default {
         // 获取配置参数
         const params = await getVmosParams(service)
 
-        // 遍历vMOS数据列表，恢复原始RTT并重新计算
-        for (let i = 0; i < taskDetail.value.vmosDataList.length; i++) {
+        // 遍历vMOS数据列表，使用上下行RTT统计中的上行RTT替换并重新计算
+        // 按照索引位置匹配（因为数据应该是按顺序对齐的）
+        const minLength = Math.min(taskDetail.value.vmosDataList.length, taskDetail.value.rttDataList.length)
+        for (let i = 0; i < minLength; i++) {
           const vmosRow = taskDetail.value.vmosDataList[i]
-          const originalRtt = originalNetworkRttDataBackup.value[vmosRow.id]
+          const rttRow = taskDetail.value.rttDataList[i]
 
-          // 如果存在原始RTT，则恢复
-          if (originalRtt !== undefined && originalRtt !== null) {
-            vmosRow.rtt = originalRtt
+          // 获取上行RTT（单位：ms），直接替换RTT
+          const ulDelay = parseFloat(rttRow.ulDelay) || 0
 
-            // 重新计算vMOS数据
-            await recalculateVmosDataForRow(vmosRow, service, params)
-          }
+          // 替换RTT
+          vmosRow.rtt = ulDelay.toString()
+
+          // 重新计算vMOS数据
+          await recalculateVmosDataForRow(vmosRow, service, params)
         }
 
         // 批量保存到数据库
@@ -2943,7 +2953,7 @@ export default {
         await Promise.all(savePromises)
 
         if (failCount === 0) {
-          // 只有在全部保存成功后才清空原始数据备份
+          // 清空原始数据备份（因为已经用上下行RTT统计的数据替换了）
           originalNetworkRttDataBackup.value = {}
           ElMessage.success(`回退网络侧RTT成功，已保存 ${successCount} 条数据`)
           // 刷新当前任务详情
@@ -3060,6 +3070,7 @@ export default {
       isReplacingNetworkRtt,
       hasOriginalNetworkRttData,
       hasNetworkRttData,
+      hasRttData,
     }
   },
 }
