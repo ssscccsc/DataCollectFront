@@ -373,28 +373,28 @@
           <el-tab-pane :label="$t('experienceTest.clientData.vmos')" name="vmos">
             <!-- 替换/回退下行速率按钮（仅在voip和meeting时显示） -->
             <div v-if="taskDetail.taskInfo && (taskDetail.taskInfo.service === 'voip' || taskDetail.taskInfo.service === 'meeting')" style="margin-bottom: 16px;">
-              <el-button type="primary" @click="handleReplaceDownlinkSpeed" :disabled="isReplacingSpeed || !hasSpeedData">
-                {{ $t('experienceTest.clientData.replaceDownlinkSpeed') }}
+              <el-button type="primary" @click="handleReplaceDownlinkSpeed" :disabled="isReplacingSpeed || !hasSpeedData || isDownlinkSpeedReplaced">
+                {{ $t('experienceTest.clientData.replaceDownlinkSpeed') }}{{ isDownlinkSpeedReplaced ? $t('experienceTest.clientData.alreadyExecuted') : '' }}
               </el-button>
-              <el-button type="warning" @click="handleRevertDownlinkSpeed" :disabled="isReplacingSpeed || !hasOriginalSpeedData">
+              <el-button type="warning" @click="handleRevertDownlinkSpeed" :disabled="isReplacingSpeed || !isDownlinkSpeedReplaced || !hasSpeedData">
                 {{ $t('experienceTest.clientData.revertDownlinkSpeed') }}
               </el-button>
             </div>
             <!-- 替换/回退游戏内RTT按钮（仅在mobile_game和mobile_game_cloud时显示） -->
             <div v-if="taskDetail.taskInfo && (taskDetail.taskInfo.service === 'mobile_game' || taskDetail.taskInfo.service === 'mobile_game_cloud')" style="margin-bottom: 16px;">
-              <el-button type="primary" @click="handleReplaceGameRtt" :disabled="isReplacingRtt || !hasGameDelayData">
-                {{ $t('experienceTest.clientData.replaceGameRtt') }}
+              <el-button type="primary" @click="handleReplaceGameRtt" :disabled="isReplacingRtt || !hasGameDelayData || isGameRttReplaced">
+                {{ $t('experienceTest.clientData.replaceGameRtt') }}{{ isGameRttReplaced ? $t('experienceTest.clientData.alreadyExecuted') : '' }}
               </el-button>
-              <el-button type="warning" @click="handleRevertGameRtt" :disabled="isReplacingRtt || !hasRttData">
+              <el-button type="warning" @click="handleRevertGameRtt" :disabled="isReplacingRtt || !isGameRttReplaced">
                 {{ $t('experienceTest.clientData.revertGameRtt') }}
               </el-button>
             </div>
             <!-- 替换/回退网络侧RTT按钮（所有业务大类都显示） -->
             <div v-if="taskDetail.taskInfo" style="margin-bottom: 16px;">
-              <el-button type="primary" @click="handleReplaceNetworkRtt" :disabled="isReplacingNetworkRtt || !hasNetworkRttData">
-                {{ $t('experienceTest.clientData.replaceNetworkRtt') }}
+              <el-button type="primary" @click="handleReplaceNetworkRtt" :disabled="isReplacingNetworkRtt || !hasNetworkRttData || isNetworkRttReplaced">
+                {{ $t('experienceTest.clientData.replaceNetworkRtt') }}{{ isNetworkRttReplaced ? $t('experienceTest.clientData.alreadyExecuted') : '' }}
               </el-button>
-              <el-button type="warning" @click="handleRevertNetworkRtt" :disabled="isReplacingNetworkRtt || !hasRttData">
+              <el-button type="warning" @click="handleRevertNetworkRtt" :disabled="isReplacingNetworkRtt || !isNetworkRttReplaced">
                 {{ $t('experienceTest.clientData.revertNetworkRtt') }}
               </el-button>
             </div>
@@ -664,6 +664,7 @@ export default {
     
     // 替换下行速率相关
     const isReplacingSpeed = ref(false)
+    const isDownlinkSpeedReplaced = ref(false) // 替换下行速率是否已执行（执行后替换按钮置灰，回退按钮可点击）
     const originalSpeedDataBackup = ref({}) // 保存原始速率数据，格式：{ rowId: originalSpeed }
     const hasOriginalSpeedData = computed(() => {
       return Object.keys(originalSpeedDataBackup.value).length > 0
@@ -674,6 +675,7 @@ export default {
     
     // 替换游戏内RTT相关
     const isReplacingRtt = ref(false)
+    const isGameRttReplaced = ref(false) // 替换游戏内RTT是否已执行（执行后替换按钮置灰，回退按钮可点击）
     const originalRttDataBackup = ref({}) // 保存原始RTT数据，格式：{ rowId: originalRtt }
     const hasOriginalRttData = computed(() => {
       return Object.keys(originalRttDataBackup.value).length > 0
@@ -684,6 +686,7 @@ export default {
     
     // 替换网络侧RTT相关
     const isReplacingNetworkRtt = ref(false)
+    const isNetworkRttReplaced = ref(false) // 替换网络侧RTT是否已执行（执行后替换按钮置灰，回退按钮可点击）
     const originalNetworkRttDataBackup = ref({}) // 保存原始RTT数据，格式：{ rowId: originalRtt }
     const networkRttComparisonData = ref(null) // 保存网络侧RTT对比数据
     const hasOriginalNetworkRttData = computed(() => {
@@ -860,14 +863,17 @@ export default {
         // 重置替换下行速率相关状态
         originalSpeedDataBackup.value = {}
         isReplacingSpeed.value = false
+        isDownlinkSpeedReplaced.value = false
         
         // 重置替换游戏内RTT相关状态
         originalRttDataBackup.value = {}
         isReplacingRtt.value = false
+        isGameRttReplaced.value = false
         
         // 重置替换网络侧RTT相关状态
         originalNetworkRttDataBackup.value = {}
         isReplacingNetworkRtt.value = false
+        isNetworkRttReplaced.value = false
         networkRttComparisonData.value = null
         
         // 重置数据
@@ -2537,6 +2543,7 @@ export default {
           if (taskDetail.value.taskInfo && taskDetail.value.taskInfo.taskId) {
             await handleViewDetail({ taskId: taskDetail.value.taskInfo.taskId })
           }
+          isDownlinkSpeedReplaced.value = true
         } else {
           ElMessage.warning(`替换下行速率完成，成功保存 ${successCount} 条，失败 ${failCount} 条`)
         }
@@ -2548,9 +2555,9 @@ export default {
       }
     }
 
-    // 回退下行速率
+    // 回退下行速率（使用上下行速率统计中的总体速率/1024替换）
     const handleRevertDownlinkSpeed = async () => {
-      if (!taskDetail.value.taskInfo || !taskDetail.value.vmosDataList) {
+      if (!taskDetail.value.taskInfo || !taskDetail.value.vmosDataList || !taskDetail.value.speedDataList) {
         ElMessage.warning('数据不完整')
         return
       }
@@ -2561,9 +2568,13 @@ export default {
         return
       }
 
-      if (Object.keys(originalSpeedDataBackup.value).length === 0) {
-        ElMessage.warning('没有可回退的原始数据')
+      if (taskDetail.value.speedDataList.length === 0) {
+        ElMessage.warning('上下行速率统计数据为空')
         return
+      }
+
+      if (taskDetail.value.vmosDataList.length !== taskDetail.value.speedDataList.length) {
+        ElMessage.warning(`vMOS数据(${taskDetail.value.vmosDataList.length}条)与上下行速率统计数据(${taskDetail.value.speedDataList.length}条)数量不匹配`)
       }
 
       isReplacingSpeed.value = true
@@ -2571,18 +2582,22 @@ export default {
         // 获取配置参数
         const params = await getVmosParams(service)
 
-        // 遍历vMOS数据列表，恢复原始速率并重新计算
-        for (let i = 0; i < taskDetail.value.vmosDataList.length; i++) {
+        // 遍历vMOS数据列表，使用上下行速率统计中的总体速率/1024替换并重新计算
+        // 按照索引位置匹配（因为数据应该是按顺序对齐的）
+        const minLength = Math.min(taskDetail.value.vmosDataList.length, taskDetail.value.speedDataList.length)
+        for (let i = 0; i < minLength; i++) {
           const vmosRow = taskDetail.value.vmosDataList[i]
-          const originalSpeed = originalSpeedDataBackup.value[vmosRow.id]
+          const speedRow = taskDetail.value.speedDataList[i]
 
-          // 如果存在原始速率，则恢复
-          if (originalSpeed !== undefined && originalSpeed !== null) {
-            vmosRow.speed = originalSpeed
+          // 获取总体速率（单位：bps），除以1024转换为Kbps
+          const totalBps = parseFloat(speedRow.total) || 0
+          const totalKbps = totalBps / 1024
 
-            // 重新计算vMOS数据
-            await recalculateVmosDataForRow(vmosRow, service, params)
-          }
+          // 替换速率
+          vmosRow.speed = totalKbps.toFixed(2)
+
+          // 重新计算vMOS数据
+          await recalculateVmosDataForRow(vmosRow, service, params)
         }
 
         // 批量保存到数据库
@@ -2607,13 +2622,14 @@ export default {
         await Promise.all(savePromises)
 
         if (failCount === 0) {
-          // 只有在全部保存成功后才清空原始数据备份
+          // 清空原始数据备份（因为已经用上下行速率统计的数据替换了）
           originalSpeedDataBackup.value = {}
           ElMessage.success(`回退下行速率成功，已保存 ${successCount} 条数据`)
           // 刷新当前任务详情
           if (taskDetail.value.taskInfo && taskDetail.value.taskInfo.taskId) {
             await handleViewDetail({ taskId: taskDetail.value.taskInfo.taskId })
           }
+          isDownlinkSpeedReplaced.value = false
         } else {
           ElMessage.warning(`回退下行速率完成，成功保存 ${successCount} 条，失败 ${failCount} 条`)
         }
@@ -2698,6 +2714,7 @@ export default {
           if (taskDetail.value.taskInfo && taskDetail.value.taskInfo.taskId) {
             await handleViewDetail({ taskId: taskDetail.value.taskInfo.taskId })
           }
+          isGameRttReplaced.value = true
         } else {
           ElMessage.warning(`替换游戏内RTT完成，成功保存 ${successCount} 条，失败 ${failCount} 条`)
         }
@@ -2782,6 +2799,7 @@ export default {
           if (taskDetail.value.taskInfo && taskDetail.value.taskInfo.taskId) {
             await handleViewDetail({ taskId: taskDetail.value.taskInfo.taskId })
           }
+          isGameRttReplaced.value = false
         } else {
           ElMessage.warning(`回退游戏内RTT完成，成功保存 ${successCount} 条，失败 ${failCount} 条`)
         }
@@ -2887,6 +2905,7 @@ export default {
           if (taskDetail.value.taskInfo && taskDetail.value.taskInfo.taskId) {
             await handleViewDetail({ taskId: taskDetail.value.taskInfo.taskId })
           }
+          isNetworkRttReplaced.value = true
         } else {
           ElMessage.warning(`替换网络侧RTT完成，成功保存 ${successCount} 条，失败 ${failCount} 条`)
         }
@@ -2967,6 +2986,7 @@ export default {
           if (taskDetail.value.taskInfo && taskDetail.value.taskInfo.taskId) {
             await handleViewDetail({ taskId: taskDetail.value.taskInfo.taskId })
           }
+          isNetworkRttReplaced.value = false
         } else {
           ElMessage.warning(`回退网络侧RTT完成，成功保存 ${successCount} 条，失败 ${failCount} 条`)
         }
@@ -3078,6 +3098,9 @@ export default {
       hasOriginalNetworkRttData,
       hasNetworkRttData,
       hasRttData,
+      isDownlinkSpeedReplaced,
+      isGameRttReplaced,
+      isNetworkRttReplaced,
     }
   },
 }

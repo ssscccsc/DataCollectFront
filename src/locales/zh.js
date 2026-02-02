@@ -1172,6 +1172,7 @@ export default {
       revertGameRtt: '回退游戏内RTT',
       replaceNetworkRtt: '替换网络侧RTT',
       revertNetworkRtt: '回退网络侧RTT',
+      alreadyExecuted: '（已执行）',
     },
     networkData: {
       description: '管理网络侧数据，包括数据查看、编辑、删除等操作',

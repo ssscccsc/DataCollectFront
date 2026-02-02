@@ -1308,6 +1308,7 @@ export default {
       revertGameRtt: 'Revert Game RTT',
       replaceNetworkRtt: 'Replace Network RTT',
       revertNetworkRtt: 'Revert Network RTT',
+      alreadyExecuted: ' (Executed)',
     },
     dataComparison: {
       description: 'Client-network data comparison analysis, support data comparison and viewing',
