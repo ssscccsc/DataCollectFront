@@ -1309,6 +1309,9 @@ export default {
       replaceNetworkRtt: 'Replace Network RTT',
       revertNetworkRtt: 'Revert Network RTT',
       alreadyExecuted: ' (Executed)',
+      saveReplaceRevertToDb: 'Save to database after replace/revert',
+      replaceSuccessNotSaved: 'Success (not saved to database)',
+      revertSuccessNotSaved: 'Revert success (not saved to database)',
     },
     dataComparison: {
       description: 'Client-network data comparison analysis, support data comparison and viewing',

@@ -1173,6 +1173,9 @@ export default {
       replaceNetworkRtt: '替换网络侧RTT',
       revertNetworkRtt: '回退网络侧RTT',
       alreadyExecuted: '（已执行）',
+      saveReplaceRevertToDb: '替换/回退后保存到数据库',
+      replaceSuccessNotSaved: '操作成功（未保存到数据库）',
+      revertSuccessNotSaved: '回退成功（未保存到数据库）',
     },
     networkData: {
       description: '管理网络侧数据，包括数据查看、编辑、删除等操作',
