@@ -2668,25 +2668,17 @@ export default {
   flex-shrink: 0;
 }
 
-/* vMOS 替换/回退按钮一行展示 */
+/* vMOS 替换/回退按钮一行展示，按钮间距均匀分布 */
 .vmos-replace-revert-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 12px 16px;
+  gap: 12px;
   margin-bottom: 16px;
 }
 .vmos-replace-revert-row .vmos-btn-group {
   display: inline-flex;
-  gap: 8px;
-}
-/* 网络侧RTT组与前一按钮组（如游戏内RTT）的间距与组内替换/回退间距一致（8px） */
-.vmos-replace-revert-row .vmos-btn-group-network {
-  margin-left: -8px;
-}
-/* 保存到数据库按钮与回退按钮的间距与替换/回退按钮间距一致（8px） */
-.vmos-replace-revert-row > .el-button {
-  margin-left: -8px;
+  gap: 12px;
 }
 
 .client-data-page :deep(.el-table) {
