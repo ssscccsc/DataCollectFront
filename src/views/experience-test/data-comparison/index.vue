@@ -833,7 +833,7 @@ export default {
               backgroundColor: '#fff',
             })
             if (speedImage) {
-              zip.file('speed-comparison.png', speedImage.split(',')[1], { base64: true })
+              zip.file(`speed-comparison-${taskId}.png`, speedImage.split(',')[1], { base64: true })
               hasAnyChart = true
             }
             // 表格导出按索引对齐端侧与网络侧，确保网络侧数据能导出（端侧用序号、网络侧用时间戳时 timeStamp 无法匹配）
@@ -852,6 +852,7 @@ export default {
               [t('experienceTest.dataComparison.sequenceNumber'), t('experienceTest.dataComparison.clientSpeedKbps'), t('experienceTest.dataComparison.networkUplinkBandwidthKbps'), t('experienceTest.dataComparison.networkDownlinkBandwidthKbps')],
               ...speedRows,
             ]
+            console.log('[导出表格] 速率对比-网络侧数据', networkData)
             tempChart.dispose()
             tempContainer.removeChild(tempDiv)
           }
@@ -980,7 +981,7 @@ export default {
               backgroundColor: '#fff',
             })
             if (rttImage) {
-              zip.file('rtt-comparison.png', rttImage.split(',')[1], { base64: true })
+              zip.file(`rtt-comparison-${taskId}.png`, rttImage.split(',')[1], { base64: true })
               hasAnyChart = true
             }
             const rttClientData = rttData.clientRttList || []
@@ -999,6 +1000,7 @@ export default {
               [t('experienceTest.dataComparison.sequenceNumber'), t('experienceTest.dataComparison.clientRtt'), t('experienceTest.dataComparison.networkServiceDelay')],
               ...rttRows,
             ]
+            console.log('[导出表格] RTT对比-网络侧数据', rttNetworkData)
             tempChart.dispose()
             tempContainer.removeChild(tempDiv)
           }
@@ -1126,7 +1128,7 @@ export default {
               backgroundColor: '#fff',
             })
             if (stutterImage) {
-              zip.file('stutter-comparison.png', stutterImage.split(',')[1], { base64: true })
+              zip.file(`stutter-comparison-${taskId}.png`, stutterImage.split(',')[1], { base64: true })
               hasAnyChart = true
             }
             const stutterClientData = stutterData.clientStutterList || []
@@ -1145,6 +1147,7 @@ export default {
               [t('experienceTest.dataComparison.sequenceNumber'), t('experienceTest.dataComparison.clientStutterRatio'), t('experienceTest.dataComparison.networkStallingNumberDiv10')],
               ...stutterRows,
             ]
+            console.log('[导出表格] 卡顿对比-网络侧数据', stutterNetworkData)
             tempChart.dispose()
             tempContainer.removeChild(tempDiv)
           }
@@ -1272,7 +1275,7 @@ export default {
               backgroundColor: '#fff',
             })
             if (avgQoeImage) {
-              zip.file('avg-qoe-comparison.png', avgQoeImage.split(',')[1], { base64: true })
+              zip.file(`avg-qoe-comparison-${taskId}.png`, avgQoeImage.split(',')[1], { base64: true })
               hasAnyChart = true
             }
             const avgQoeClientData = avgQoeData.clientAvgQoeList || []
@@ -1291,6 +1294,7 @@ export default {
               [t('experienceTest.dataComparison.sequenceNumber'), t('experienceTest.dataComparison.clientAvgQoe'), t('experienceTest.dataComparison.networkAvgQoe')],
               ...avgQoeRows,
             ]
+            console.log('[导出表格] 平均QOE对比-网络侧数据', avgQoeNetworkData)
             tempChart.dispose()
             tempContainer.removeChild(tempDiv)
           }
@@ -1328,7 +1332,7 @@ export default {
               utils.book_append_sheet(wb, ws, t('experienceTest.dataComparison.avgQoeComparison'))
             }
             const excelBuffer = write(wb, { type: 'array', bookType: 'xlsx' })
-            zip.file('comparison-data.xlsx', excelBuffer, { binary: true })
+            zip.file(`comparison-data-${taskId}.xlsx`, excelBuffer, { binary: true })
           } catch (excelError) {
             console.error('Export Excel error:', excelError)
             ElMessage.warning('表格数据导出为 Excel 失败，仅导出图表')
