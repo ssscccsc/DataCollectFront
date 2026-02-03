@@ -389,7 +389,7 @@
                   {{ $t('experienceTest.clientData.revertGameRtt') }}
                 </el-button>
               </span>
-              <span class="vmos-btn-group">
+              <span class="vmos-btn-group vmos-btn-group-network">
                 <el-button type="primary" size="small" @click="handleReplaceNetworkRtt" :disabled="isReplacingNetworkRtt || !hasNetworkRttData || isNetworkRttReplaced">
                   {{ $t('experienceTest.clientData.replaceNetworkRtt') }}{{ isNetworkRttReplaced ? $t('experienceTest.clientData.alreadyExecuted') : '' }}
                 </el-button>
@@ -2680,8 +2680,13 @@ export default {
   display: inline-flex;
   gap: 8px;
 }
-.vmos-replace-revert-row .vmos-save-checkbox {
-  margin-left: 8px;
+/* 网络侧RTT组与前一按钮组（如游戏内RTT）的间距与组内替换/回退间距一致（8px） */
+.vmos-replace-revert-row .vmos-btn-group-network {
+  margin-left: -8px;
+}
+/* 保存到数据库按钮与回退按钮的间距与替换/回退按钮间距一致（8px） */
+.vmos-replace-revert-row > .el-button {
+  margin-left: -8px;
 }
 
 .client-data-page :deep(.el-table) {
