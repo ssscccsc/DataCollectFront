@@ -53,12 +53,6 @@
               clearable
             />
             <el-input
-              v-model="searchForm.userCategory"
-              :placeholder="$t('experienceTest.clientData.searchUserCategory')"
-              style="width: 150px; margin-right: 10px;"
-              clearable
-            />
-            <el-input
               v-model="searchForm.service"
               :placeholder="$t('experienceTest.clientData.searchService')"
               style="width: 150px; margin-right: 10px;"
@@ -67,6 +61,12 @@
             <el-input
               v-model="searchForm.app"
               :placeholder="$t('experienceTest.clientData.searchApp')"
+              style="width: 150px; margin-right: 10px;"
+              clearable
+            />
+            <el-input
+              v-model="searchForm.userCategory"
+              :placeholder="$t('experienceTest.clientData.searchUserCategory')"
               style="width: 150px; margin-right: 10px;"
               clearable
             />
@@ -87,9 +87,9 @@
             <el-table-column prop="operator" :label="$t('experienceTest.clientData.operator')" min-width="120" show-overflow-tooltip />
             <el-table-column prop="prb" :label="$t('experienceTest.clientData.prb')" min-width="100" show-overflow-tooltip />
             <el-table-column prop="rsrp" :label="$t('experienceTest.clientData.rsrp')" min-width="100" show-overflow-tooltip />
-            <el-table-column prop="userCategory" :label="$t('experienceTest.clientData.userCategory')" min-width="120" show-overflow-tooltip />
             <el-table-column prop="service" :label="$t('experienceTest.clientData.service')" min-width="150" show-overflow-tooltip />
             <el-table-column prop="app" :label="$t('experienceTest.clientData.app')" min-width="150" show-overflow-tooltip />
+            <el-table-column prop="userCategory" :label="$t('experienceTest.clientData.userCategory')" min-width="120" show-overflow-tooltip />
             <el-table-column :label="$t('common.operations')" width="200" fixed="right">
               <template #default="scope">
                 <el-button type="primary" size="small" @click="handleView(scope.row)">
