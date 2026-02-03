@@ -1310,6 +1310,7 @@ export default {
       revertNetworkRtt: 'Revert Network RTT',
       alreadyExecuted: ' (Executed)',
       saveReplaceRevertToDb: 'Save to database after replace/revert',
+      saveToDbButton: 'Save to database',
       replaceSuccessNotSaved: 'Success (not saved to database)',
       revertSuccessNotSaved: 'Revert success (not saved to database)',
     },

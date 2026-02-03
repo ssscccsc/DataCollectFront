@@ -1174,6 +1174,7 @@ export default {
       revertNetworkRtt: '回退网络侧RTT',
       alreadyExecuted: '（已执行）',
       saveReplaceRevertToDb: '替换/回退后保存到数据库',
+      saveToDbButton: '保存到数据库',
       replaceSuccessNotSaved: '操作成功（未保存到数据库）',
       revertSuccessNotSaved: '回退成功（未保存到数据库）',
     },

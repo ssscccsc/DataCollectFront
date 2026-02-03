@@ -397,9 +397,9 @@
                   {{ $t('experienceTest.clientData.revertNetworkRtt') }}
                 </el-button>
               </span>
-              <el-checkbox v-model="saveReplaceRevertToDb" class="vmos-save-checkbox">
-                {{ $t('experienceTest.clientData.saveReplaceRevertToDb') }}
-              </el-checkbox>
+              <el-button type="success" size="small" @click="handleSaveReplaceRevertToDb" :disabled="!hasReplaceRevertUnsaved" :loading="savingReplaceRevertToDb">
+                {{ $t('experienceTest.clientData.saveToDbButton') }}
+              </el-button>
             </div>
             <el-table :data="taskDetail.vmosDataList" border stripe style="width: 100%">
               <el-table-column prop="sequenceNumber" :label="$t('experienceTest.clientData.sequenceNumber')" width="100" />
@@ -702,8 +702,9 @@ export default {
       return taskDetail.value.rttDataList && taskDetail.value.rttDataList.length > 0
     })
     
-    // 替换/回退后是否保存到数据库（勾选则保存，不勾选仅更新界面）
-    const saveReplaceRevertToDb = ref(true)
+    // 替换/回退后是否有未保存数据（有则保存按钮可点，平常置灰）
+    const hasReplaceRevertUnsaved = ref(false)
+    const savingReplaceRevertToDb = ref(false)
     
     // 基础信息编辑相关
     const editingBasicInfo = ref(false)
@@ -881,7 +882,8 @@ export default {
         isReplacingNetworkRtt.value = false
         isNetworkRttReplaced.value = false
         networkRttComparisonData.value = null
-        
+        hasReplaceRevertUnsaved.value = false
+
         // 重置数据
         taskDetail.value = {
           taskInfo: null,
@@ -2128,41 +2130,9 @@ export default {
           await recalculateVmosDataForRow(vmosRow, service, params)
         }
 
-        if (saveReplaceRevertToDb.value) {
-          // 批量保存到数据库
-          let successCount = 0
-          let failCount = 0
-          const savePromises = taskDetail.value.vmosDataList.map(async (vmosRow) => {
-            try {
-              const dataToSave = prepareVmosDataToSave(vmosRow, service, params)
-              const response = await updateVmosData(vmosRow.id, dataToSave)
-              if (response.code === 200) {
-                successCount++
-              } else {
-                failCount++
-                console.error(`保存vMOS数据失败 (ID: ${vmosRow.id}):`, response.message)
-              }
-            } catch (error) {
-              failCount++
-              console.error(`保存vMOS数据失败 (ID: ${vmosRow.id}):`, error)
-            }
-          })
-
-          await Promise.all(savePromises)
-
-          if (failCount === 0) {
-            ElMessage.success(`替换下行速率成功，已保存 ${successCount} 条数据`)
-            if (taskDetail.value.taskInfo && taskDetail.value.taskInfo.taskId) {
-              await handleViewDetail({ taskId: taskDetail.value.taskInfo.taskId })
-            }
-            isDownlinkSpeedReplaced.value = true
-          } else {
-            ElMessage.warning(`替换下行速率完成，成功保存 ${successCount} 条，失败 ${failCount} 条`)
-          }
-        } else {
-          isDownlinkSpeedReplaced.value = true
-          ElMessage.success(t('experienceTest.clientData.replaceSuccessNotSaved'))
-        }
+        isDownlinkSpeedReplaced.value = true
+        hasReplaceRevertUnsaved.value = true
+        ElMessage.success(t('experienceTest.clientData.replaceSuccessNotSaved'))
       } catch (error) {
         console.error('Replace downlink speed error:', error)
         ElMessage.error(error.message || t('common.error'))
@@ -2217,43 +2187,10 @@ export default {
           await recalculateVmosDataForRow(vmosRow, service, params)
         }
 
-        if (saveReplaceRevertToDb.value) {
-          // 批量保存到数据库
-          let successCount = 0
-          let failCount = 0
-          const savePromises = taskDetail.value.vmosDataList.map(async (vmosRow) => {
-            try {
-              const dataToSave = prepareVmosDataToSave(vmosRow, service, params)
-              const response = await updateVmosData(vmosRow.id, dataToSave)
-              if (response.code === 200) {
-                successCount++
-              } else {
-                failCount++
-                console.error(`保存vMOS数据失败 (ID: ${vmosRow.id}):`, response.message)
-              }
-            } catch (error) {
-              failCount++
-              console.error(`保存vMOS数据失败 (ID: ${vmosRow.id}):`, error)
-            }
-          })
-
-          await Promise.all(savePromises)
-
-          if (failCount === 0) {
-            originalSpeedDataBackup.value = {}
-            ElMessage.success(`回退下行速率成功，已保存 ${successCount} 条数据`)
-            if (taskDetail.value.taskInfo && taskDetail.value.taskInfo.taskId) {
-              await handleViewDetail({ taskId: taskDetail.value.taskInfo.taskId })
-            }
-            isDownlinkSpeedReplaced.value = false
-          } else {
-            ElMessage.warning(`回退下行速率完成，成功保存 ${successCount} 条，失败 ${failCount} 条`)
-          }
-        } else {
-          originalSpeedDataBackup.value = {}
-          isDownlinkSpeedReplaced.value = false
-          ElMessage.success(t('experienceTest.clientData.revertSuccessNotSaved'))
-        }
+        originalSpeedDataBackup.value = {}
+        isDownlinkSpeedReplaced.value = false
+        hasReplaceRevertUnsaved.value = true
+        ElMessage.success(t('experienceTest.clientData.revertSuccessNotSaved'))
       } catch (error) {
         console.error('Revert downlink speed error:', error)
         ElMessage.error(error.message || t('common.error'))
@@ -2309,41 +2246,9 @@ export default {
           await recalculateVmosDataForRow(vmosRow, service, params)
         }
 
-        if (saveReplaceRevertToDb.value) {
-          // 批量保存到数据库
-          let successCount = 0
-          let failCount = 0
-          const savePromises = taskDetail.value.vmosDataList.map(async (vmosRow) => {
-            try {
-              const dataToSave = prepareVmosDataToSave(vmosRow, service, params)
-              const response = await updateVmosData(vmosRow.id, dataToSave)
-              if (response.code === 200) {
-                successCount++
-              } else {
-                failCount++
-                console.error(`保存vMOS数据失败 (ID: ${vmosRow.id}):`, response.message)
-              }
-            } catch (error) {
-              failCount++
-              console.error(`保存vMOS数据失败 (ID: ${vmosRow.id}):`, error)
-            }
-          })
-
-          await Promise.all(savePromises)
-
-          if (failCount === 0) {
-            ElMessage.success(`替换游戏内RTT成功，已保存 ${successCount} 条数据`)
-            if (taskDetail.value.taskInfo && taskDetail.value.taskInfo.taskId) {
-              await handleViewDetail({ taskId: taskDetail.value.taskInfo.taskId })
-            }
-            isGameRttReplaced.value = true
-          } else {
-            ElMessage.warning(`替换游戏内RTT完成，成功保存 ${successCount} 条，失败 ${failCount} 条`)
-          }
-        } else {
-          isGameRttReplaced.value = true
-          ElMessage.success(t('experienceTest.clientData.replaceSuccessNotSaved'))
-        }
+        isGameRttReplaced.value = true
+        hasReplaceRevertUnsaved.value = true
+        ElMessage.success(t('experienceTest.clientData.replaceSuccessNotSaved'))
       } catch (error) {
         console.error('Replace game RTT error:', error)
         ElMessage.error(error.message || t('common.error'))
@@ -2397,43 +2302,10 @@ export default {
           await recalculateVmosDataForRow(vmosRow, service, params)
         }
 
-        if (saveReplaceRevertToDb.value) {
-          // 批量保存到数据库
-          let successCount = 0
-          let failCount = 0
-          const savePromises = taskDetail.value.vmosDataList.map(async (vmosRow) => {
-            try {
-              const dataToSave = prepareVmosDataToSave(vmosRow, service, params)
-              const response = await updateVmosData(vmosRow.id, dataToSave)
-              if (response.code === 200) {
-                successCount++
-              } else {
-                failCount++
-                console.error(`保存vMOS数据失败 (ID: ${vmosRow.id}):`, response.message)
-              }
-            } catch (error) {
-              failCount++
-              console.error(`保存vMOS数据失败 (ID: ${vmosRow.id}):`, error)
-            }
-          })
-
-          await Promise.all(savePromises)
-
-          if (failCount === 0) {
-            originalRttDataBackup.value = {}
-            ElMessage.success(`回退游戏内RTT成功，已保存 ${successCount} 条数据`)
-            if (taskDetail.value.taskInfo && taskDetail.value.taskInfo.taskId) {
-              await handleViewDetail({ taskId: taskDetail.value.taskInfo.taskId })
-            }
-            isGameRttReplaced.value = false
-          } else {
-            ElMessage.warning(`回退游戏内RTT完成，成功保存 ${successCount} 条，失败 ${failCount} 条`)
-          }
-        } else {
-          originalRttDataBackup.value = {}
-          isGameRttReplaced.value = false
-          ElMessage.success(t('experienceTest.clientData.revertSuccessNotSaved'))
-        }
+        originalRttDataBackup.value = {}
+        isGameRttReplaced.value = false
+        hasReplaceRevertUnsaved.value = true
+        ElMessage.success(t('experienceTest.clientData.revertSuccessNotSaved'))
       } catch (error) {
         console.error('Revert game RTT error:', error)
         ElMessage.error(error.message || t('common.error'))
@@ -2510,41 +2382,9 @@ export default {
           await recalculateVmosDataForRow(vmosRow, service, params)
         }
 
-        if (saveReplaceRevertToDb.value) {
-          // 批量保存到数据库
-          let successCount = 0
-          let failCount = 0
-          const savePromises = taskDetail.value.vmosDataList.map(async (vmosRow) => {
-            try {
-              const dataToSave = prepareVmosDataToSave(vmosRow, service, params)
-              const response = await updateVmosData(vmosRow.id, dataToSave)
-              if (response.code === 200) {
-                successCount++
-              } else {
-                failCount++
-                console.error(`保存vMOS数据失败 (ID: ${vmosRow.id}):`, response.message)
-              }
-            } catch (error) {
-              failCount++
-              console.error(`保存vMOS数据失败 (ID: ${vmosRow.id}):`, error)
-            }
-          })
-
-          await Promise.all(savePromises)
-
-          if (failCount === 0) {
-            ElMessage.success(`替换网络侧RTT成功，已保存 ${successCount} 条数据`)
-            if (taskDetail.value.taskInfo && taskDetail.value.taskInfo.taskId) {
-              await handleViewDetail({ taskId: taskDetail.value.taskInfo.taskId })
-            }
-            isNetworkRttReplaced.value = true
-          } else {
-            ElMessage.warning(`替换网络侧RTT完成，成功保存 ${successCount} 条，失败 ${failCount} 条`)
-          }
-        } else {
-          isNetworkRttReplaced.value = true
-          ElMessage.success(t('experienceTest.clientData.replaceSuccessNotSaved'))
-        }
+        isNetworkRttReplaced.value = true
+        hasReplaceRevertUnsaved.value = true
+        ElMessage.success(t('experienceTest.clientData.replaceSuccessNotSaved'))
       } catch (error) {
         console.error('Replace network RTT error:', error)
         ElMessage.error(error.message || t('common.error'))
@@ -2594,48 +2434,63 @@ export default {
           await recalculateVmosDataForRow(vmosRow, service, params)
         }
 
-        if (saveReplaceRevertToDb.value) {
-          // 批量保存到数据库
-          let successCount = 0
-          let failCount = 0
-          const savePromises = taskDetail.value.vmosDataList.map(async (vmosRow) => {
-            try {
-              const dataToSave = prepareVmosDataToSave(vmosRow, service, params)
-              const response = await updateVmosData(vmosRow.id, dataToSave)
-              if (response.code === 200) {
-                successCount++
-              } else {
-                failCount++
-                console.error(`保存vMOS数据失败 (ID: ${vmosRow.id}):`, response.message)
-              }
-            } catch (error) {
-              failCount++
-              console.error(`保存vMOS数据失败 (ID: ${vmosRow.id}):`, error)
-            }
-          })
-
-          await Promise.all(savePromises)
-
-          if (failCount === 0) {
-            originalNetworkRttDataBackup.value = {}
-            ElMessage.success(`回退网络侧RTT成功，已保存 ${successCount} 条数据`)
-            if (taskDetail.value.taskInfo && taskDetail.value.taskInfo.taskId) {
-              await handleViewDetail({ taskId: taskDetail.value.taskInfo.taskId })
-            }
-            isNetworkRttReplaced.value = false
-          } else {
-            ElMessage.warning(`回退网络侧RTT完成，成功保存 ${successCount} 条，失败 ${failCount} 条`)
-          }
-        } else {
-          originalNetworkRttDataBackup.value = {}
-          isNetworkRttReplaced.value = false
-          ElMessage.success(t('experienceTest.clientData.revertSuccessNotSaved'))
-        }
+        originalNetworkRttDataBackup.value = {}
+        isNetworkRttReplaced.value = false
+        hasReplaceRevertUnsaved.value = true
+        ElMessage.success(t('experienceTest.clientData.revertSuccessNotSaved'))
       } catch (error) {
         console.error('Revert network RTT error:', error)
         ElMessage.error(error.message || t('common.error'))
       } finally {
         isReplacingNetworkRtt.value = false
+      }
+    }
+
+    // 点击「保存到数据库」：将当前页面 vMOS 数据（替换/回退后的结果）保存到后端
+    const handleSaveReplaceRevertToDb = async () => {
+      if (!hasReplaceRevertUnsaved.value) {
+        return
+      }
+      if (!taskDetail.value.taskInfo || !taskDetail.value.vmosDataList || taskDetail.value.vmosDataList.length === 0) {
+        ElMessage.warning('无数据可保存')
+        return
+      }
+      const service = taskDetail.value.taskInfo.service
+      savingReplaceRevertToDb.value = true
+      try {
+        const params = await getVmosParams(service)
+        let successCount = 0
+        let failCount = 0
+        const savePromises = taskDetail.value.vmosDataList.map(async (vmosRow) => {
+          try {
+            const dataToSave = prepareVmosDataToSave(vmosRow, service, params)
+            const response = await updateVmosData(vmosRow.id, dataToSave)
+            if (response.code === 200) {
+              successCount++
+            } else {
+              failCount++
+              console.error(`保存vMOS数据失败 (ID: ${vmosRow.id}):`, response.message)
+            }
+          } catch (error) {
+            failCount++
+            console.error(`保存vMOS数据失败 (ID: ${vmosRow.id}):`, error)
+          }
+        })
+        await Promise.all(savePromises)
+        if (failCount === 0) {
+          hasReplaceRevertUnsaved.value = false
+          ElMessage.success(`已保存 ${successCount} 条数据到数据库`)
+          if (taskDetail.value.taskInfo && taskDetail.value.taskInfo.taskId) {
+            await handleViewDetail({ taskId: taskDetail.value.taskInfo.taskId })
+          }
+        } else {
+          ElMessage.warning(`保存完成：成功 ${successCount} 条，失败 ${failCount} 条`)
+        }
+      } catch (error) {
+        console.error('Save replace/revert to DB error:', error)
+        ElMessage.error(error.message || t('common.error'))
+      } finally {
+        savingReplaceRevertToDb.value = false
       }
     }
 
@@ -2742,7 +2597,9 @@ export default {
       isDownlinkSpeedReplaced,
       isGameRttReplaced,
       isNetworkRttReplaced,
-      saveReplaceRevertToDb,
+      hasReplaceRevertUnsaved,
+      savingReplaceRevertToDb,
+      handleSaveReplaceRevertToDb,
       getResolutionPixels,
     }
   },
