@@ -836,9 +836,21 @@ export default {
               zip.file('speed-comparison.png', speedImage.split(',')[1], { base64: true })
               hasAnyChart = true
             }
+            // 表格导出按索引对齐端侧与网络侧，确保网络侧数据能导出（端侧用序号、网络侧用时间戳时 timeStamp 无法匹配）
+            const maxLen = Math.max(clientData.length, networkData.length)
+            const speedRows = []
+            for (let i = 0; i < maxLen; i++) {
+              const clientItem = clientData[i]
+              const networkItem = networkData[i]
+              const ts = (clientItem && (clientItem.timeStamp || clientItem.sequenceNumber)) || (networkItem && networkItem.timeStamp) || String(i + 1)
+              const cs = clientItem != null ? (typeof clientItem.speed === 'number' ? clientItem.speed : parseFloat(clientItem.speed) || '') : ''
+              const nu = networkItem != null ? (typeof networkItem.uplinkBandwidth === 'number' ? networkItem.uplinkBandwidth : parseFloat(networkItem.uplinkBandwidth) || '') : ''
+              const nd = networkItem != null ? (typeof networkItem.downlinkBandwidth === 'number' ? networkItem.downlinkBandwidth : parseFloat(networkItem.downlinkBandwidth) || '') : ''
+              speedRows.push([ts, cs, nu, nd])
+            }
             speedTableAoa = [
               [t('experienceTest.dataComparison.sequenceNumber'), t('experienceTest.dataComparison.clientSpeedKbps'), t('experienceTest.dataComparison.networkUplinkBandwidthKbps'), t('experienceTest.dataComparison.networkDownlinkBandwidthKbps')],
-              ...sortedTimeStamps.map((ts, i) => [ts, clientSpeeds[i] ?? '', networkUplinkSpeeds[i] ?? '', networkDownlinkSpeeds[i] ?? '']),
+              ...speedRows,
             ]
             tempChart.dispose()
             tempContainer.removeChild(tempDiv)
@@ -971,9 +983,21 @@ export default {
               zip.file('rtt-comparison.png', rttImage.split(',')[1], { base64: true })
               hasAnyChart = true
             }
+            const rttClientData = rttData.clientRttList || []
+            const rttNetworkData = rttData.networkRttList || []
+            const rttMaxLen = Math.max(rttClientData.length, rttNetworkData.length)
+            const rttRows = []
+            for (let i = 0; i < rttMaxLen; i++) {
+              const c = rttClientData[i]
+              const n = rttNetworkData[i]
+              const ts = (c && (c.timeStamp || c.sequenceNumber)) || (n && n.timeStamp) || String(i + 1)
+              const cr = c != null ? (typeof c.rtt === 'number' ? c.rtt : parseFloat(c.rtt) || '') : ''
+              const nd = n != null ? (typeof n.serviceDelay === 'number' ? n.serviceDelay : parseFloat(n.serviceDelay) || '') : ''
+              rttRows.push([ts, cr, nd])
+            }
             rttTableAoa = [
               [t('experienceTest.dataComparison.sequenceNumber'), t('experienceTest.dataComparison.clientRtt'), t('experienceTest.dataComparison.networkServiceDelay')],
-              ...sortedTimeStamps.map((ts, i) => [ts, clientRtts[i] ?? '', networkDelays[i] ?? '']),
+              ...rttRows,
             ]
             tempChart.dispose()
             tempContainer.removeChild(tempDiv)
@@ -1105,9 +1129,21 @@ export default {
               zip.file('stutter-comparison.png', stutterImage.split(',')[1], { base64: true })
               hasAnyChart = true
             }
+            const stutterClientData = stutterData.clientStutterList || []
+            const stutterNetworkData = stutterData.networkStutterList || []
+            const stutterMaxLen = Math.max(stutterClientData.length, stutterNetworkData.length)
+            const stutterRows = []
+            for (let i = 0; i < stutterMaxLen; i++) {
+              const c = stutterClientData[i]
+              const n = stutterNetworkData[i]
+              const ts = (c && (c.timeStamp || c.sequenceNumber)) || (n && n.timeStamp) || String(i + 1)
+              const cr = c != null ? (typeof c.stutterRatio === 'number' ? c.stutterRatio : parseFloat(c.stutterRatio) || '') : ''
+              const nn = n != null ? (typeof n.stallingNumberDiv10 === 'number' ? n.stallingNumberDiv10 : (parseFloat(n.stallingNumberDiv10) || (typeof n.stallingNumber === 'number' ? n.stallingNumber / 10 : (parseFloat(n.stallingNumber) || 0) / 10) || '')) : ''
+              stutterRows.push([ts, cr, nn])
+            }
             stutterTableAoa = [
               [t('experienceTest.dataComparison.sequenceNumber'), t('experienceTest.dataComparison.clientStutterRatio'), t('experienceTest.dataComparison.networkStallingNumberDiv10')],
-              ...sortedTimeStamps.map((ts, i) => [ts, clientRatios[i] ?? '', networkNumbers[i] ?? '']),
+              ...stutterRows,
             ]
             tempChart.dispose()
             tempContainer.removeChild(tempDiv)
@@ -1239,9 +1275,21 @@ export default {
               zip.file('avg-qoe-comparison.png', avgQoeImage.split(',')[1], { base64: true })
               hasAnyChart = true
             }
+            const avgQoeClientData = avgQoeData.clientAvgQoeList || []
+            const avgQoeNetworkData = avgQoeData.networkAvgQoeList || []
+            const avgQoeMaxLen = Math.max(avgQoeClientData.length, avgQoeNetworkData.length)
+            const avgQoeRows = []
+            for (let i = 0; i < avgQoeMaxLen; i++) {
+              const c = avgQoeClientData[i]
+              const n = avgQoeNetworkData[i]
+              const ts = (c && (c.timeStamp || c.sequenceNumber)) || (n && n.timeStamp) || String(i + 1)
+              const cq = c != null ? (typeof c.avgQoe === 'number' ? c.avgQoe : parseFloat(c.avgQoe) || '') : ''
+              const nq = n != null ? (typeof n.avgQoe === 'number' ? n.avgQoe : parseFloat(n.avgQoe) || '') : ''
+              avgQoeRows.push([ts, cq, nq])
+            }
             avgQoeTableAoa = [
               [t('experienceTest.dataComparison.sequenceNumber'), t('experienceTest.dataComparison.clientAvgQoe'), t('experienceTest.dataComparison.networkAvgQoe')],
-              ...sortedTimeStamps.map((ts, i) => [ts, clientAvgQoes[i] ?? '', networkAvgQoes[i] ?? '']),
+              ...avgQoeRows,
             ]
             tempChart.dispose()
             tempContainer.removeChild(tempDiv)
